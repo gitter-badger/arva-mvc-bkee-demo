@@ -1,2 +1,2 @@
-# famous-mvc-template
-Application template based on famous-mvc and famous-flex.
+# famous-mvc-demo
+Application example based on famous-mvc and famous-flex.
