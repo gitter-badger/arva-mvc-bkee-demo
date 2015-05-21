@@ -8326,6 +8326,183 @@ System.register("github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface",
   }).call(__exports, __require, __exports, __module);
 });
 })();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Utility = require("npm:famous@0.3.5/utilities/Utility");
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var capabilities = {
+      sequence: true,
+      direction: [Utility.Direction.Y, Utility.Direction.X],
+      scrolling: true,
+      trueSize: true,
+      sequentialScrollingOptimized: true
+    };
+    var context;
+    var size;
+    var direction;
+    var alignment;
+    var lineDirection;
+    var lineLength;
+    var offset;
+    var margins;
+    var margin = [0, 0];
+    var spacing;
+    var justify;
+    var itemSize;
+    var getItemSize;
+    var lineNodes;
+    function _layoutLine(next, endReached) {
+      if (!lineNodes.length) {
+        return 0;
+      }
+      var i;
+      var lineSize = [0, 0];
+      var lineNode;
+      for (i = 0; i < lineNodes.length; i++) {
+        lineSize[direction] = Math.max(lineSize[direction], lineNodes[i].size[direction]);
+        lineSize[lineDirection] += ((i > 0) ? spacing[lineDirection] : 0) + lineNodes[i].size[lineDirection];
+      }
+      var justifyOffset = justify[lineDirection] ? ((lineLength - lineSize[lineDirection]) / (lineNodes.length * 2)) : 0;
+      var lineOffset = (direction ? margins[3] : margins[0]) + justifyOffset;
+      var scrollLength;
+      for (i = 0; i < lineNodes.length; i++) {
+        lineNode = lineNodes[i];
+        var translate = [0, 0, 0];
+        translate[lineDirection] = lineOffset;
+        translate[direction] = next ? offset : (offset - (lineSize[direction]));
+        scrollLength = 0;
+        if (i === 0) {
+          scrollLength = lineSize[direction];
+          if (endReached && ((next && !alignment) || (!next && alignment))) {
+            scrollLength += direction ? (margins[0] + margins[2]) : (margins[3] + margins[1]);
+          } else {
+            scrollLength += spacing[direction];
+          }
+        }
+        lineNode.set = {
+          size: lineNode.size,
+          translate: translate,
+          scrollLength: scrollLength
+        };
+        lineOffset += lineNode.size[lineDirection] + spacing[lineDirection] + (justifyOffset * 2);
+      }
+      for (i = 0; i < lineNodes.length; i++) {
+        lineNode = next ? lineNodes[i] : lineNodes[(lineNodes.length - 1) - i];
+        context.set(lineNode.node, lineNode.set);
+      }
+      lineNodes = [];
+      return lineSize[direction] + spacing[direction];
+    }
+    function _resolveNodeSize(node) {
+      var localItemSize = itemSize;
+      if (getItemSize) {
+        localItemSize = getItemSize(node.renderNode, size);
+      }
+      if ((localItemSize[0] === true) || (localItemSize[1] === true)) {
+        var result = context.resolveSize(node, size);
+        if (localItemSize[0] !== true) {
+          result[0] = itemSize[0];
+        }
+        if (localItemSize[1] !== true) {
+          result[1] = itemSize[1];
+        }
+        return result;
+      } else {
+        return localItemSize;
+      }
+    }
+    function CollectionLayout(context_, options) {
+      context = context_;
+      size = context.size;
+      direction = context.direction;
+      alignment = context.alignment;
+      lineDirection = (direction + 1) % 2;
+      if ((options.gutter !== undefined) && console.warn && !options.suppressWarnings) {
+        console.warn('option `gutter` has been deprecated for CollectionLayout, use margins & spacing instead');
+      }
+      if (options.gutter && !options.margins && !options.spacing) {
+        var gutter = Array.isArray(options.gutter) ? options.gutter : [options.gutter, options.gutter];
+        margins = [gutter[1], gutter[0], gutter[1], gutter[0]];
+        spacing = gutter;
+      } else {
+        margins = LayoutUtility.normalizeMargins(options.margins);
+        spacing = options.spacing || 0;
+        spacing = Array.isArray(spacing) ? spacing : [spacing, spacing];
+      }
+      margin[0] = margins[direction ? 0 : 3];
+      margin[1] = -margins[direction ? 2 : 1];
+      justify = Array.isArray(options.justify) ? options.justify : (options.justify ? [true, true] : [false, false]);
+      lineLength = size[lineDirection] - (direction ? (margins[3] + margins[1]) : (margins[0] + margins[2]));
+      var node;
+      var nodeSize;
+      var lineOffset;
+      var bound;
+      if (options.cells) {
+        if (options.itemSize && console.warn && !options.suppressWarnings) {
+          console.warn('options `cells` and `itemSize` cannot both be specified for CollectionLayout, only use one of the two');
+        }
+        itemSize = [(size[0] - (margins[1] + margins[3] + (spacing[0] * (options.cells[0] - 1)))) / options.cells[0], (size[1] - (margins[0] + margins[2] + (spacing[1] * (options.cells[1] - 1)))) / options.cells[1]];
+      } else if (!options.itemSize) {
+        itemSize = [true, true];
+      } else if (options.itemSize instanceof Function) {
+        getItemSize = options.itemSize;
+      } else if ((options.itemSize[0] === undefined) || (options.itemSize[0] === undefined)) {
+        itemSize = [(options.itemSize[0] === undefined) ? size[0] : options.itemSize[0], (options.itemSize[1] === undefined) ? size[1] : options.itemSize[1]];
+      } else {
+        itemSize = options.itemSize;
+      }
+      offset = context.scrollOffset + (alignment ? 0 : margin[alignment]);
+      bound = context.scrollEnd + (alignment ? 0 : margin[alignment]);
+      lineOffset = 0;
+      lineNodes = [];
+      while (offset < bound) {
+        node = context.next();
+        if (!node) {
+          _layoutLine(true, true);
+          break;
+        }
+        nodeSize = _resolveNodeSize(node);
+        lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
+        if (lineOffset > lineLength) {
+          offset += _layoutLine(true, !node);
+          lineOffset = nodeSize[lineDirection];
+        }
+        lineNodes.push({
+          node: node,
+          size: nodeSize
+        });
+      }
+      offset = context.scrollOffset + (alignment ? margin[alignment] : 0);
+      bound = context.scrollStart + (alignment ? margin[alignment] : 0);
+      lineOffset = 0;
+      lineNodes = [];
+      while (offset > bound) {
+        node = context.prev();
+        if (!node) {
+          _layoutLine(false, true);
+          break;
+        }
+        nodeSize = _resolveNodeSize(node);
+        lineOffset += (lineNodes.length ? spacing[lineDirection] : 0) + nodeSize[lineDirection];
+        if (lineOffset > lineLength) {
+          offset -= _layoutLine(false, !node);
+          lineOffset = nodeSize[lineDirection];
+        }
+        lineNodes.unshift({
+          node: node,
+          size: nodeSize
+        });
+      }
+    }
+    CollectionLayout.Capabilities = capabilities;
+    CollectionLayout.Name = 'CollectionLayout';
+    CollectionLayout.Description = 'Multi-cell collection-layout with margins & spacing';
+    module.exports = CollectionLayout;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
 System.register("github:firebase/firebase-bower@2.2.5/firebase", [], false, function(__require, __exports, __module) {
   System.get("@@global-helpers").prepareGlobal(__module.id, []);
   (function() {
@@ -26866,6 +27043,27 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
   };
 });
 
+System.register("utils/helpers", [], function($__export) {
+  "use strict";
+  var __moduleName = "utils/helpers";
+  function FireOnceAndWait(object) {
+    if (object.once) {
+      return new Promise(function(resolve) {
+        object.once('ready', function() {
+          resolve();
+        });
+      });
+    } else
+      return Promise.resolve();
+  }
+  $__export("FireOnceAndWait", FireOnceAndWait);
+  return {
+    setters: [],
+    execute: function() {
+    }
+  };
+});
+
 System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController"], function($__export) {
   "use strict";
   var __moduleName = "views/Play/PlayView";
@@ -27340,35 +27538,42 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
     execute: function() {
       DEFAULT_OPTIONS = {
         headerHeight: 75,
-        rowSize: 50
+        rowSize: 50,
+        defaultModel: {
+          name: 'name',
+          avatar: 'http://www.nowseethis.org/avatars/default/missing.gif',
+          lost: 0,
+          draw: 0,
+          won: 0,
+          score: 0
+        }
       };
       $__export('default', (function($__super) {
-        function ProfileView(OPTIONS) {
+        function ProfileView() {
           $traceurRuntime.superConstructor(ProfileView).call(this, DEFAULT_OPTIONS);
           ObjectHelper.bindAllMethods(this, this);
           ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          this._dataSource = OPTIONS.dataSource;
           this._createRenderables();
           this._createLayout();
+          this.set(this.options.defaultModel);
         }
         return ($traceurRuntime.createClass)(ProfileView, {
+          set: function(model) {
+            this._renderables.header.setContent(("<div>" + model.name + "</div>Je kan je avatar en naam hieronder wijzigen."));
+            this._renderables.avatar.setContent(model.avatar);
+            this._renderables.score.setContent(("<div class=\"lost\">" + model.lost + "<span>lost</span></div>\n                <div class=\"draw\">" + model.draw + "<span>draw</span></div>\n                <div class=\"won\">" + model.won + "<span>won</span></div>"));
+          },
           _createRenderables: function() {
-            if (!this._dataSource) {
-              console.log('No data source');
-              return ;
-            }
             this._renderables = {
-              header: new Surface({
-                content: ("<div>" + this._dataSource.name + "</div>Je kan je avatar en naam hieronder wijzigen."),
-                classes: ['header']
+              header: new Surface({classes: ['header']}),
+              avatar: new BkImageSurface(),
+              name: new InputSurface({
+                properties: {textAlign: 'center'},
+                placeholder: 'Verander hier je naam...',
+                value: ''
               }),
-              avatar: new BkImageSurface({content: this._dataSource.avatar}),
-              name: new InputSurface({value: this._dataSource.name}),
-              score: new Surface({
-                classes: ['profile'],
-                content: ("<div class=\"lost\">" + this._dataSource.lost + "<span>lost</span></div>\n                <div class=\"draw\">" + this._dataSource.draw + "<span>draw</span></div>\n                <div class=\"won\">" + this._dataSource.won + "<span>won</span></div>")
-              })
+              score: new Surface({classes: ['profile']})
             };
           },
           _createLayout: function() {
@@ -27395,6 +27600,104 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
                 context.set('score', {
                   size: [context.size[0], scoreSpan * this.options.rowSize],
                   translate: [0, ((avatarSpan + nameSpan) * this.options.rowSize) + this.options.headerHeight, 1]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          }
+        }, {}, $__super);
+      }(View)));
+    }
+  };
+});
+
+System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Profile/ChangeAvatarView";
+  var Surface,
+      InputSurface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      BkImageSurface,
+      FlexScrollView,
+      CollectionLayout,
+      ViewSequence,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      InputSurface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.default;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      BkImageSurface = $__m.default;
+    }, function($__m) {
+      FlexScrollView = $__m.default;
+    }, function($__m) {
+      CollectionLayout = $__m.default;
+    }, function($__m) {
+      ViewSequence = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {
+        headerHeight: 75,
+        rowSize: 50,
+        defaultModel: []
+      };
+      $__export('default', (function($__super) {
+        function ChangeAvatarView() {
+          $traceurRuntime.superConstructor(ChangeAvatarView).call(this, DEFAULT_OPTIONS);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+          this.set(this.options.defaultModel);
+        }
+        return ($traceurRuntime.createClass)(ChangeAvatarView, {
+          set: function(model) {
+            this._renderables.header.setContent("<div>Avatars</div>Kies je eigen avatar.");
+            if (model.length == 0)
+              return ;
+            var sequence = new ViewSequence();
+            model.forEach(function(avatar) {
+              sequence.push(new BkImageSurface({content: avatar.url}));
+            });
+            this._renderables.avatarlist.setDataSource(sequence);
+          },
+          _createRenderables: function() {
+            this._renderables = {
+              header: new Surface({classes: ['header']}),
+              avatarlist: new FlexScrollView({
+                autoPipeEvents: true,
+                layout: CollectionLayout,
+                layoutOptions: {
+                  itemSize: [75, 75],
+                  margins: [20, 10, 20, 10],
+                  spacing: [20, 20]
+                }
+              })
+            };
+          },
+          _createLayout: function() {
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('header', {
+                  size: [context.size[0], this.options.headerHeight],
+                  translate: [0, 0, 20]
+                });
+                context.set('avatarlist', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, this.options.headerHeight, 1]
                 });
               }.bind(this),
               dataSource: this._renderables
@@ -27926,29 +28229,35 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
   };
 });
 
-System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@develop/core/Controller", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Player", "views/Profile/ProfileView", "controllers/HomeController"], function($__export) {
+System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Player", "controllers/HomeController", "utils/GameContext", "utils/helpers", "views/Profile/ProfileView", "views/Profile/ChangeAvatarView"], function($__export) {
   "use strict";
   var __moduleName = "controllers/ProfileController";
   var Controller,
-      GameContext,
       GetDefaultContext,
       Player,
-      ProfileView,
       HomeController,
+      GameContext,
+      FireOnceAndWait,
+      ProfileView,
+      ChangeAvatarView,
       ProfileController;
   return {
     setters: [function($__m) {
       Controller = $__m.Controller;
     }, function($__m) {
-      GameContext = $__m.default;
-    }, function($__m) {
       GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
       Player = $__m.default;
     }, function($__m) {
+      HomeController = $__m.HomeController;
+    }, function($__m) {
+      GameContext = $__m.default;
+    }, function($__m) {
+      FireOnceAndWait = $__m.FireOnceAndWait;
+    }, function($__m) {
       ProfileView = $__m.default;
     }, function($__m) {
-      HomeController = $__m.HomeController;
+      ChangeAvatarView = $__m.default;
     }],
     execute: function() {
       ProfileController = (function($__super) {
@@ -27994,12 +28303,17 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
             }, this);
           },
           Show: function(playerId) {
-            var playerToShow,
+            var controllerContext,
+                playerToShow,
                 profileView;
             return $traceurRuntime.asyncWrap(function($ctx) {
               while (true)
                 switch ($ctx.state) {
                   case 0:
+                    controllerContext = this;
+                    $ctx.state = 14;
+                    break;
+                  case 14:
                     $ctx.state = (!playerId) ? 10 : 6;
                     break;
                   case 10:
@@ -28011,12 +28325,20 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
                     $ctx.state = 7;
                     break;
                   case 7:
-                    Promise.resolve(this._FireOnceAndWait(playerToShow)).then($ctx.createCallback(2), $ctx.errback);
+                    Promise.resolve(FireOnceAndWait(playerToShow)).then($ctx.createCallback(2), $ctx.errback);
                     return ;
                   case 2:
-                    profileView = new ProfileView({dataSource: playerToShow});
+                    profileView = new ProfileView();
+                    profileView.set(playerToShow);
+                    playerToShow.on('value', (function() {
+                      profileView.set(playerToShow);
+                    }));
                     profileView._renderables.name.on('change', function() {
-                      playerToShow.name = this.value;
+                      playerToShow.name = this.getValue();
+                      this.setValue('');
+                    });
+                    profileView._renderables.avatar.on('click', function() {
+                      controllerContext.router.go(controllerContext, 'ChangeAvatar');
                     });
                     $ctx.state = 9;
                     break;
@@ -28032,12 +28354,30 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
                 }
             }, this);
           },
-          _FireOnceAndWait: function(object) {
-            return new Promise(function(resolve) {
-              object.once('ready', function() {
-                resolve();
-              });
-            });
+          ChangeAvatar: function() {
+            var avatarView;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    Promise.resolve(FireOnceAndWait(this.gameContext.avatars)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    avatarView = new ChangeAvatarView();
+                    avatarView.set(this.gameContext.avatars);
+                    $ctx.state = 7;
+                    break;
+                  case 7:
+                    $ctx.returnValue = avatarView;
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
           }
         }, {}, $__super);
       }(Controller));

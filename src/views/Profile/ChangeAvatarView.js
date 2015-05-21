@@ -7,22 +7,17 @@ import View                         from 'famous/core/View';
 import ObjectHelper                 from 'arva-mvc/utils/objectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
 import BkImageSurface               from 'famous-bkimagesurface/BkImageSurface';
-
+import FlexScrollView               from 'famous-flex/src/FlexScrollView';
+import CollectionLayout             from 'famous-flex/src/layouts/CollectionLayout';
+import ViewSequence                 from 'famous/core/ViewSequence';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75,
     rowSize: 50,
-    defaultModel: {
-        name: 'name',
-        avatar: 'http://www.nowseethis.org/avatars/default/missing.gif',
-        lost: 0,
-        draw: 0,
-        won: 0,
-        score: 0
-    }
+    defaultModel: []
 };
 
-export default class ProfileView extends View {
+export default class ChangeAvatarView extends View {
 
 
 
@@ -46,13 +41,16 @@ export default class ProfileView extends View {
     }
 
     set(model) {
-        this._renderables.header.setContent(`<div>${model.name}</div>Je kan je avatar en naam hieronder wijzigen.`);
+        this._renderables.header.setContent(`<div>Avatars</div>Kies je eigen avatar.`);
 
-        this._renderables.avatar.setContent(model.avatar);
+        if (model.length==0) return;
 
-        this._renderables.score.setContent(`<div class="lost">${model.lost}<span>lost</span></div>
-                <div class="draw">${model.draw}<span>draw</span></div>
-                <div class="won">${model.won}<span>won</span></div>`);
+        let sequence = new ViewSequence();
+        model.forEach(function(avatar){
+            sequence.push(new BkImageSurface({content: avatar.url}));
+        });
+
+        this._renderables.avatarlist.setDataSource(sequence);
     }
 
 
@@ -64,11 +62,16 @@ export default class ProfileView extends View {
             header: new Surface({
                 classes: ['header']
             }),
-            avatar: new BkImageSurface(),
-            name: new InputSurface({properties:{textAlign:'center'}, placeholder:'Verander hier je naam...', value: ''}),
-            score: new Surface({
-                classes: ['profile']
+            avatarlist: new FlexScrollView({
+                autoPipeEvents: true,
+                layout: CollectionLayout,
+                layoutOptions: {
+                    itemSize: [75, 75],
+                    margins: [20, 10, 20, 10],
+                    spacing: [20, 20]
+                }
             })
+
         };
     }
 
@@ -77,32 +80,17 @@ export default class ProfileView extends View {
             autoPipeEvents: true,
             layout: function(context) {
 
-                let area = (context.size[1]-this.options.headerHeight)-40;
-                let rows = Math.floor(area/50);
-                let avatarSpan = rows*0.6;
-                let nameSpan = 1;
-                let scoreSpan = rows*0.3;
 
                 context.set('header', {
                     size: [context.size[0], this.options.headerHeight],
-                    translate: [0,0,1]
+                    translate: [0, 0, 20]
                 });
 
-                context.set('avatar', {
-                    size: [context.size[0], avatarSpan*this.options.rowSize],
-                    translate: [0,this.options.headerHeight,1]
+                context.set('avatarlist', {
+                    size: [context.size[0], context.size[1]/1.3],
+                    translate: [0,this.options.headerHeight, 1]
                 });
 
-                context.set('name', {
-                    size: [context.size[0], nameSpan*this.options.rowSize],
-                    translate: [0,(avatarSpan*this.options.rowSize)+this.options.headerHeight,1]
-                });
-
-                context.set('score', {
-                    size: [context.size[0], scoreSpan*this.options.rowSize],
-                    //align: [0,0.5],
-                    translate: [0,((avatarSpan+nameSpan)*this.options.rowSize)+this.options.headerHeight,1]
-                });
 
             }.bind(this),
             dataSource: this._renderables

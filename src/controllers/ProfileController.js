@@ -4,12 +4,16 @@
 
 
 import {Controller}         from 'arva-mvc/core/Controller';
-import GameContext          from '../utils/GameContext';
 import {GetDefaultContext}  from 'arva-mvc/DefaultContext';
-import Player               from '../models/Player';
-import ProfileView          from '../views/Profile/ProfileView';
 
+import Player               from '../models/Player';
 import {HomeController}     from './HomeController';
+import GameContext          from '../utils/GameContext';
+import {FireOnceAndWait}    from '../utils/helpers';
+
+import ProfileView          from '../views/Profile/ProfileView';
+import ChangeAvatarView     from '../views/Profile/ChangeAvatarView';
+
 
 export class ProfileController extends Controller {
 
@@ -54,31 +58,37 @@ export class ProfileController extends Controller {
      * @constructor
      */
     async Show(playerId) {
+        let controllerContext = this;
+
         if (!playerId) this.router.go(HomeController, 'Main');
         else {
             let playerToShow = new Player(playerId);
-            await this._FireOnceAndWait(playerToShow);
+            await FireOnceAndWait(playerToShow);
 
-            let profileView = new ProfileView({
-                dataSource: playerToShow
+            let profileView = new ProfileView();
+            profileView.set(playerToShow);
+
+            playerToShow.on('value', () => {
+                profileView.set(playerToShow);
             });
 
             profileView._renderables.name.on('change', function() {
-                playerToShow.name = this.value;
+                playerToShow.name = this.getValue();
+                this.setValue('');
+            });
+
+            profileView._renderables.avatar.on('click', function() {
+                controllerContext.router.go(controllerContext, 'ChangeAvatar');
             });
 
             return profileView;
         }
-
     }
 
-
-    _FireOnceAndWait(object) {
-        return new Promise(function(resolve){
-            object.once('ready', function() {
-                resolve();
-            });
-        });
+    async ChangeAvatar() {
+        await FireOnceAndWait(this.gameContext.avatars);
+        let avatarView = new ChangeAvatarView();
+        avatarView.set(this.gameContext.avatars);
+        return avatarView;
     }
-
 }
