@@ -86,9 +86,18 @@ export class ProfileController extends Controller {
     }
 
     async ChangeAvatar() {
+        let controllerContext = this;
+
         await FireOnceAndWait(this.gameContext.avatars);
         let avatarView = new ChangeAvatarView();
         avatarView.set(this.gameContext.avatars);
+
+        avatarView.on('select', function(avatar) {
+            let playerId = controllerContext.gameContext.getPlayerId();
+            let playerToUpdate = new Player(playerId);
+            playerToUpdate.once('ready', function(){playerToUpdate.avatar=avatar.properties.data.url});
+            controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+        });
         return avatarView;
     }
 }

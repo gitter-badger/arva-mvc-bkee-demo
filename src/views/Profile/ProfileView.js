@@ -66,7 +66,9 @@ export default class ProfileView extends View {
             header: new Surface({
                 classes: ['header']
             }),
-            avatar: new BkImageSurface(),
+            avatar: new BkImageSurface({
+                sizeMode: BkImageSurface.SizeMode.ASPECTFILL
+            }),
             name: new InputSurface({properties:{textAlign:'center'}, placeholder:'Verander hier je naam...', value: ''}),
             score: new Surface({
                 classes: ['profile']

@@ -42,13 +42,20 @@ export default class ChangeAvatarView extends View {
     }
 
     set(model) {
+        let viewContext = this;
         this._renderables.header.setContent(`<div>Avatars</div>Kies je eigen avatar.`);
 
         if (model.length==0) return;
 
         let sequence = new ViewSequence();
         model.forEach(function(avatar){
-            sequence.push(new BkImageSurface({content: avatar.url}));
+            var avatarSurface = new BkImageSurface({
+                content: avatar.url,
+                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
+                properties: { data: avatar }
+            });
+            avatarSurface.on('click', function(){ viewContext._eventOutput.emit('select', this);});
+            sequence.push(avatarSurface);
         });
 
         this._renderables.avatarlist.setDataSource(sequence);

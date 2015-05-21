@@ -28062,7 +28062,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
             this._renderables = {
               background: new Background(),
               header: new Surface({classes: ['header']}),
-              avatar: new BkImageSurface(),
+              avatar: new BkImageSurface({sizeMode: BkImageSurface.SizeMode.ASPECTFILL}),
               name: new InputSurface({
                 properties: {textAlign: 'center'},
                 placeholder: 'Verander hier je naam...',
@@ -28166,12 +28166,21 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
         }
         return ($traceurRuntime.createClass)(ChangeAvatarView, {
           set: function(model) {
+            var viewContext = this;
             this._renderables.header.setContent("<div>Avatars</div>Kies je eigen avatar.");
             if (model.length == 0)
               return ;
             var sequence = new ViewSequence();
             model.forEach(function(avatar) {
-              sequence.push(new BkImageSurface({content: avatar.url}));
+              var avatarSurface = new BkImageSurface({
+                content: avatar.url,
+                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
+                properties: {data: avatar}
+              });
+              avatarSurface.on('click', function() {
+                viewContext._eventOutput.emit('select', this);
+              });
+              sequence.push(avatarSurface);
             });
             this._renderables.avatarlist.setDataSource(sequence);
           },
@@ -28934,19 +28943,32 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
             }, this);
           },
           ChangeAvatar: function() {
-            var avatarView;
+            var controllerContext,
+                avatarView;
             return $traceurRuntime.asyncWrap(function($ctx) {
               while (true)
                 switch ($ctx.state) {
                   case 0:
+                    controllerContext = this;
+                    $ctx.state = 7;
+                    break;
+                  case 7:
                     Promise.resolve(FireOnceAndWait(this.gameContext.avatars)).then($ctx.createCallback(2), $ctx.errback);
                     return ;
                   case 2:
                     avatarView = new ChangeAvatarView();
                     avatarView.set(this.gameContext.avatars);
-                    $ctx.state = 7;
+                    avatarView.on('select', function(avatar) {
+                      var playerId = controllerContext.gameContext.getPlayerId();
+                      var playerToUpdate = new Player(playerId);
+                      playerToUpdate.once('ready', function() {
+                        playerToUpdate.avatar = avatar.properties.data.url;
+                      });
+                      controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+                    });
+                    $ctx.state = 9;
                     break;
-                  case 7:
+                  case 9:
                     $ctx.returnValue = avatarView;
                     $ctx.state = 4;
                     break;
