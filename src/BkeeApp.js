@@ -8,6 +8,8 @@ import Router                   from 'arva-mvc/core/Router';
 import Context                  from 'famous/core/Context';
 import {DataSource}             from 'arva-ds/core/DataSource';
 import {GetDefaultContext}      from 'arva-mvc/DefaultContext';
+import AnimationController      from 'famous-flex/src/AnimationController';
+import Easing                   from 'famous/transitions/Easing';
 
 import Navigation               from './views/Shared/Navigation';
 import GameContext              from './utils/GameContext';
@@ -26,6 +28,53 @@ export class BkeeApp extends App {
     constructor(router, context) {
         // make one of the controllers default
         router.setDefault(HomeController, 'Main');
+
+        router.setControllerSpecs({
+            HomeController: {
+                controllers: [
+                    {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Right,
+                        activeFrom: ['PlayController', 'ProfileController']
+                    }
+                ]
+            },
+            PlayController: {
+                controllers: [
+                    {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Left,
+                        activeFrom: ['HomeController']
+                    },
+                    {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Right,
+                        activeFrom: ['ProfileController']
+                    }
+
+                ]
+            },
+            ProfileController: {
+                controllers: [
+                    {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Left,
+                        activeFrom: ['PlayController', 'ProfileController']
+                    }
+                ],
+                methods: {
+                    next: {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Up
+                    },
+                    previous: {
+                        transition: {duration: 500, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Down
+                    }
+                }
+            }
+        });
+
         super(router);
 
         this.gameContext = GetDefaultContext().get(GameContext);

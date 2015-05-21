@@ -6444,182 +6444,6 @@ System.register("npm:famous@0.3.5/core/Engine", ["npm:famous@0.3.5/core/Context"
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/ElementOutput", ["npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Transform"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Entity = require("npm:famous@0.3.5/core/Entity");
-  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  var Transform = require("npm:famous@0.3.5/core/Transform");
-  var usePrefix = !('transform' in document.documentElement.style);
-  var devicePixelRatio = window.devicePixelRatio || 1;
-  function ElementOutput(element) {
-    this._matrix = null;
-    this._opacity = 1;
-    this._origin = null;
-    this._size = null;
-    this._eventOutput = new EventHandler();
-    this._eventOutput.bindThis(this);
-    this.eventForwarder = function eventForwarder(event) {
-      this._eventOutput.emit(event.type, event);
-    }.bind(this);
-    this.id = Entity.register(this);
-    this._element = null;
-    this._sizeDirty = false;
-    this._originDirty = false;
-    this._transformDirty = false;
-    this._invisible = false;
-    if (element)
-      this.attach(element);
-  }
-  ElementOutput.prototype.on = function on(type, fn) {
-    if (this._element)
-      this._element.addEventListener(type, this.eventForwarder);
-    this._eventOutput.on(type, fn);
-  };
-  ElementOutput.prototype.removeListener = function removeListener(type, fn) {
-    this._eventOutput.removeListener(type, fn);
-  };
-  ElementOutput.prototype.emit = function emit(type, event) {
-    if (event && !event.origin)
-      event.origin = this;
-    var handled = this._eventOutput.emit(type, event);
-    if (handled && event && event.stopPropagation)
-      event.stopPropagation();
-    return handled;
-  };
-  ElementOutput.prototype.pipe = function pipe(target) {
-    return this._eventOutput.pipe(target);
-  };
-  ElementOutput.prototype.unpipe = function unpipe(target) {
-    return this._eventOutput.unpipe(target);
-  };
-  ElementOutput.prototype.render = function render() {
-    return this.id;
-  };
-  function _addEventListeners(target) {
-    for (var i in this._eventOutput.listeners) {
-      target.addEventListener(i, this.eventForwarder);
-    }
-  }
-  function _removeEventListeners(target) {
-    for (var i in this._eventOutput.listeners) {
-      target.removeEventListener(i, this.eventForwarder);
-    }
-  }
-  function _formatCSSTransform(m) {
-    m[12] = Math.round(m[12] * devicePixelRatio) / devicePixelRatio;
-    m[13] = Math.round(m[13] * devicePixelRatio) / devicePixelRatio;
-    var result = 'matrix3d(';
-    for (var i = 0; i < 15; i++) {
-      result += m[i] < 0.000001 && m[i] > -0.000001 ? '0,' : m[i] + ',';
-    }
-    result += m[15] + ')';
-    return result;
-  }
-  var _setMatrix;
-  if (usePrefix) {
-    _setMatrix = function(element, matrix) {
-      element.style.webkitTransform = _formatCSSTransform(matrix);
-    };
-  } else {
-    _setMatrix = function(element, matrix) {
-      element.style.transform = _formatCSSTransform(matrix);
-    };
-  }
-  function _formatCSSOrigin(origin) {
-    return 100 * origin[0] + '% ' + 100 * origin[1] + '%';
-  }
-  var _setOrigin = usePrefix ? function(element, origin) {
-    element.style.webkitTransformOrigin = _formatCSSOrigin(origin);
-  } : function(element, origin) {
-    element.style.transformOrigin = _formatCSSOrigin(origin);
-  };
-  var _setInvisible = usePrefix ? function(element) {
-    element.style.webkitTransform = 'scale3d(0.0001,0.0001,0.0001)';
-    element.style.opacity = 0;
-  } : function(element) {
-    element.style.transform = 'scale3d(0.0001,0.0001,0.0001)';
-    element.style.opacity = 0;
-  };
-  function _xyNotEquals(a, b) {
-    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
-  }
-  ElementOutput.prototype.commit = function commit(context) {
-    var target = this._element;
-    if (!target)
-      return ;
-    var matrix = context.transform;
-    var opacity = context.opacity;
-    var origin = context.origin;
-    var size = context.size;
-    if (!matrix && this._matrix) {
-      this._matrix = null;
-      this._opacity = 0;
-      _setInvisible(target);
-      return ;
-    }
-    if (_xyNotEquals(this._origin, origin))
-      this._originDirty = true;
-    if (Transform.notEquals(this._matrix, matrix))
-      this._transformDirty = true;
-    if (this._invisible) {
-      this._invisible = false;
-      this._element.style.display = '';
-    }
-    if (this._opacity !== opacity) {
-      this._opacity = opacity;
-      target.style.opacity = opacity >= 1 ? '0.999999' : opacity;
-    }
-    if (this._transformDirty || this._originDirty || this._sizeDirty) {
-      if (this._sizeDirty)
-        this._sizeDirty = false;
-      if (this._originDirty) {
-        if (origin) {
-          if (!this._origin)
-            this._origin = [0, 0];
-          this._origin[0] = origin[0];
-          this._origin[1] = origin[1];
-        } else
-          this._origin = null;
-        _setOrigin(target, this._origin);
-        this._originDirty = false;
-      }
-      if (!matrix)
-        matrix = Transform.identity;
-      this._matrix = matrix;
-      var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0] * origin[0], -this._size[1] * origin[1], 0]) : matrix;
-      _setMatrix(target, aaMatrix);
-      this._transformDirty = false;
-    }
-  };
-  ElementOutput.prototype.cleanup = function cleanup() {
-    if (this._element) {
-      this._invisible = true;
-      this._element.style.display = 'none';
-    }
-  };
-  ElementOutput.prototype.attach = function attach(target) {
-    this._element = target;
-    _addEventListeners.call(this, target);
-  };
-  ElementOutput.prototype.detach = function detach() {
-    var target = this._element;
-    if (target) {
-      _removeEventListeners.call(this, target);
-      if (this._invisible) {
-        this._invisible = false;
-        this._element.style.display = '';
-      }
-    }
-    this._element = null;
-    return target;
-  };
-  module.exports = ElementOutput;
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:famous@0.3.5/utilities/Utility"], false, function(__require, __exports, __module) {
@@ -7429,6 +7253,182 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelp
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/core/ElementOutput", ["npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Transform"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Entity = require("npm:famous@0.3.5/core/Entity");
+  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+  var Transform = require("npm:famous@0.3.5/core/Transform");
+  var usePrefix = !('transform' in document.documentElement.style);
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  function ElementOutput(element) {
+    this._matrix = null;
+    this._opacity = 1;
+    this._origin = null;
+    this._size = null;
+    this._eventOutput = new EventHandler();
+    this._eventOutput.bindThis(this);
+    this.eventForwarder = function eventForwarder(event) {
+      this._eventOutput.emit(event.type, event);
+    }.bind(this);
+    this.id = Entity.register(this);
+    this._element = null;
+    this._sizeDirty = false;
+    this._originDirty = false;
+    this._transformDirty = false;
+    this._invisible = false;
+    if (element)
+      this.attach(element);
+  }
+  ElementOutput.prototype.on = function on(type, fn) {
+    if (this._element)
+      this._element.addEventListener(type, this.eventForwarder);
+    this._eventOutput.on(type, fn);
+  };
+  ElementOutput.prototype.removeListener = function removeListener(type, fn) {
+    this._eventOutput.removeListener(type, fn);
+  };
+  ElementOutput.prototype.emit = function emit(type, event) {
+    if (event && !event.origin)
+      event.origin = this;
+    var handled = this._eventOutput.emit(type, event);
+    if (handled && event && event.stopPropagation)
+      event.stopPropagation();
+    return handled;
+  };
+  ElementOutput.prototype.pipe = function pipe(target) {
+    return this._eventOutput.pipe(target);
+  };
+  ElementOutput.prototype.unpipe = function unpipe(target) {
+    return this._eventOutput.unpipe(target);
+  };
+  ElementOutput.prototype.render = function render() {
+    return this.id;
+  };
+  function _addEventListeners(target) {
+    for (var i in this._eventOutput.listeners) {
+      target.addEventListener(i, this.eventForwarder);
+    }
+  }
+  function _removeEventListeners(target) {
+    for (var i in this._eventOutput.listeners) {
+      target.removeEventListener(i, this.eventForwarder);
+    }
+  }
+  function _formatCSSTransform(m) {
+    m[12] = Math.round(m[12] * devicePixelRatio) / devicePixelRatio;
+    m[13] = Math.round(m[13] * devicePixelRatio) / devicePixelRatio;
+    var result = 'matrix3d(';
+    for (var i = 0; i < 15; i++) {
+      result += m[i] < 0.000001 && m[i] > -0.000001 ? '0,' : m[i] + ',';
+    }
+    result += m[15] + ')';
+    return result;
+  }
+  var _setMatrix;
+  if (usePrefix) {
+    _setMatrix = function(element, matrix) {
+      element.style.webkitTransform = _formatCSSTransform(matrix);
+    };
+  } else {
+    _setMatrix = function(element, matrix) {
+      element.style.transform = _formatCSSTransform(matrix);
+    };
+  }
+  function _formatCSSOrigin(origin) {
+    return 100 * origin[0] + '% ' + 100 * origin[1] + '%';
+  }
+  var _setOrigin = usePrefix ? function(element, origin) {
+    element.style.webkitTransformOrigin = _formatCSSOrigin(origin);
+  } : function(element, origin) {
+    element.style.transformOrigin = _formatCSSOrigin(origin);
+  };
+  var _setInvisible = usePrefix ? function(element) {
+    element.style.webkitTransform = 'scale3d(0.0001,0.0001,0.0001)';
+    element.style.opacity = 0;
+  } : function(element) {
+    element.style.transform = 'scale3d(0.0001,0.0001,0.0001)';
+    element.style.opacity = 0;
+  };
+  function _xyNotEquals(a, b) {
+    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
+  }
+  ElementOutput.prototype.commit = function commit(context) {
+    var target = this._element;
+    if (!target)
+      return ;
+    var matrix = context.transform;
+    var opacity = context.opacity;
+    var origin = context.origin;
+    var size = context.size;
+    if (!matrix && this._matrix) {
+      this._matrix = null;
+      this._opacity = 0;
+      _setInvisible(target);
+      return ;
+    }
+    if (_xyNotEquals(this._origin, origin))
+      this._originDirty = true;
+    if (Transform.notEquals(this._matrix, matrix))
+      this._transformDirty = true;
+    if (this._invisible) {
+      this._invisible = false;
+      this._element.style.display = '';
+    }
+    if (this._opacity !== opacity) {
+      this._opacity = opacity;
+      target.style.opacity = opacity >= 1 ? '0.999999' : opacity;
+    }
+    if (this._transformDirty || this._originDirty || this._sizeDirty) {
+      if (this._sizeDirty)
+        this._sizeDirty = false;
+      if (this._originDirty) {
+        if (origin) {
+          if (!this._origin)
+            this._origin = [0, 0];
+          this._origin[0] = origin[0];
+          this._origin[1] = origin[1];
+        } else
+          this._origin = null;
+        _setOrigin(target, this._origin);
+        this._originDirty = false;
+      }
+      if (!matrix)
+        matrix = Transform.identity;
+      this._matrix = matrix;
+      var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0] * origin[0], -this._size[1] * origin[1], 0]) : matrix;
+      _setMatrix(target, aaMatrix);
+      this._transformDirty = false;
+    }
+  };
+  ElementOutput.prototype.cleanup = function cleanup() {
+    if (this._element) {
+      this._invisible = true;
+      this._element.style.display = 'none';
+    }
+  };
+  ElementOutput.prototype.attach = function attach(target) {
+    this._element = target;
+    _addEventListeners.call(this, target);
+  };
+  ElementOutput.prototype.detach = function detach() {
+    var target = this._element;
+    if (target) {
+      _removeEventListeners.call(this, target);
+      if (this._invisible) {
+        this._invisible = false;
+        this._element.style.display = '';
+      }
+    }
+    this._element = null;
+    return target;
+  };
+  module.exports = ElementOutput;
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
@@ -16597,307 +16597,6 @@ System.register("npm:famous@0.3.5/utilities/Timer", ["npm:famous@0.3.5/core/Engi
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/Surface", ["npm:famous@0.3.5/core/ElementOutput"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var ElementOutput = require("npm:famous@0.3.5/core/ElementOutput");
-  function Surface(options) {
-    ElementOutput.call(this);
-    this.options = {};
-    this.properties = {};
-    this.attributes = {};
-    this.content = '';
-    this.classList = [];
-    this.size = null;
-    this._classesDirty = true;
-    this._stylesDirty = true;
-    this._attributesDirty = true;
-    this._sizeDirty = true;
-    this._contentDirty = true;
-    this._trueSizeCheck = true;
-    this._dirtyClasses = [];
-    if (options)
-      this.setOptions(options);
-    this._currentTarget = null;
-  }
-  Surface.prototype = Object.create(ElementOutput.prototype);
-  Surface.prototype.constructor = Surface;
-  Surface.prototype.elementType = 'div';
-  Surface.prototype.elementClass = 'famous-surface';
-  Surface.prototype.setAttributes = function setAttributes(attributes) {
-    for (var n in attributes) {
-      if (n === 'style')
-        throw new Error('Cannot set styles via "setAttributes" as it will break Famo.us.  Use "setProperties" instead.');
-      this.attributes[n] = attributes[n];
-    }
-    this._attributesDirty = true;
-  };
-  Surface.prototype.getAttributes = function getAttributes() {
-    return this.attributes;
-  };
-  Surface.prototype.setProperties = function setProperties(properties) {
-    for (var n in properties) {
-      this.properties[n] = properties[n];
-    }
-    this._stylesDirty = true;
-    return this;
-  };
-  Surface.prototype.getProperties = function getProperties() {
-    return this.properties;
-  };
-  Surface.prototype.addClass = function addClass(className) {
-    if (this.classList.indexOf(className) < 0) {
-      this.classList.push(className);
-      this._classesDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.removeClass = function removeClass(className) {
-    var i = this.classList.indexOf(className);
-    if (i >= 0) {
-      this._dirtyClasses.push(this.classList.splice(i, 1)[0]);
-      this._classesDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.toggleClass = function toggleClass(className) {
-    var i = this.classList.indexOf(className);
-    if (i >= 0) {
-      this.removeClass(className);
-    } else {
-      this.addClass(className);
-    }
-    return this;
-  };
-  Surface.prototype.setClasses = function setClasses(classList) {
-    var i = 0;
-    var removal = [];
-    for (i = 0; i < this.classList.length; i++) {
-      if (classList.indexOf(this.classList[i]) < 0)
-        removal.push(this.classList[i]);
-    }
-    for (i = 0; i < removal.length; i++)
-      this.removeClass(removal[i]);
-    for (i = 0; i < classList.length; i++)
-      this.addClass(classList[i]);
-    return this;
-  };
-  Surface.prototype.getClassList = function getClassList() {
-    return this.classList;
-  };
-  Surface.prototype.setContent = function setContent(content) {
-    if (this.content !== content) {
-      this.content = content;
-      this._contentDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.getContent = function getContent() {
-    return this.content;
-  };
-  Surface.prototype.setOptions = function setOptions(options) {
-    if (options.size)
-      this.setSize(options.size);
-    if (options.classes)
-      this.setClasses(options.classes);
-    if (options.properties)
-      this.setProperties(options.properties);
-    if (options.attributes)
-      this.setAttributes(options.attributes);
-    if (options.content)
-      this.setContent(options.content);
-    return this;
-  };
-  function _cleanupClasses(target) {
-    for (var i = 0; i < this._dirtyClasses.length; i++)
-      target.classList.remove(this._dirtyClasses[i]);
-    this._dirtyClasses = [];
-  }
-  function _applyStyles(target) {
-    for (var n in this.properties) {
-      target.style[n] = this.properties[n];
-    }
-  }
-  function _cleanupStyles(target) {
-    for (var n in this.properties) {
-      target.style[n] = '';
-    }
-  }
-  function _applyAttributes(target) {
-    for (var n in this.attributes) {
-      target.setAttribute(n, this.attributes[n]);
-    }
-  }
-  function _cleanupAttributes(target) {
-    for (var n in this.attributes) {
-      target.removeAttribute(n);
-    }
-  }
-  function _xyNotEquals(a, b) {
-    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
-  }
-  Surface.prototype.setup = function setup(allocator) {
-    var target = allocator.allocate(this.elementType);
-    if (this.elementClass) {
-      if (this.elementClass instanceof Array) {
-        for (var i = 0; i < this.elementClass.length; i++) {
-          target.classList.add(this.elementClass[i]);
-        }
-      } else {
-        target.classList.add(this.elementClass);
-      }
-    }
-    target.style.display = '';
-    this.attach(target);
-    this._opacity = null;
-    this._currentTarget = target;
-    this._stylesDirty = true;
-    this._classesDirty = true;
-    this._attributesDirty = true;
-    this._sizeDirty = true;
-    this._contentDirty = true;
-    this._originDirty = true;
-    this._transformDirty = true;
-  };
-  Surface.prototype.commit = function commit(context) {
-    if (!this._currentTarget)
-      this.setup(context.allocator);
-    var target = this._currentTarget;
-    var size = context.size;
-    if (this._classesDirty) {
-      _cleanupClasses.call(this, target);
-      var classList = this.getClassList();
-      for (var i = 0; i < classList.length; i++)
-        target.classList.add(classList[i]);
-      this._classesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this._stylesDirty) {
-      _applyStyles.call(this, target);
-      this._stylesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this._attributesDirty) {
-      _applyAttributes.call(this, target);
-      this._attributesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this.size) {
-      var origSize = context.size;
-      size = [this.size[0], this.size[1]];
-      if (size[0] === undefined)
-        size[0] = origSize[0];
-      if (size[1] === undefined)
-        size[1] = origSize[1];
-      if (size[0] === true || size[1] === true) {
-        if (size[0] === true) {
-          if (this._trueSizeCheck || this._size[0] === 0) {
-            var width = target.offsetWidth;
-            if (this._size && this._size[0] !== width) {
-              this._size[0] = width;
-              this._sizeDirty = true;
-            }
-            size[0] = width;
-          } else {
-            if (this._size)
-              size[0] = this._size[0];
-          }
-        }
-        if (size[1] === true) {
-          if (this._trueSizeCheck || this._size[1] === 0) {
-            var height = target.offsetHeight;
-            if (this._size && this._size[1] !== height) {
-              this._size[1] = height;
-              this._sizeDirty = true;
-            }
-            size[1] = height;
-          } else {
-            if (this._size)
-              size[1] = this._size[1];
-          }
-        }
-        this._trueSizeCheck = false;
-      }
-    }
-    if (_xyNotEquals(this._size, size)) {
-      if (!this._size)
-        this._size = [0, 0];
-      this._size[0] = size[0];
-      this._size[1] = size[1];
-      this._sizeDirty = true;
-    }
-    if (this._sizeDirty) {
-      if (this._size) {
-        target.style.width = this.size && this.size[0] === true ? '' : this._size[0] + 'px';
-        target.style.height = this.size && this.size[1] === true ? '' : this._size[1] + 'px';
-      }
-      this._eventOutput.emit('resize');
-    }
-    if (this._contentDirty) {
-      this.deploy(target);
-      this._eventOutput.emit('deploy');
-      this._contentDirty = false;
-      this._trueSizeCheck = true;
-    }
-    ElementOutput.prototype.commit.call(this, context);
-  };
-  Surface.prototype.cleanup = function cleanup(allocator) {
-    var i = 0;
-    var target = this._currentTarget;
-    this._eventOutput.emit('recall');
-    this.recall(target);
-    target.style.display = 'none';
-    target.style.opacity = '';
-    target.style.width = '';
-    target.style.height = '';
-    _cleanupStyles.call(this, target);
-    _cleanupAttributes.call(this, target);
-    var classList = this.getClassList();
-    _cleanupClasses.call(this, target);
-    for (i = 0; i < classList.length; i++)
-      target.classList.remove(classList[i]);
-    if (this.elementClass) {
-      if (this.elementClass instanceof Array) {
-        for (i = 0; i < this.elementClass.length; i++) {
-          target.classList.remove(this.elementClass[i]);
-        }
-      } else {
-        target.classList.remove(this.elementClass);
-      }
-    }
-    this.detach(target);
-    this._currentTarget = null;
-    allocator.deallocate(target);
-  };
-  Surface.prototype.deploy = function deploy(target) {
-    var content = this.getContent();
-    if (content instanceof Node) {
-      while (target.hasChildNodes())
-        target.removeChild(target.firstChild);
-      target.appendChild(content);
-    } else
-      target.innerHTML = content;
-  };
-  Surface.prototype.recall = function recall(target) {
-    var df = document.createDocumentFragment();
-    while (target.hasChildNodes())
-      df.appendChild(target.firstChild);
-    this.setContent(df);
-  };
-  Surface.prototype.getSize = function getSize() {
-    return this._size ? this._size : this.size;
-  };
-  Surface.prototype.setSize = function setSize(size) {
-    this.size = size ? [size[0], size[1]] : null;
-    this._sizeDirty = true;
-    return this;
-  };
-  module.exports = Surface;
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
@@ -17378,6 +17077,307 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/core/Surface", ["npm:famous@0.3.5/core/ElementOutput"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var ElementOutput = require("npm:famous@0.3.5/core/ElementOutput");
+  function Surface(options) {
+    ElementOutput.call(this);
+    this.options = {};
+    this.properties = {};
+    this.attributes = {};
+    this.content = '';
+    this.classList = [];
+    this.size = null;
+    this._classesDirty = true;
+    this._stylesDirty = true;
+    this._attributesDirty = true;
+    this._sizeDirty = true;
+    this._contentDirty = true;
+    this._trueSizeCheck = true;
+    this._dirtyClasses = [];
+    if (options)
+      this.setOptions(options);
+    this._currentTarget = null;
+  }
+  Surface.prototype = Object.create(ElementOutput.prototype);
+  Surface.prototype.constructor = Surface;
+  Surface.prototype.elementType = 'div';
+  Surface.prototype.elementClass = 'famous-surface';
+  Surface.prototype.setAttributes = function setAttributes(attributes) {
+    for (var n in attributes) {
+      if (n === 'style')
+        throw new Error('Cannot set styles via "setAttributes" as it will break Famo.us.  Use "setProperties" instead.');
+      this.attributes[n] = attributes[n];
+    }
+    this._attributesDirty = true;
+  };
+  Surface.prototype.getAttributes = function getAttributes() {
+    return this.attributes;
+  };
+  Surface.prototype.setProperties = function setProperties(properties) {
+    for (var n in properties) {
+      this.properties[n] = properties[n];
+    }
+    this._stylesDirty = true;
+    return this;
+  };
+  Surface.prototype.getProperties = function getProperties() {
+    return this.properties;
+  };
+  Surface.prototype.addClass = function addClass(className) {
+    if (this.classList.indexOf(className) < 0) {
+      this.classList.push(className);
+      this._classesDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.removeClass = function removeClass(className) {
+    var i = this.classList.indexOf(className);
+    if (i >= 0) {
+      this._dirtyClasses.push(this.classList.splice(i, 1)[0]);
+      this._classesDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.toggleClass = function toggleClass(className) {
+    var i = this.classList.indexOf(className);
+    if (i >= 0) {
+      this.removeClass(className);
+    } else {
+      this.addClass(className);
+    }
+    return this;
+  };
+  Surface.prototype.setClasses = function setClasses(classList) {
+    var i = 0;
+    var removal = [];
+    for (i = 0; i < this.classList.length; i++) {
+      if (classList.indexOf(this.classList[i]) < 0)
+        removal.push(this.classList[i]);
+    }
+    for (i = 0; i < removal.length; i++)
+      this.removeClass(removal[i]);
+    for (i = 0; i < classList.length; i++)
+      this.addClass(classList[i]);
+    return this;
+  };
+  Surface.prototype.getClassList = function getClassList() {
+    return this.classList;
+  };
+  Surface.prototype.setContent = function setContent(content) {
+    if (this.content !== content) {
+      this.content = content;
+      this._contentDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.getContent = function getContent() {
+    return this.content;
+  };
+  Surface.prototype.setOptions = function setOptions(options) {
+    if (options.size)
+      this.setSize(options.size);
+    if (options.classes)
+      this.setClasses(options.classes);
+    if (options.properties)
+      this.setProperties(options.properties);
+    if (options.attributes)
+      this.setAttributes(options.attributes);
+    if (options.content)
+      this.setContent(options.content);
+    return this;
+  };
+  function _cleanupClasses(target) {
+    for (var i = 0; i < this._dirtyClasses.length; i++)
+      target.classList.remove(this._dirtyClasses[i]);
+    this._dirtyClasses = [];
+  }
+  function _applyStyles(target) {
+    for (var n in this.properties) {
+      target.style[n] = this.properties[n];
+    }
+  }
+  function _cleanupStyles(target) {
+    for (var n in this.properties) {
+      target.style[n] = '';
+    }
+  }
+  function _applyAttributes(target) {
+    for (var n in this.attributes) {
+      target.setAttribute(n, this.attributes[n]);
+    }
+  }
+  function _cleanupAttributes(target) {
+    for (var n in this.attributes) {
+      target.removeAttribute(n);
+    }
+  }
+  function _xyNotEquals(a, b) {
+    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
+  }
+  Surface.prototype.setup = function setup(allocator) {
+    var target = allocator.allocate(this.elementType);
+    if (this.elementClass) {
+      if (this.elementClass instanceof Array) {
+        for (var i = 0; i < this.elementClass.length; i++) {
+          target.classList.add(this.elementClass[i]);
+        }
+      } else {
+        target.classList.add(this.elementClass);
+      }
+    }
+    target.style.display = '';
+    this.attach(target);
+    this._opacity = null;
+    this._currentTarget = target;
+    this._stylesDirty = true;
+    this._classesDirty = true;
+    this._attributesDirty = true;
+    this._sizeDirty = true;
+    this._contentDirty = true;
+    this._originDirty = true;
+    this._transformDirty = true;
+  };
+  Surface.prototype.commit = function commit(context) {
+    if (!this._currentTarget)
+      this.setup(context.allocator);
+    var target = this._currentTarget;
+    var size = context.size;
+    if (this._classesDirty) {
+      _cleanupClasses.call(this, target);
+      var classList = this.getClassList();
+      for (var i = 0; i < classList.length; i++)
+        target.classList.add(classList[i]);
+      this._classesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this._stylesDirty) {
+      _applyStyles.call(this, target);
+      this._stylesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this._attributesDirty) {
+      _applyAttributes.call(this, target);
+      this._attributesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this.size) {
+      var origSize = context.size;
+      size = [this.size[0], this.size[1]];
+      if (size[0] === undefined)
+        size[0] = origSize[0];
+      if (size[1] === undefined)
+        size[1] = origSize[1];
+      if (size[0] === true || size[1] === true) {
+        if (size[0] === true) {
+          if (this._trueSizeCheck || this._size[0] === 0) {
+            var width = target.offsetWidth;
+            if (this._size && this._size[0] !== width) {
+              this._size[0] = width;
+              this._sizeDirty = true;
+            }
+            size[0] = width;
+          } else {
+            if (this._size)
+              size[0] = this._size[0];
+          }
+        }
+        if (size[1] === true) {
+          if (this._trueSizeCheck || this._size[1] === 0) {
+            var height = target.offsetHeight;
+            if (this._size && this._size[1] !== height) {
+              this._size[1] = height;
+              this._sizeDirty = true;
+            }
+            size[1] = height;
+          } else {
+            if (this._size)
+              size[1] = this._size[1];
+          }
+        }
+        this._trueSizeCheck = false;
+      }
+    }
+    if (_xyNotEquals(this._size, size)) {
+      if (!this._size)
+        this._size = [0, 0];
+      this._size[0] = size[0];
+      this._size[1] = size[1];
+      this._sizeDirty = true;
+    }
+    if (this._sizeDirty) {
+      if (this._size) {
+        target.style.width = this.size && this.size[0] === true ? '' : this._size[0] + 'px';
+        target.style.height = this.size && this.size[1] === true ? '' : this._size[1] + 'px';
+      }
+      this._eventOutput.emit('resize');
+    }
+    if (this._contentDirty) {
+      this.deploy(target);
+      this._eventOutput.emit('deploy');
+      this._contentDirty = false;
+      this._trueSizeCheck = true;
+    }
+    ElementOutput.prototype.commit.call(this, context);
+  };
+  Surface.prototype.cleanup = function cleanup(allocator) {
+    var i = 0;
+    var target = this._currentTarget;
+    this._eventOutput.emit('recall');
+    this.recall(target);
+    target.style.display = 'none';
+    target.style.opacity = '';
+    target.style.width = '';
+    target.style.height = '';
+    _cleanupStyles.call(this, target);
+    _cleanupAttributes.call(this, target);
+    var classList = this.getClassList();
+    _cleanupClasses.call(this, target);
+    for (i = 0; i < classList.length; i++)
+      target.classList.remove(classList[i]);
+    if (this.elementClass) {
+      if (this.elementClass instanceof Array) {
+        for (i = 0; i < this.elementClass.length; i++) {
+          target.classList.remove(this.elementClass[i]);
+        }
+      } else {
+        target.classList.remove(this.elementClass);
+      }
+    }
+    this.detach(target);
+    this._currentTarget = null;
+    allocator.deallocate(target);
+  };
+  Surface.prototype.deploy = function deploy(target) {
+    var content = this.getContent();
+    if (content instanceof Node) {
+      while (target.hasChildNodes())
+        target.removeChild(target.firstChild);
+      target.appendChild(content);
+    } else
+      target.innerHTML = content;
+  };
+  Surface.prototype.recall = function recall(target) {
+    var df = document.createDocumentFragment();
+    while (target.hasChildNodes())
+      df.appendChild(target.firstChild);
+    this.setContent(df);
+  };
+  Surface.prototype.getSize = function getSize() {
+    return this._size ? this._size : this.size;
+  };
+  Surface.prototype.setSize = function setSize(size) {
+    this.size = size ? [size[0], size[1]] : null;
+    this._sizeDirty = true;
+    return this;
+  };
+  module.exports = Surface;
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout"], false, function(__require, __exports, __module) {
@@ -21234,6 +21234,467 @@ System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["n
       }
     };
     module.exports = LayoutController;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", ["npm:famous@0.3.5/core/View", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/Modifier", "npm:famous@0.3.5/modifiers/StateModifier", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Timer", "npm:famous@0.3.5/transitions/Easing"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var View = require("npm:famous@0.3.5/core/View");
+    var LayoutController = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController");
+    var Transform = require("npm:famous@0.3.5/core/Transform");
+    var Modifier = require("npm:famous@0.3.5/core/Modifier");
+    var StateModifier = require("npm:famous@0.3.5/modifiers/StateModifier");
+    var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
+    var Timer = require("npm:famous@0.3.5/utilities/Timer");
+    var Easing = require("npm:famous@0.3.5/transitions/Easing");
+    function AnimationController(options) {
+      View.apply(this, arguments);
+      _createLayout.call(this);
+      if (options) {
+        this.setOptions(options);
+      }
+    }
+    AnimationController.prototype = Object.create(View.prototype);
+    AnimationController.prototype.constructor = AnimationController;
+    AnimationController.Animation = {
+      Slide: {
+        Left: function(show, size) {
+          return {transform: Transform.translate(show ? size[0] : -size[0], 0, 0)};
+        },
+        Right: function(show, size) {
+          return {transform: Transform.translate(show ? -size[0] : size[0], 0, 0)};
+        },
+        Up: function(show, size) {
+          return {transform: Transform.translate(0, show ? size[1] : -size[1], 0)};
+        },
+        Down: function(show, size) {
+          return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
+        }
+      },
+      Fade: function(show, size) {
+        return {opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0};
+      },
+      Zoom: function(show, size) {
+        var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
+        return {
+          transform: Transform.scale(scale, scale, 1),
+          align: [0.5, 0.5],
+          origin: [0.5, 0.5]
+        };
+      },
+      FadedZoom: function(show, size) {
+        var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
+        return {
+          opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
+          transform: Transform.scale(scale, scale, 1),
+          align: [0.5, 0.5],
+          origin: [0.5, 0.5]
+        };
+      }
+    };
+    AnimationController.DEFAULT_OPTIONS = {
+      transition: {
+        duration: 400,
+        curve: Easing.inOutQuad
+      },
+      animation: AnimationController.Animation.Fade,
+      show: {},
+      hide: {},
+      transfer: {
+        fastResize: true,
+        zIndex: 10
+      },
+      zIndexOffset: 0
+    };
+    var ItemState = {
+      NONE: 0,
+      HIDE: 1,
+      HIDING: 2,
+      SHOW: 3,
+      SHOWING: 4,
+      VISIBLE: 5,
+      QUEUED: 6
+    };
+    function ViewStackLayout(context, options) {
+      var set = {
+        size: context.size,
+        translate: [0, 0, 0]
+      };
+      var views = context.get('views');
+      var transferables = context.get('transferables');
+      for (var i = 0; i < Math.min(views.length, 2); i++) {
+        var item = this._viewStack[i];
+        switch (item.state) {
+          case ItemState.HIDE:
+          case ItemState.HIDING:
+          case ItemState.VISIBLE:
+          case ItemState.SHOW:
+          case ItemState.SHOWING:
+            var view = views[i];
+            context.set(view, set);
+            for (var j = 0; j < transferables.length; j++) {
+              for (var k = 0; k < item.transferables.length; k++) {
+                if (transferables[j].renderNode === item.transferables[k].renderNode) {
+                  context.set(transferables[j], {
+                    translate: [0, 0, set.translate[2]],
+                    size: [context.size[0], context.size[1]]
+                  });
+                }
+              }
+            }
+            set.translate[2] += options.zIndexOffset;
+            break;
+        }
+      }
+    }
+    function _createLayout() {
+      this._renderables = {
+        views: [],
+        transferables: []
+      };
+      this._viewStack = [];
+      this.layout = new LayoutController({
+        layout: ViewStackLayout.bind(this),
+        layoutOptions: this.options,
+        dataSource: this._renderables
+      });
+      this.add(this.layout);
+      this.layout.on('layoutend', _startAnimations.bind(this));
+    }
+    function _getViewSpec(item, view, id, callback) {
+      if (!item.view) {
+        return ;
+      }
+      var spec = view.getSpec(id);
+      if (spec) {
+        callback(spec);
+      } else {
+        Timer.after(_getViewSpec.bind(this, item, view, id, callback), 1);
+      }
+    }
+    function _getTransferable(item, view, id) {
+      if (view.getTransferable) {
+        return view.getTransferable(id);
+      }
+      if (view.getSpec && view.get && view.replace) {
+        if (view.get(id) !== undefined) {
+          return {
+            get: function() {
+              return view.get(id);
+            },
+            show: function(renderable) {
+              view.replace(id, renderable);
+            },
+            getSpec: _getViewSpec.bind(this, item, view, id)
+          };
+        }
+      }
+      if (view.layout) {
+        return _getTransferable.call(this, item, view.layout, id);
+      }
+    }
+    function _startTransferableAnimations(item, prevItem) {
+      for (var sourceId in item.options.transfer.items) {
+        _startTransferableAnimation.call(this, item, prevItem, sourceId);
+      }
+    }
+    function _startTransferableAnimation(item, prevItem, sourceId) {
+      var target = item.options.transfer.items[sourceId];
+      var transferable = {};
+      transferable.source = _getTransferable.call(this, prevItem, prevItem.view, sourceId);
+      if (Array.isArray(target)) {
+        for (var i = 0; i < target.length; i++) {
+          transferable.target = _getTransferable.call(this, item, item.view, target[i]);
+          if (transferable.target) {
+            break;
+          }
+        }
+      } else {
+        transferable.target = _getTransferable.call(this, item, item.view, target);
+      }
+      if (transferable.source && transferable.target) {
+        transferable.source.getSpec(function(sourceSpec) {
+          transferable.originalSource = transferable.source.get();
+          transferable.source.show(new RenderNode(new Modifier(sourceSpec)));
+          transferable.originalTarget = transferable.target.get();
+          var targetNode = new RenderNode(new Modifier({opacity: 0}));
+          targetNode.add(transferable.originalTarget);
+          transferable.target.show(targetNode);
+          var zIndexMod = new Modifier({transform: Transform.translate(0, 0, item.options.transfer.zIndex)});
+          var mod = new StateModifier(sourceSpec);
+          transferable.renderNode = new RenderNode(zIndexMod);
+          transferable.renderNode.add(mod).add(transferable.originalSource);
+          item.transferables.push(transferable);
+          this._renderables.transferables.push(transferable.renderNode);
+          this.layout.reflowLayout();
+          Timer.after(function() {
+            transferable.target.getSpec(function(targetSpec, transition) {
+              mod.halt();
+              if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
+                mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition || item.options.transfer.transition);
+              }
+              if (item.options.transfer.fastResize) {
+                if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
+                  var transform = targetSpec.transform || Transform.identity;
+                  if (sourceSpec.size && targetSpec.size) {
+                    transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
+                  }
+                  mod.setTransform(transform, transition || item.options.transfer.transition);
+                }
+              } else {
+                if (sourceSpec.transform || targetSpec.transform) {
+                  mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
+                }
+                if (sourceSpec.size || targetSpec.size) {
+                  mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
+                }
+              }
+            }, true);
+          }, 1);
+        }.bind(this), false);
+      }
+    }
+    function _endTransferableAnimations(item) {
+      for (var j = 0; j < item.transferables.length; j++) {
+        var transferable = item.transferables[j];
+        for (var i = 0; i < this._renderables.transferables.length; i++) {
+          if (this._renderables.transferables[i] === transferable.renderNode) {
+            this._renderables.transferables.splice(i, 1);
+            break;
+          }
+        }
+        transferable.source.show(transferable.originalSource);
+        transferable.target.show(transferable.originalTarget);
+      }
+      item.transferables = [];
+      this.layout.reflowLayout();
+    }
+    function _startAnimations(event) {
+      var prevItem;
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[i];
+        switch (item.state) {
+          case ItemState.HIDE:
+            item.state = ItemState.HIDING;
+            _startAnimation.call(this, item, prevItem, event.size, false);
+            _updateState.call(this);
+            break;
+          case ItemState.SHOW:
+            item.state = ItemState.SHOWING;
+            _startAnimation.call(this, item, prevItem, event.size, true);
+            _updateState.call(this);
+            break;
+        }
+        prevItem = item;
+      }
+    }
+    function _startAnimation(item, prevItem, size, show) {
+      var animation = show ? item.options.show.animation : item.options.hide.animation;
+      var spec = animation ? animation.call(undefined, show, size) : {};
+      item.mod.halt();
+      var callback;
+      if (show) {
+        callback = item.showCallback;
+        if (spec.transform) {
+          item.mod.setTransform(spec.transform);
+          item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
+          callback = undefined;
+        }
+        if (spec.opacity !== undefined) {
+          item.mod.setOpacity(spec.opacity);
+          item.mod.setOpacity(1, item.options.show.transition, callback);
+          callback = undefined;
+        }
+        if (spec.align) {
+          item.mod.setAlign(spec.align);
+        }
+        if (spec.origin) {
+          item.mod.setOrigin(spec.origin);
+        }
+        if (prevItem) {
+          _startTransferableAnimations.call(this, item, prevItem);
+        }
+        if (callback) {
+          callback();
+        }
+      } else {
+        callback = item.hideCallback;
+        if (spec.transform) {
+          item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
+          callback = undefined;
+        }
+        if (spec.opacity !== undefined) {
+          item.mod.setOpacity(spec.opacity, item.options.hide.transition, callback);
+          callback = undefined;
+        }
+        if (callback) {
+          callback();
+        }
+      }
+    }
+    function _setItemOptions(item, options) {
+      item.options = {
+        show: {
+          transition: this.options.show.transition || this.options.transition,
+          animation: this.options.show.animation || this.options.animation
+        },
+        hide: {
+          transition: this.options.hide.transition || this.options.transition,
+          animation: this.options.hide.animation || this.options.animation
+        },
+        transfer: {
+          transition: this.options.transfer.transition || this.options.transition,
+          items: this.options.transfer.items || {},
+          zIndex: this.options.transfer.zIndex,
+          fastResize: this.options.transfer.fastResize
+        }
+      };
+      if (options) {
+        item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
+        if (options && options.show && (options.show.animation !== undefined)) {
+          item.options.show.animation = options.show.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.show.animation = options.animation;
+        }
+        item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
+        item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
+        item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
+        item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
+      }
+    }
+    function _updateState() {
+      var prevItem;
+      var invalidated = false;
+      for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+        var item = this._viewStack[i];
+        if (item.state === ItemState.QUEUED) {
+          if (!prevItem || (prevItem.state === ItemState.VISIBLE) || (prevItem.state === ItemState.HIDING)) {
+            if (prevItem && (prevItem.state === ItemState.VISIBLE)) {
+              prevItem.state = ItemState.HIDE;
+            }
+            item.state = ItemState.SHOW;
+            invalidated = true;
+          }
+          break;
+        } else if ((item.state === ItemState.VISIBLE) && item.hide) {
+          item.state = ItemState.HIDE;
+        }
+        if ((item.state === ItemState.SHOW) || (item.state === ItemState.HIDE)) {
+          this.layout.reflowLayout();
+        }
+        prevItem = item;
+      }
+      if (invalidated) {
+        _updateState.call(this);
+        this.layout.reflowLayout();
+      }
+    }
+    AnimationController.prototype.show = function(renderable, options, callback) {
+      if (!renderable) {
+        return this.hide(options, callback);
+      }
+      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
+      if (item && (item.view === renderable)) {
+        item.hide = false;
+        if (item.state === ItemState.HIDE) {
+          item.state = ItemState.QUEUED;
+          _setItemOptions.call(this, item, options);
+          _updateState.call(this);
+        }
+        return this;
+      }
+      if (item && (item.state !== ItemState.HIDING) && options) {
+        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+        if (options && options.hide && (options.hide.animation !== undefined)) {
+          item.options.hide.animation = options.hide.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.hide.animation = options.animation;
+        }
+      }
+      item = {
+        view: renderable,
+        mod: new StateModifier(),
+        state: ItemState.QUEUED,
+        callback: callback,
+        transferables: []
+      };
+      item.node = new RenderNode(item.mod);
+      item.node.add(renderable);
+      _setItemOptions.call(this, item, options);
+      item.showCallback = function() {
+        item.state = ItemState.VISIBLE;
+        _updateState.call(this);
+        _endTransferableAnimations.call(this, item);
+        if (callback) {
+          callback();
+        }
+      }.bind(this);
+      item.hideCallback = function() {
+        var index = this._viewStack.indexOf(item);
+        this._renderables.views.splice(index, 1);
+        this._viewStack.splice(index, 1);
+        item.view = undefined;
+        _updateState.call(this);
+        this.layout.reflowLayout();
+      }.bind(this);
+      this._renderables.views.push(item.node);
+      this._viewStack.push(item);
+      _updateState.call(this);
+      return this;
+    };
+    AnimationController.prototype.hide = function(options, callback) {
+      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
+      if (!item || (item.state === ItemState.HIDING)) {
+        return this;
+      }
+      item.hide = true;
+      if (options) {
+        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+        if (options && options.hide && (options.hide.animation !== undefined)) {
+          item.options.hide.animation = options.hide.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.hide.animation = options.animation;
+        }
+      }
+      item.hideCallback = function() {
+        var index = this._viewStack.indexOf(item);
+        this._renderables.views.splice(index, 1);
+        this._viewStack.splice(index, 1);
+        item.view = undefined;
+        _updateState.call(this);
+        this.layout.reflowLayout();
+        if (callback) {
+          callback();
+        }
+      }.bind(this);
+      _updateState.call(this);
+      return this;
+    };
+    AnimationController.prototype.halt = function() {
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[this._viewStack.length - 1];
+        if ((item.state === ItemState.QUEUED) || (item.state === ItemState.SHOW)) {
+          this._renderables.views.splice(this._viewStack.length - 1, 1);
+          this._viewStack.splice(this._viewStack.length - 1, 1);
+          item.view = undefined;
+        } else {
+          break;
+        }
+      }
+      return this;
+    };
+    AnimationController.prototype.get = function() {
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[i];
+        if ((item.state === ItemState.VISIBLE) || (item.state === ItemState.SHOW) || (item.state === ItemState.SHOWING)) {
+          return item.view;
+        }
+      }
+      return undefined;
+    };
+    module.exports = AnimationController;
   }).call(__exports, __require, __exports, __module);
 });
 })();
@@ -28094,6 +28555,78 @@ System.register("github:Bizboard/di.js@master/injector", ["github:Bizboard/di.js
   };
 });
 
+System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Shared/Navigation";
+  var Surface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      TabBar,
+      Arena,
+      Play,
+      Profile,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.default;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      TabBar = $__m.default;
+    }, function($__m) {
+      Arena = $__m.default;
+    }, function($__m) {
+      Play = $__m.default;
+    }, function($__m) {
+      Profile = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {};
+      $__export('default', (function($__super) {
+        function Navigation() {
+          $traceurRuntime.superConstructor(Navigation).call(this, DEFAULT_OPTIONS);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+        }
+        return ($traceurRuntime.createClass)(Navigation, {
+          _createRenderables: function() {
+            var tabBar = new TabBar({createRenderables: {
+                background: true,
+                selectedItemOverlay: true
+              }});
+            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Play', '<div>' + Profile + '</div>Settings']);
+            this._renderables = {tabBar: tabBar};
+          },
+          _createLayout: function() {
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('tabBar', {
+                  size: [context.size[0], 40],
+                  align: [0, 1],
+                  origin: [0, 1],
+                  translate: [0, 0, 20]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          }
+        }, {}, $__super);
+      }(View)));
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.1", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
@@ -28581,78 +29114,6 @@ System.register("github:Bizboard/di.js@master/index", ["github:Bizboard/di.js@ma
       $__export("FactoryProvider", $__m.FactoryProvider);
     }],
     execute: function() {}
-  };
-});
-
-System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
-  "use strict";
-  var __moduleName = "views/Shared/Navigation";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      TabBar,
-      Arena,
-      Play,
-      Profile,
-      DEFAULT_OPTIONS;
-  return {
-    setters: [function($__m) {
-      Surface = $__m.default;
-    }, function($__m) {
-      View = $__m.default;
-    }, function($__m) {
-      ObjectHelper = $__m.default;
-    }, function($__m) {
-      LayoutController = $__m.default;
-    }, function($__m) {
-      TabBar = $__m.default;
-    }, function($__m) {
-      Arena = $__m.default;
-    }, function($__m) {
-      Play = $__m.default;
-    }, function($__m) {
-      Profile = $__m.default;
-    }],
-    execute: function() {
-      DEFAULT_OPTIONS = {};
-      $__export('default', (function($__super) {
-        function Navigation() {
-          $traceurRuntime.superConstructor(Navigation).call(this, DEFAULT_OPTIONS);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          this._createRenderables();
-          this._createLayout();
-        }
-        return ($traceurRuntime.createClass)(Navigation, {
-          _createRenderables: function() {
-            var tabBar = new TabBar({createRenderables: {
-                background: true,
-                selectedItemOverlay: true
-              }});
-            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Play', '<div>' + Profile + '</div>Settings']);
-            this._renderables = {tabBar: tabBar};
-          },
-          _createLayout: function() {
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('tabBar', {
-                  size: [context.size[0], 40],
-                  align: [0, 1],
-                  origin: [0, 1],
-                  translate: [0, 0, 20]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
-          }
-        }, {}, $__super);
-      }(View)));
-    }
   };
 });
 
@@ -29734,7 +30195,7 @@ System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/d
   };
 });
 
-System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-mvc@develop/DefaultContext", "views/Shared/Navigation", "utils/GameContext", "models/Invite", "collections/Invites", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController"], function($__export) {
+System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-mvc@develop/DefaultContext", "github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", "npm:famous@0.3.5/transitions/Easing", "views/Shared/Navigation", "utils/GameContext", "models/Invite", "collections/Invites", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController"], function($__export) {
   "use strict";
   var __moduleName = "BkeeApp";
   var Inject,
@@ -29743,6 +30204,8 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
       Context,
       DataSource,
       GetDefaultContext,
+      AnimationController,
+      Easing,
       Navigation,
       GameContext,
       Invite,
@@ -29765,6 +30228,10 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
     }, function($__m) {
       GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
+      AnimationController = $__m.default;
+    }, function($__m) {
+      Easing = $__m.default;
+    }, function($__m) {
       Navigation = $__m.default;
     }, function($__m) {
       GameContext = $__m.default;
@@ -29784,6 +30251,57 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
         function BkeeApp(router, context) {
           var $__0;
           router.setDefault(HomeController, 'Main');
+          router.setControllerSpecs({
+            HomeController: {controllers: [{
+                transition: {
+                  duration: 500,
+                  curve: Easing.outBack
+                },
+                animation: AnimationController.Animation.Slide.Right,
+                activeFrom: ['PlayController', 'ProfileController']
+              }]},
+            PlayController: {controllers: [{
+                transition: {
+                  duration: 500,
+                  curve: Easing.outBack
+                },
+                animation: AnimationController.Animation.Slide.Left,
+                activeFrom: ['HomeController']
+              }, {
+                transition: {
+                  duration: 500,
+                  curve: Easing.outBack
+                },
+                animation: AnimationController.Animation.Slide.Right,
+                activeFrom: ['ProfileController']
+              }]},
+            ProfileController: {
+              controllers: [{
+                transition: {
+                  duration: 500,
+                  curve: Easing.outBack
+                },
+                animation: AnimationController.Animation.Slide.Left,
+                activeFrom: ['PlayController', 'ProfileController']
+              }],
+              methods: {
+                next: {
+                  transition: {
+                    duration: 500,
+                    curve: Easing.outBack
+                  },
+                  animation: AnimationController.Animation.Slide.Up
+                },
+                previous: {
+                  transition: {
+                    duration: 500,
+                    curve: Easing.outBack
+                  },
+                  animation: AnimationController.Animation.Slide.Down
+                }
+              }
+            }
+          });
           $traceurRuntime.superConstructor(BkeeApp).call(this, router);
           this.gameContext = GetDefaultContext().get(GameContext);
           var navigation = new Navigation();
