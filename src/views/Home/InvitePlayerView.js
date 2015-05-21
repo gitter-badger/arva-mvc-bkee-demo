@@ -43,6 +43,23 @@ export default class InvitePlayerView extends View {
 
         var invitePlayers = new DataboundFlexScrollView({
 
+            flowOptions: {
+                spring: {               // spring-options used when transitioning between states
+                    dampingRatio: 0.8,  // spring damping ratio
+                    period: 1000        // duration of the animation
+                },
+                insertSpec: {           // render-spec used when inserting renderables
+                    opacity: 0          // start opacity is 0, causing a fade-in effect,
+                    //size: [0, 0],     // uncommented to create a grow-effect
+                    //transform: Transform.translate(-300, 0, 0) // uncomment for slide-in effect
+                }
+                //removeSpec: {...},    // render-spec used when removing renderables
+            },
+
+            layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+            },
             template: function(player) {
 
                 let isOnline = (Date.now() - player.lastTimeAccessed)<10000?'online':'offline';
@@ -57,6 +74,7 @@ export default class InvitePlayerView extends View {
                         data: player
                     },
                     content: `<div class="indicator ${isOnline}"></div>
+                    <div class="avatar" style="background-image: url(${player.avatar});"></div>
                     <div class="playername">${player.name}</div>
                     <div class="score">${player.score}</div>`
                 });

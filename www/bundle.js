@@ -29442,6 +29442,17 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
           _createRenderables: function() {
             var contextView = this;
             var invitePlayers = new DataboundFlexScrollView({
+              flowOptions: {
+                spring: {
+                  dampingRatio: 0.8,
+                  period: 1000
+                },
+                insertSpec: {opacity: 0}
+              },
+              layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+              },
               template: function(player) {
                 var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
                 var surface = new Surface({
@@ -29453,7 +29464,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                     paddingRight: '10px',
                     data: player
                   },
-                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
+                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + player.avatar + ");\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
                 });
                 surface.on('click', function() {
                   contextView._eventOutput.emit('invite', this.properties.data);

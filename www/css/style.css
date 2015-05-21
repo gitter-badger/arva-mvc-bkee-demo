@@ -62,9 +62,10 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
 
 
 .arena-item div.indicator {
-    display:inline-block;
-    height:15px;
-    width:15px;
+    -webkit-transform: translate(0, 100%);
+    position: absolute;
+    height:14px;
+    width:14px;
     border-radius: 7px;
     border:1px solid #dddddd;
 }
@@ -78,8 +79,20 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
 }
 
 .arena-item div.playername {
-    display:inline-block;
+    -webkit-transform: translate(80px, 0);
+    position: absolute;
     font-size:11px;
+    overflow:hidden;
+}
+
+.arena-item div.avatar {
+    -webkit-transform: translate(25px, 0%);
+    position: absolute;
+    background-position:center center;
+    width:50px;
+    height:50px;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .arena-item div.score {
