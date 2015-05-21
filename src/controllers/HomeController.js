@@ -16,6 +16,7 @@ import {GetDefaultContext}  from 'arva-mvc/DefaultContext';
 import {ProfileController}  from './ProfileController';
 import {PlayController}     from './PlayController';
 
+
 export class HomeController extends Controller {
 
     constructor(router, context) {

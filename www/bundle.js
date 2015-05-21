@@ -4587,178 +4587,169 @@ System.register("npm:famous@0.3.5/transitions/TweenTransition", [], true, functi
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/ElementOutput", ["npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Transform"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/transitions/Easing", [], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  var Entity = require("npm:famous@0.3.5/core/Entity");
-  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  var Transform = require("npm:famous@0.3.5/core/Transform");
-  var usePrefix = !('transform' in document.documentElement.style);
-  var devicePixelRatio = window.devicePixelRatio || 1;
-  function ElementOutput(element) {
-    this._matrix = null;
-    this._opacity = 1;
-    this._origin = null;
-    this._size = null;
-    this._eventOutput = new EventHandler();
-    this._eventOutput.bindThis(this);
-    this.eventForwarder = function eventForwarder(event) {
-      this._eventOutput.emit(event.type, event);
-    }.bind(this);
-    this.id = Entity.register(this);
-    this._element = null;
-    this._sizeDirty = false;
-    this._originDirty = false;
-    this._transformDirty = false;
-    this._invisible = false;
-    if (element)
-      this.attach(element);
-  }
-  ElementOutput.prototype.on = function on(type, fn) {
-    if (this._element)
-      this._element.addEventListener(type, this.eventForwarder);
-    this._eventOutput.on(type, fn);
-  };
-  ElementOutput.prototype.removeListener = function removeListener(type, fn) {
-    this._eventOutput.removeListener(type, fn);
-  };
-  ElementOutput.prototype.emit = function emit(type, event) {
-    if (event && !event.origin)
-      event.origin = this;
-    var handled = this._eventOutput.emit(type, event);
-    if (handled && event && event.stopPropagation)
-      event.stopPropagation();
-    return handled;
-  };
-  ElementOutput.prototype.pipe = function pipe(target) {
-    return this._eventOutput.pipe(target);
-  };
-  ElementOutput.prototype.unpipe = function unpipe(target) {
-    return this._eventOutput.unpipe(target);
-  };
-  ElementOutput.prototype.render = function render() {
-    return this.id;
-  };
-  function _addEventListeners(target) {
-    for (var i in this._eventOutput.listeners) {
-      target.addEventListener(i, this.eventForwarder);
-    }
-  }
-  function _removeEventListeners(target) {
-    for (var i in this._eventOutput.listeners) {
-      target.removeEventListener(i, this.eventForwarder);
-    }
-  }
-  function _formatCSSTransform(m) {
-    m[12] = Math.round(m[12] * devicePixelRatio) / devicePixelRatio;
-    m[13] = Math.round(m[13] * devicePixelRatio) / devicePixelRatio;
-    var result = 'matrix3d(';
-    for (var i = 0; i < 15; i++) {
-      result += m[i] < 0.000001 && m[i] > -0.000001 ? '0,' : m[i] + ',';
-    }
-    result += m[15] + ')';
-    return result;
-  }
-  var _setMatrix;
-  if (usePrefix) {
-    _setMatrix = function(element, matrix) {
-      element.style.webkitTransform = _formatCSSTransform(matrix);
-    };
-  } else {
-    _setMatrix = function(element, matrix) {
-      element.style.transform = _formatCSSTransform(matrix);
-    };
-  }
-  function _formatCSSOrigin(origin) {
-    return 100 * origin[0] + '% ' + 100 * origin[1] + '%';
-  }
-  var _setOrigin = usePrefix ? function(element, origin) {
-    element.style.webkitTransformOrigin = _formatCSSOrigin(origin);
-  } : function(element, origin) {
-    element.style.transformOrigin = _formatCSSOrigin(origin);
-  };
-  var _setInvisible = usePrefix ? function(element) {
-    element.style.webkitTransform = 'scale3d(0.0001,0.0001,0.0001)';
-    element.style.opacity = 0;
-  } : function(element) {
-    element.style.transform = 'scale3d(0.0001,0.0001,0.0001)';
-    element.style.opacity = 0;
-  };
-  function _xyNotEquals(a, b) {
-    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
-  }
-  ElementOutput.prototype.commit = function commit(context) {
-    var target = this._element;
-    if (!target)
-      return ;
-    var matrix = context.transform;
-    var opacity = context.opacity;
-    var origin = context.origin;
-    var size = context.size;
-    if (!matrix && this._matrix) {
-      this._matrix = null;
-      this._opacity = 0;
-      _setInvisible(target);
-      return ;
-    }
-    if (_xyNotEquals(this._origin, origin))
-      this._originDirty = true;
-    if (Transform.notEquals(this._matrix, matrix))
-      this._transformDirty = true;
-    if (this._invisible) {
-      this._invisible = false;
-      this._element.style.display = '';
-    }
-    if (this._opacity !== opacity) {
-      this._opacity = opacity;
-      target.style.opacity = opacity >= 1 ? '0.999999' : opacity;
-    }
-    if (this._transformDirty || this._originDirty || this._sizeDirty) {
-      if (this._sizeDirty)
-        this._sizeDirty = false;
-      if (this._originDirty) {
-        if (origin) {
-          if (!this._origin)
-            this._origin = [0, 0];
-          this._origin[0] = origin[0];
-          this._origin[1] = origin[1];
-        } else
-          this._origin = null;
-        _setOrigin(target, this._origin);
-        this._originDirty = false;
+  var Easing = {
+    inQuad: function(t) {
+      return t * t;
+    },
+    outQuad: function(t) {
+      return -(t -= 1) * t + 1;
+    },
+    inOutQuad: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t;
+      return -0.5 * (--t * (t - 2) - 1);
+    },
+    inCubic: function(t) {
+      return t * t * t;
+    },
+    outCubic: function(t) {
+      return --t * t * t + 1;
+    },
+    inOutCubic: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t;
+      return 0.5 * ((t -= 2) * t * t + 2);
+    },
+    inQuart: function(t) {
+      return t * t * t * t;
+    },
+    outQuart: function(t) {
+      return -(--t * t * t * t - 1);
+    },
+    inOutQuart: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t * t;
+      return -0.5 * ((t -= 2) * t * t * t - 2);
+    },
+    inQuint: function(t) {
+      return t * t * t * t * t;
+    },
+    outQuint: function(t) {
+      return --t * t * t * t * t + 1;
+    },
+    inOutQuint: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t * t * t;
+      return 0.5 * ((t -= 2) * t * t * t * t + 2);
+    },
+    inSine: function(t) {
+      return -1 * Math.cos(t * (Math.PI / 2)) + 1;
+    },
+    outSine: function(t) {
+      return Math.sin(t * (Math.PI / 2));
+    },
+    inOutSine: function(t) {
+      return -0.5 * (Math.cos(Math.PI * t) - 1);
+    },
+    inExpo: function(t) {
+      return t === 0 ? 0 : Math.pow(2, 10 * (t - 1));
+    },
+    outExpo: function(t) {
+      return t === 1 ? 1 : -Math.pow(2, -10 * t) + 1;
+    },
+    inOutExpo: function(t) {
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if ((t /= 0.5) < 1)
+        return 0.5 * Math.pow(2, 10 * (t - 1));
+      return 0.5 * (-Math.pow(2, -10 * --t) + 2);
+    },
+    inCirc: function(t) {
+      return -(Math.sqrt(1 - t * t) - 1);
+    },
+    outCirc: function(t) {
+      return Math.sqrt(1 - --t * t);
+    },
+    inOutCirc: function(t) {
+      if ((t /= 0.5) < 1)
+        return -0.5 * (Math.sqrt(1 - t * t) - 1);
+      return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
+    },
+    inElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if (!p)
+        p = 0.3;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
+    },
+    outElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if (!p)
+        p = 0.3;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      return a * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) + 1;
+    },
+    inOutElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if ((t /= 0.5) === 2)
+        return 1;
+      if (!p)
+        p = 0.3 * 1.5;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      if (t < 1)
+        return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
+      return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p) * 0.5 + 1;
+    },
+    inBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      return t * t * ((s + 1) * t - s);
+    },
+    outBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      return --t * t * ((s + 1) * t + s) + 1;
+    },
+    inOutBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      if ((t /= 0.5) < 1)
+        return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
+      return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
+    },
+    inBounce: function(t) {
+      return 1 - Easing.outBounce(1 - t);
+    },
+    outBounce: function(t) {
+      if (t < 1 / 2.75) {
+        return 7.5625 * t * t;
+      } else if (t < 2 / 2.75) {
+        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+      } else if (t < 2.5 / 2.75) {
+        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+      } else {
+        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
       }
-      if (!matrix)
-        matrix = Transform.identity;
-      this._matrix = matrix;
-      var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0] * origin[0], -this._size[1] * origin[1], 0]) : matrix;
-      _setMatrix(target, aaMatrix);
-      this._transformDirty = false;
+    },
+    inOutBounce: function(t) {
+      if (t < 0.5)
+        return Easing.inBounce(t * 2) * 0.5;
+      return Easing.outBounce(t * 2 - 1) * 0.5 + 0.5;
     }
   };
-  ElementOutput.prototype.cleanup = function cleanup() {
-    if (this._element) {
-      this._invisible = true;
-      this._element.style.display = 'none';
-    }
-  };
-  ElementOutput.prototype.attach = function attach(target) {
-    this._element = target;
-    _addEventListeners.call(this, target);
-  };
-  ElementOutput.prototype.detach = function detach() {
-    var target = this._element;
-    if (target) {
-      _removeEventListeners.call(this, target);
-      if (this._invisible) {
-        this._invisible = false;
-        this._element.style.display = '';
-      }
-    }
-    this._element = null;
-    return target;
-  };
-  module.exports = ElementOutput;
+  module.exports = Easing;
   global.define = __define;
   return module.exports;
 });
@@ -5087,7 +5078,7 @@ System.register("npm:famous@0.3.5/core/ViewSequence", [], true, function(require
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:famous@0.3.5/utilities/Utility"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:famous@0.3.5/utilities/Utility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Utility = require("npm:famous@0.3.5/utilities/Utility");
     function LayoutUtility() {}
@@ -5242,7 +5233,7 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:
 })();
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", [], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext", [], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     function LayoutContext(methods) {
       for (var n in methods) {
@@ -5265,10 +5256,10 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", [], fa
 })();
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", ["npm:famous@0.3.5/core/Transform", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", ["npm:famous@0.3.5/core/Transform", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Transform = require("npm:famous@0.3.5/core/Transform");
-    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
     function LayoutNode(renderNode, spec) {
       this.renderNode = renderNode;
       this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
@@ -5889,1252 +5880,6 @@ System.register("npm:famous@0.3.5/physics/PhysicsEngine", ["npm:famous@0.3.5/cor
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
-    function LayoutDockHelper(context, options) {
-      var size = context.size;
-      this._size = size;
-      this._context = context;
-      this._options = options;
-      this._z = (options && options.translateZ) ? options.translateZ : 0;
-      if (options && options.margins) {
-        var margins = LayoutUtility.normalizeMargins(options.margins);
-        this._left = margins[3];
-        this._top = margins[0];
-        this._right = size[0] - margins[1];
-        this._bottom = size[1] - margins[2];
-      } else {
-        this._left = 0;
-        this._top = 0;
-        this._right = size[0];
-        this._bottom = size[1];
-      }
-    }
-    LayoutDockHelper.prototype.parse = function(data) {
-      for (var i = 0; i < data.length; i++) {
-        var rule = data[i];
-        var value = (rule.length >= 3) ? rule[2] : undefined;
-        if (rule[0] === 'top') {
-          this.top(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
-        } else if (rule[0] === 'left') {
-          this.left(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
-        } else if (rule[0] === 'right') {
-          this.right(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
-        } else if (rule[0] === 'bottom') {
-          this.bottom(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
-        } else if (rule[0] === 'fill') {
-          this.fill(rule[1], (rule.length >= 3) ? rule[2] : undefined);
-        } else if (rule[0] === 'margins') {
-          this.margins(rule[1]);
-        }
-      }
-    };
-    LayoutDockHelper.prototype.top = function(node, height, z) {
-      if (height instanceof Array) {
-        height = height[1];
-      }
-      if (height === undefined) {
-        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-        height = size[1];
-      }
-      this._context.set(node, {
-        size: [this._right - this._left, height],
-        origin: [0, 0],
-        align: [0, 0],
-        translate: [this._left, this._top, (z === undefined) ? this._z : z]
-      });
-      this._top += height;
-      return this;
-    };
-    LayoutDockHelper.prototype.left = function(node, width, z) {
-      if (width instanceof Array) {
-        width = width[0];
-      }
-      if (width === undefined) {
-        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-        width = size[0];
-      }
-      this._context.set(node, {
-        size: [width, this._bottom - this._top],
-        origin: [0, 0],
-        align: [0, 0],
-        translate: [this._left, this._top, (z === undefined) ? this._z : z]
-      });
-      this._left += width;
-      return this;
-    };
-    LayoutDockHelper.prototype.bottom = function(node, height, z) {
-      if (height instanceof Array) {
-        height = height[1];
-      }
-      if (height === undefined) {
-        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-        height = size[1];
-      }
-      this._context.set(node, {
-        size: [this._right - this._left, height],
-        origin: [0, 1],
-        align: [0, 1],
-        translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
-      });
-      this._bottom -= height;
-      return this;
-    };
-    LayoutDockHelper.prototype.right = function(node, width, z) {
-      if (width instanceof Array) {
-        width = width[0];
-      }
-      if (node) {
-        if (width === undefined) {
-          var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
-          width = size[0];
-        }
-        this._context.set(node, {
-          size: [width, this._bottom - this._top],
-          origin: [1, 0],
-          align: [1, 0],
-          translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
-        });
-      }
-      if (width) {
-        this._right -= width;
-      }
-      return this;
-    };
-    LayoutDockHelper.prototype.fill = function(node, z) {
-      this._context.set(node, {
-        size: [this._right - this._left, this._bottom - this._top],
-        translate: [this._left, this._top, (z === undefined) ? this._z : z]
-      });
-      return this;
-    };
-    LayoutDockHelper.prototype.margins = function(margins) {
-      margins = LayoutUtility.normalizeMargins(margins);
-      this._left += margins[3];
-      this._top += margins[0];
-      this._right -= margins[1];
-      this._bottom -= margins[2];
-      return this;
-    };
-    LayoutUtility.registerHelper('dock', LayoutDockHelper);
-    module.exports = LayoutDockHelper;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var Utility = require("npm:famous@0.3.5/utilities/Utility");
-    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
-    var capabilities = {
-      sequence: true,
-      direction: [Utility.Direction.X, Utility.Direction.Y],
-      trueSize: true
-    };
-    var size;
-    var direction;
-    var revDirection;
-    var items;
-    var spacers;
-    var margins;
-    var spacing;
-    var sizeLeft;
-    var set = {
-      size: [0, 0],
-      translate: [0, 0, 0],
-      align: [0, 0],
-      origin: [0, 0]
-    };
-    var nodeSize;
-    var offset;
-    var zIncrement;
-    function TabBarLayout(context, options) {
-      size = context.size;
-      direction = context.direction;
-      revDirection = direction ? 0 : 1;
-      spacing = options.spacing || 0;
-      items = context.get('items');
-      spacers = context.get('spacers');
-      margins = LayoutUtility.normalizeMargins(options.margins);
-      zIncrement = options.zIncrement || 0.001;
-      set.size[0] = context.size[0];
-      set.size[1] = context.size[1];
-      set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
-      set.translate[0] = 0;
-      set.translate[1] = 0;
-      set.translate[2] = zIncrement;
-      set.translate[revDirection] = margins[direction ? 3 : 0];
-      set.align[0] = 0;
-      set.align[1] = 0;
-      set.origin[0] = 0;
-      set.origin[1] = 0;
-      offset = direction ? margins[0] : margins[3];
-      sizeLeft = size[direction] - (offset + (direction ? margins[2] : margins[1]));
-      sizeLeft -= ((items.length - 1) * spacing);
-      for (var i = 0; i < items.length; i++) {
-        if (options.itemSize === undefined) {
-          nodeSize = Math.round(sizeLeft / (items.length - i));
-        } else {
-          nodeSize = (options.itemSize === true) ? context.resolveSize(items[i], size)[direction] : options.itemSize;
-        }
-        set.scrollLength = nodeSize;
-        if (i === 0) {
-          set.scrollLength += direction ? margins[0] : margins[3];
-        }
-        if (i === (items.length - 1)) {
-          set.scrollLength += direction ? margins[2] : margins[1];
-        } else {
-          set.scrollLength += spacing;
-        }
-        set.size[direction] = nodeSize;
-        set.translate[direction] = offset;
-        context.set(items[i], set);
-        offset += nodeSize;
-        sizeLeft -= nodeSize;
-        if (i === options.selectedItemIndex) {
-          set.scrollLength = 0;
-          set.translate[direction] += (nodeSize / 2);
-          set.translate[2] = zIncrement * 2;
-          set.origin[direction] = 0.5;
-          context.set('selectedItemOverlay', set);
-          set.origin[direction] = 0;
-          set.translate[2] = zIncrement;
-        }
-        if (i < (items.length - 1)) {
-          if (spacers && (i < spacers.length)) {
-            set.size[direction] = spacing;
-            set.translate[direction] = offset;
-            context.set(spacers[i], set);
-          }
-          offset += spacing;
-        } else {
-          offset += direction ? margins[2] : margins[1];
-        }
-      }
-      set.scrollLength = 0;
-      set.size[0] = size[0];
-      set.size[1] = size[1];
-      set.size[direction] = size[direction];
-      set.translate[0] = 0;
-      set.translate[1] = 0;
-      set.translate[2] = 0;
-      set.translate[direction] = 0;
-      context.set('background', set);
-    }
-    TabBarLayout.Capabilities = capabilities;
-    TabBarLayout.Name = 'TabBarLayout';
-    TabBarLayout.Description = 'TabBar widget layout';
-    module.exports = TabBarLayout;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var prefix = typeof Object.create !== 'function' ? '~' : false;
-  function EE(fn, context, once) {
-    this.fn = fn;
-    this.context = context;
-    this.once = once || false;
-  }
-  function EventEmitter() {}
-  EventEmitter.prototype._events = undefined;
-  EventEmitter.prototype.listeners = function listeners(event, exists) {
-    var evt = prefix ? prefix + event : event,
-        available = this._events && this._events[evt];
-    if (exists)
-      return !!available;
-    if (!available)
-      return [];
-    if (this._events[evt].fn)
-      return [this._events[evt].fn];
-    for (var i = 0,
-        l = this._events[evt].length,
-        ee = new Array(l); i < l; i++) {
-      ee[i] = this._events[evt][i].fn;
-    }
-    return ee;
-  };
-  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return false;
-    var listeners = this._events[evt],
-        len = arguments.length,
-        args,
-        i;
-    if ('function' === typeof listeners.fn) {
-      if (listeners.once)
-        this.removeListener(event, listeners.fn, undefined, true);
-      switch (len) {
-        case 1:
-          return listeners.fn.call(listeners.context), true;
-        case 2:
-          return listeners.fn.call(listeners.context, a1), true;
-        case 3:
-          return listeners.fn.call(listeners.context, a1, a2), true;
-        case 4:
-          return listeners.fn.call(listeners.context, a1, a2, a3), true;
-        case 5:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-        case 6:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-      }
-      for (i = 1, args = new Array(len - 1); i < len; i++) {
-        args[i - 1] = arguments[i];
-      }
-      listeners.fn.apply(listeners.context, args);
-    } else {
-      var length = listeners.length,
-          j;
-      for (i = 0; i < length; i++) {
-        if (listeners[i].once)
-          this.removeListener(event, listeners[i].fn, undefined, true);
-        switch (len) {
-          case 1:
-            listeners[i].fn.call(listeners[i].context);
-            break;
-          case 2:
-            listeners[i].fn.call(listeners[i].context, a1);
-            break;
-          case 3:
-            listeners[i].fn.call(listeners[i].context, a1, a2);
-            break;
-          default:
-            if (!args)
-              for (j = 1, args = new Array(len - 1); j < len; j++) {
-                args[j - 1] = arguments[j];
-              }
-            listeners[i].fn.apply(listeners[i].context, args);
-        }
-      }
-    }
-    return true;
-  };
-  EventEmitter.prototype.on = function on(event, fn, context) {
-    var listener = new EE(fn, context || this),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.once = function once(event, fn, context) {
-    var listener = new EE(fn, context || this, true),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return this;
-    var listeners = this._events[evt],
-        events = [];
-    if (fn) {
-      if (listeners.fn) {
-        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
-          events.push(listeners);
-        }
-      } else {
-        for (var i = 0,
-            length = listeners.length; i < length; i++) {
-          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
-            events.push(listeners[i]);
-          }
-        }
-      }
-    }
-    if (events.length) {
-      this._events[evt] = events.length === 1 ? events[0] : events;
-    } else {
-      delete this._events[evt];
-    }
-    return this;
-  };
-  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
-    if (!this._events)
-      return this;
-    if (event)
-      delete this._events[prefix ? prefix + event : event];
-    else
-      this._events = prefix ? {} : Object.create(null);
-    return this;
-  };
-  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
-    return this;
-  };
-  EventEmitter.prefixed = prefix;
-  module.exports = EventEmitter;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/transitions/Easing", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Easing = {
-    inQuad: function(t) {
-      return t * t;
-    },
-    outQuad: function(t) {
-      return -(t -= 1) * t + 1;
-    },
-    inOutQuad: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t;
-      return -0.5 * (--t * (t - 2) - 1);
-    },
-    inCubic: function(t) {
-      return t * t * t;
-    },
-    outCubic: function(t) {
-      return --t * t * t + 1;
-    },
-    inOutCubic: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t;
-      return 0.5 * ((t -= 2) * t * t + 2);
-    },
-    inQuart: function(t) {
-      return t * t * t * t;
-    },
-    outQuart: function(t) {
-      return -(--t * t * t * t - 1);
-    },
-    inOutQuart: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t * t;
-      return -0.5 * ((t -= 2) * t * t * t - 2);
-    },
-    inQuint: function(t) {
-      return t * t * t * t * t;
-    },
-    outQuint: function(t) {
-      return --t * t * t * t * t + 1;
-    },
-    inOutQuint: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t * t * t;
-      return 0.5 * ((t -= 2) * t * t * t * t + 2);
-    },
-    inSine: function(t) {
-      return -1 * Math.cos(t * (Math.PI / 2)) + 1;
-    },
-    outSine: function(t) {
-      return Math.sin(t * (Math.PI / 2));
-    },
-    inOutSine: function(t) {
-      return -0.5 * (Math.cos(Math.PI * t) - 1);
-    },
-    inExpo: function(t) {
-      return t === 0 ? 0 : Math.pow(2, 10 * (t - 1));
-    },
-    outExpo: function(t) {
-      return t === 1 ? 1 : -Math.pow(2, -10 * t) + 1;
-    },
-    inOutExpo: function(t) {
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if ((t /= 0.5) < 1)
-        return 0.5 * Math.pow(2, 10 * (t - 1));
-      return 0.5 * (-Math.pow(2, -10 * --t) + 2);
-    },
-    inCirc: function(t) {
-      return -(Math.sqrt(1 - t * t) - 1);
-    },
-    outCirc: function(t) {
-      return Math.sqrt(1 - --t * t);
-    },
-    inOutCirc: function(t) {
-      if ((t /= 0.5) < 1)
-        return -0.5 * (Math.sqrt(1 - t * t) - 1);
-      return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
-    },
-    inElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if (!p)
-        p = 0.3;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
-    },
-    outElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if (!p)
-        p = 0.3;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      return a * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) + 1;
-    },
-    inOutElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if ((t /= 0.5) === 2)
-        return 1;
-      if (!p)
-        p = 0.3 * 1.5;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      if (t < 1)
-        return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
-      return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p) * 0.5 + 1;
-    },
-    inBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      return t * t * ((s + 1) * t - s);
-    },
-    outBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      return --t * t * ((s + 1) * t + s) + 1;
-    },
-    inOutBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      if ((t /= 0.5) < 1)
-        return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
-      return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
-    },
-    inBounce: function(t) {
-      return 1 - Easing.outBounce(1 - t);
-    },
-    outBounce: function(t) {
-      if (t < 1 / 2.75) {
-        return 7.5625 * t * t;
-      } else if (t < 2 / 2.75) {
-        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-      } else if (t < 2.5 / 2.75) {
-        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-      } else {
-        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-      }
-    },
-    inOutBounce: function(t) {
-      if (t < 0.5)
-        return Easing.inBounce(t * 2) * 0.5;
-      return Easing.outBounce(t * 2 - 1) * 0.5 + 0.5;
-    }
-  };
-  module.exports = Easing;
-  global.define = __define;
-  return module.exports;
-});
-
-(function() {
-function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:famous@0.3.5/utilities/Utility"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var Utility = require("npm:famous@0.3.5/utilities/Utility");
-    function LayoutUtility() {}
-    LayoutUtility.registeredHelpers = {};
-    var Capabilities = {
-      SEQUENCE: 1,
-      DIRECTION_X: 2,
-      DIRECTION_Y: 4,
-      SCROLLING: 8
-    };
-    LayoutUtility.Capabilities = Capabilities;
-    LayoutUtility.normalizeMargins = function(margins) {
-      if (!margins) {
-        return [0, 0, 0, 0];
-      } else if (!Array.isArray(margins)) {
-        return [margins, margins, margins, margins];
-      } else if (margins.length === 0) {
-        return [0, 0, 0, 0];
-      } else if (margins.length === 1) {
-        return [margins[0], margins[0], margins[0], margins[0]];
-      } else if (margins.length === 2) {
-        return [margins[0], margins[1], margins[0], margins[1]];
-      } else {
-        return margins;
-      }
-    };
-    LayoutUtility.cloneSpec = function(spec) {
-      var clone = {};
-      if (spec.opacity !== undefined) {
-        clone.opacity = spec.opacity;
-      }
-      if (spec.size !== undefined) {
-        clone.size = spec.size.slice(0);
-      }
-      if (spec.transform !== undefined) {
-        clone.transform = spec.transform.slice(0);
-      }
-      if (spec.origin !== undefined) {
-        clone.origin = spec.origin.slice(0);
-      }
-      if (spec.align !== undefined) {
-        clone.align = spec.align.slice(0);
-      }
-      return clone;
-    };
-    function _isEqualArray(a, b) {
-      if (a === b) {
-        return true;
-      }
-      if ((a === undefined) || (b === undefined)) {
-        return false;
-      }
-      var i = a.length;
-      if (i !== b.length) {
-        return false;
-      }
-      while (i--) {
-        if (a[i] !== b[i]) {
-          return false;
-        }
-      }
-      return true;
-    }
-    LayoutUtility.isEqualSpec = function(spec1, spec2) {
-      if (spec1.opacity !== spec2.opacity) {
-        return false;
-      }
-      if (!_isEqualArray(spec1.size, spec2.size)) {
-        return false;
-      }
-      if (!_isEqualArray(spec1.transform, spec2.transform)) {
-        return false;
-      }
-      if (!_isEqualArray(spec1.origin, spec2.origin)) {
-        return false;
-      }
-      if (!_isEqualArray(spec1.align, spec2.align)) {
-        return false;
-      }
-      return true;
-    };
-    LayoutUtility.getSpecDiffText = function(spec1, spec2) {
-      var result = 'spec diff:';
-      if (spec1.opacity !== spec2.opacity) {
-        result += '\nopacity: ' + spec1.opacity + ' != ' + spec2.opacity;
-      }
-      if (!_isEqualArray(spec1.size, spec2.size)) {
-        result += '\nsize: ' + JSON.stringify(spec1.size) + ' != ' + JSON.stringify(spec2.size);
-      }
-      if (!_isEqualArray(spec1.transform, spec2.transform)) {
-        result += '\ntransform: ' + JSON.stringify(spec1.transform) + ' != ' + JSON.stringify(spec2.transform);
-      }
-      if (!_isEqualArray(spec1.origin, spec2.origin)) {
-        result += '\norigin: ' + JSON.stringify(spec1.origin) + ' != ' + JSON.stringify(spec2.origin);
-      }
-      if (!_isEqualArray(spec1.align, spec2.align)) {
-        result += '\nalign: ' + JSON.stringify(spec1.align) + ' != ' + JSON.stringify(spec2.align);
-      }
-      return result;
-    };
-    LayoutUtility.error = function(message) {
-      console.log('ERROR: ' + message);
-      throw message;
-    };
-    LayoutUtility.warning = function(message) {
-      console.log('WARNING: ' + message);
-    };
-    LayoutUtility.log = function(args) {
-      var message = '';
-      for (var i = 0; i < arguments.length; i++) {
-        var arg = arguments[i];
-        if ((arg instanceof Object) || (arg instanceof Array)) {
-          message += JSON.stringify(arg);
-        } else {
-          message += arg;
-        }
-      }
-      console.log(message);
-    };
-    LayoutUtility.combineOptions = function(options1, options2, forceClone) {
-      if (options1 && !options2 && !forceClone) {
-        return options1;
-      } else if (!options1 && options2 && !forceClone) {
-        return options2;
-      }
-      var options = Utility.clone(options1 || {});
-      if (options2) {
-        for (var key in options2) {
-          options[key] = options2[key];
-        }
-      }
-      return options;
-    };
-    LayoutUtility.registerHelper = function(name, Helper) {
-      if (!Helper.prototype.parse) {
-        LayoutUtility.error('The layout-helper for name "' + name + '" is required to support the "parse" method');
-      }
-      if (this.registeredHelpers[name] !== undefined) {
-        LayoutUtility.warning('A layout-helper with the name "' + name + '" is already registered and will be overwritten');
-      }
-      this.registeredHelpers[name] = Helper;
-    };
-    LayoutUtility.unregisterHelper = function(name) {
-      delete this.registeredHelpers[name];
-    };
-    LayoutUtility.getRegisteredHelper = function(name) {
-      return this.registeredHelpers[name];
-    };
-    module.exports = LayoutUtility;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext", [], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    function LayoutContext(methods) {
-      for (var n in methods) {
-        this[n] = methods[n];
-      }
-    }
-    LayoutContext.prototype.size = undefined;
-    LayoutContext.prototype.direction = undefined;
-    LayoutContext.prototype.scrollOffset = undefined;
-    LayoutContext.prototype.scrollStart = undefined;
-    LayoutContext.prototype.scrollEnd = undefined;
-    LayoutContext.prototype.next = function() {};
-    LayoutContext.prototype.prev = function() {};
-    LayoutContext.prototype.get = function(node) {};
-    LayoutContext.prototype.set = function(node, set) {};
-    LayoutContext.prototype.resolveSize = function(node) {};
-    module.exports = LayoutContext;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", ["npm:famous@0.3.5/core/Transform", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var Transform = require("npm:famous@0.3.5/core/Transform");
-    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
-    function LayoutNode(renderNode, spec) {
-      this.renderNode = renderNode;
-      this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
-      this._spec.renderNode = renderNode;
-      this._specModified = true;
-      this._invalidated = false;
-      this._removing = false;
-    }
-    LayoutNode.prototype.setRenderNode = function(renderNode) {
-      this.renderNode = renderNode;
-      this._spec.renderNode = renderNode;
-    };
-    LayoutNode.prototype.setOptions = function(options) {};
-    LayoutNode.prototype.destroy = function() {
-      this.renderNode = undefined;
-      this._spec.renderNode = undefined;
-      this._viewSequence = undefined;
-    };
-    LayoutNode.prototype.reset = function() {
-      this._invalidated = false;
-      this.trueSizeRequested = false;
-    };
-    LayoutNode.prototype.setSpec = function(spec) {
-      this._specModified = true;
-      if (spec.align) {
-        if (!spec.align) {
-          this._spec.align = [0, 0];
-        }
-        this._spec.align[0] = spec.align[0];
-        this._spec.align[1] = spec.align[1];
-      } else {
-        this._spec.align = undefined;
-      }
-      if (spec.origin) {
-        if (!spec.origin) {
-          this._spec.origin = [0, 0];
-        }
-        this._spec.origin[0] = spec.origin[0];
-        this._spec.origin[1] = spec.origin[1];
-      } else {
-        this._spec.origin = undefined;
-      }
-      if (spec.size) {
-        if (!spec.size) {
-          this._spec.size = [0, 0];
-        }
-        this._spec.size[0] = spec.size[0];
-        this._spec.size[1] = spec.size[1];
-      } else {
-        this._spec.size = undefined;
-      }
-      if (spec.transform) {
-        if (!spec.transform) {
-          this._spec.transform = spec.transform.slice(0);
-        } else {
-          for (var i = 0; i < 16; i++) {
-            this._spec.transform[i] = spec.transform[i];
-          }
-        }
-      } else {
-        this._spec.transform = undefined;
-      }
-      this._spec.opacity = spec.opacity;
-    };
-    LayoutNode.prototype.set = function(set, size) {
-      this._invalidated = true;
-      this._specModified = true;
-      this._removing = false;
-      var spec = this._spec;
-      spec.opacity = set.opacity;
-      if (set.size) {
-        if (!spec.size) {
-          spec.size = [0, 0];
-        }
-        spec.size[0] = set.size[0];
-        spec.size[1] = set.size[1];
-      } else {
-        spec.size = undefined;
-      }
-      if (set.origin) {
-        if (!spec.origin) {
-          spec.origin = [0, 0];
-        }
-        spec.origin[0] = set.origin[0];
-        spec.origin[1] = set.origin[1];
-      } else {
-        spec.origin = undefined;
-      }
-      if (set.align) {
-        if (!spec.align) {
-          spec.align = [0, 0];
-        }
-        spec.align[0] = set.align[0];
-        spec.align[1] = set.align[1];
-      } else {
-        spec.align = undefined;
-      }
-      if (set.skew || set.rotate || set.scale) {
-        this._spec.transform = Transform.build({
-          translate: set.translate || [0, 0, 0],
-          skew: set.skew || [0, 0, 0],
-          scale: set.scale || [1, 1, 1],
-          rotate: set.rotate || [0, 0, 0]
-        });
-      } else if (set.translate) {
-        this._spec.transform = Transform.translate(set.translate[0], set.translate[1], set.translate[2]);
-      } else {
-        this._spec.transform = undefined;
-      }
-      this.scrollLength = set.scrollLength;
-    };
-    LayoutNode.prototype.getSpec = function() {
-      this._specModified = false;
-      this._spec.removed = !this._invalidated;
-      return this._spec;
-    };
-    LayoutNode.prototype.remove = function(removeSpec) {
-      this._removing = true;
-    };
-    module.exports = LayoutNode;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/physics/PhysicsEngine", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "npm:famous@0.3.5/transitions/Transitionable"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
-    var Transform = require("npm:famous@0.3.5/core/Transform");
-    var Vector = require("npm:famous@0.3.5/math/Vector");
-    var Particle = require("npm:famous@0.3.5/physics/bodies/Particle");
-    var Spring = require("npm:famous@0.3.5/physics/forces/Spring");
-    var PhysicsEngine = require("npm:famous@0.3.5/physics/PhysicsEngine");
-    var LayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
-    var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
-    function FlowLayoutNode(renderNode, spec) {
-      LayoutNode.apply(this, arguments);
-      if (!this.options) {
-        this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
-        this._optionsManager = new OptionsManager(this.options);
-      }
-      if (!this._pe) {
-        this._pe = new PhysicsEngine();
-        this._pe.sleep();
-      }
-      if (!this._properties) {
-        this._properties = {};
-      } else {
-        for (var propName in this._properties) {
-          this._properties[propName].init = false;
-        }
-      }
-      if (!this._lockTransitionable) {
-        this._lockTransitionable = new Transitionable(1);
-      } else {
-        this._lockTransitionable.halt();
-        this._lockTransitionable.reset(1);
-      }
-      this._specModified = true;
-      this._initial = true;
-      this._spec.endState = {};
-      if (spec) {
-        this.setSpec(spec);
-      }
-    }
-    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
-    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
-    FlowLayoutNode.DEFAULT_OPTIONS = {
-      spring: {
-        dampingRatio: 0.8,
-        period: 300
-      },
-      properties: {
-        opacity: true,
-        align: true,
-        origin: true,
-        size: true,
-        translate: true,
-        skew: true,
-        rotate: true,
-        scale: true
-      },
-      particleRounding: 0.001
-    };
-    var DEFAULT = {
-      opacity: 1,
-      opacity2D: [1, 0],
-      size: [0, 0],
-      origin: [0, 0],
-      align: [0, 0],
-      scale: [1, 1, 1],
-      translate: [0, 0, 0],
-      rotate: [0, 0, 0],
-      skew: [0, 0, 0]
-    };
-    FlowLayoutNode.prototype.setOptions = function(options) {
-      this._optionsManager.setOptions(options);
-      var wasSleeping = this._pe.isSleeping();
-      for (var propName in this._properties) {
-        var prop = this._properties[propName];
-        if (options.spring && prop.force) {
-          prop.force.setOptions(this.options.spring);
-        }
-        if (options.properties && (options.properties[propName] !== undefined)) {
-          if (this.options.properties[propName].length) {
-            prop.enabled = this.options.properties[propName];
-          } else {
-            prop.enabled = [this.options.properties[propName], this.options.properties[propName], this.options.properties[propName]];
-          }
-        }
-      }
-      if (wasSleeping) {
-        this._pe.sleep();
-      }
-      return this;
-    };
-    FlowLayoutNode.prototype.setSpec = function(spec) {
-      var set;
-      if (spec.transform) {
-        set = Transform.interpret(spec.transform);
-      }
-      if (!set) {
-        set = {};
-      }
-      set.opacity = spec.opacity;
-      set.size = spec.size;
-      set.align = spec.align;
-      set.origin = spec.origin;
-      var oldRemoving = this._removing;
-      var oldInvalidated = this._invalidated;
-      this.set(set);
-      this._removing = oldRemoving;
-      this._invalidated = oldInvalidated;
-    };
-    FlowLayoutNode.prototype.reset = function() {
-      if (this._invalidated) {
-        for (var propName in this._properties) {
-          this._properties[propName].invalidated = false;
-        }
-        this._invalidated = false;
-      }
-      this.trueSizeRequested = false;
-      this.usesTrueSize = false;
-    };
-    FlowLayoutNode.prototype.remove = function(removeSpec) {
-      this._removing = true;
-      if (removeSpec) {
-        this.setSpec(removeSpec);
-      } else {
-        this._pe.sleep();
-        this._specModified = false;
-      }
-      this._invalidated = false;
-    };
-    FlowLayoutNode.prototype.releaseLock = function(enable) {
-      this._lockTransitionable.halt();
-      this._lockTransitionable.reset(0);
-      if (enable) {
-        this._lockTransitionable.set(1, {duration: this.options.spring.period || 1000});
-      }
-    };
-    function _getRoundedValue3D(prop, def, precision, lockValue) {
-      if (!prop || !prop.init) {
-        return def;
-      }
-      return [prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / precision) * precision) : prop.endState.x, prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / precision) * precision) : prop.endState.y, prop.enabled[2] ? (Math.round((prop.curState.z + ((prop.endState.z - prop.curState.z) * lockValue)) / precision) * precision) : prop.endState.z];
-    }
-    FlowLayoutNode.prototype.getSpec = function() {
-      var endStateReached = this._pe.isSleeping();
-      if (!this._specModified && endStateReached) {
-        this._spec.removed = !this._invalidated;
-        return this._spec;
-      }
-      this._initial = false;
-      this._specModified = !endStateReached;
-      this._spec.removed = false;
-      if (!endStateReached) {
-        this._pe.step();
-      }
-      var spec = this._spec;
-      var precision = this.options.particleRounding;
-      var lockValue = this._lockTransitionable.get();
-      var prop = this._properties.opacity;
-      if (prop && prop.init) {
-        spec.opacity = prop.enabled[0] ? (Math.round(Math.max(0, Math.min(1, prop.curState.x)) / precision) * precision) : prop.endState.x;
-        spec.endState.opacity = prop.endState.x;
-      } else {
-        spec.opacity = undefined;
-        spec.endState.opacity = undefined;
-      }
-      prop = this._properties.size;
-      if (prop && prop.init) {
-        spec.size = spec.size || [0, 0];
-        spec.size[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
-        spec.size[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
-        spec.endState.size = spec.endState.size || [0, 0];
-        spec.endState.size[0] = prop.endState.x;
-        spec.endState.size[1] = prop.endState.y;
-      } else {
-        spec.size = undefined;
-        spec.endState.size = undefined;
-      }
-      prop = this._properties.align;
-      if (prop && prop.init) {
-        spec.align = spec.align || [0, 0];
-        spec.align[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
-        spec.align[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
-        spec.endState.align = spec.endState.align || [0, 0];
-        spec.endState.align[0] = prop.endState.x;
-        spec.endState.align[1] = prop.endState.y;
-      } else {
-        spec.align = undefined;
-        spec.endState.align = undefined;
-      }
-      prop = this._properties.origin;
-      if (prop && prop.init) {
-        spec.origin = spec.origin || [0, 0];
-        spec.origin[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
-        spec.origin[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
-        spec.endState.origin = spec.endState.origin || [0, 0];
-        spec.endState.origin[0] = prop.endState.x;
-        spec.endState.origin[1] = prop.endState.y;
-      } else {
-        spec.origin = undefined;
-        spec.endState.origin = undefined;
-      }
-      var translate = this._properties.translate;
-      var translateX;
-      var translateY;
-      var translateZ;
-      if (translate && translate.init) {
-        translateX = translate.enabled[0] ? (Math.round((translate.curState.x + ((translate.endState.x - translate.curState.x) * lockValue)) / precision) * precision) : translate.endState.x;
-        translateY = translate.enabled[1] ? (Math.round((translate.curState.y + ((translate.endState.y - translate.curState.y) * lockValue)) / precision) * precision) : translate.endState.y;
-        translateZ = translate.enabled[2] ? (Math.round((translate.curState.z + ((translate.endState.z - translate.curState.z) * lockValue)) / precision) * precision) : translate.endState.z;
-      } else {
-        translateX = 0;
-        translateY = 0;
-        translateZ = 0;
-      }
-      var scale = this._properties.scale;
-      var skew = this._properties.skew;
-      var rotate = this._properties.rotate;
-      if (scale || skew || rotate) {
-        spec.transform = Transform.build({
-          translate: [translateX, translateY, translateZ],
-          skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew, this.options.particleRounding, lockValue),
-          scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale, this.options.particleRounding, lockValue),
-          rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate, this.options.particleRounding, lockValue)
-        });
-        spec.endState.transform = Transform.build({
-          translate: translate ? [translate.endState.x, translate.endState.y, translate.endState.z] : DEFAULT.translate,
-          scale: scale ? [scale.endState.x, scale.endState.y, scale.endState.z] : DEFAULT.scale,
-          skew: skew ? [skew.endState.x, skew.endState.y, skew.endState.z] : DEFAULT.skew,
-          rotate: rotate ? [rotate.endState.x, rotate.endState.y, rotate.endState.z] : DEFAULT.rotate
-        });
-      } else if (translate) {
-        if (!spec.transform) {
-          spec.transform = Transform.translate(translateX, translateY, translateZ);
-        } else {
-          spec.transform[12] = translateX;
-          spec.transform[13] = translateY;
-          spec.transform[14] = translateZ;
-        }
-        if (!spec.endState.transform) {
-          spec.endState.transform = Transform.translate(translate.endState.x, translate.endState.y, translate.endState.z);
-        } else {
-          spec.endState.transform[12] = translate.endState.x;
-          spec.endState.transform[13] = translate.endState.y;
-          spec.endState.transform[14] = translate.endState.z;
-        }
-      } else {
-        spec.transform = undefined;
-        spec.endState.transform = undefined;
-      }
-      return this._spec;
-    };
-    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
-      prop = prop || this._properties[propName];
-      if (prop && prop.init) {
-        prop.invalidated = true;
-        var value = defaultValue;
-        if (endState !== undefined) {
-          value = endState;
-        } else if (this._removing) {
-          value = prop.particle.getPosition();
-        }
-        prop.endState.x = value[0];
-        prop.endState.y = (value.length > 1) ? value[1] : 0;
-        prop.endState.z = (value.length > 2) ? value[2] : 0;
-        if (immediate) {
-          prop.curState.x = prop.endState.x;
-          prop.curState.y = prop.endState.y;
-          prop.curState.z = prop.endState.z;
-          prop.velocity.x = 0;
-          prop.velocity.y = 0;
-          prop.velocity.z = 0;
-        } else if ((prop.endState.x !== prop.curState.x) || (prop.endState.y !== prop.curState.y) || (prop.endState.z !== prop.curState.z)) {
-          this._pe.wake();
-        }
-        return ;
-      } else {
-        var wasSleeping = this._pe.isSleeping();
-        if (!prop) {
-          prop = {
-            particle: new Particle({position: (this._initial || immediate) ? endState : defaultValue}),
-            endState: new Vector(endState)
-          };
-          prop.curState = prop.particle.position;
-          prop.velocity = prop.particle.velocity;
-          prop.force = new Spring(this.options.spring);
-          prop.force.setOptions({anchor: prop.endState});
-          this._pe.addBody(prop.particle);
-          prop.forceId = this._pe.attach(prop.force, prop.particle);
-          this._properties[propName] = prop;
-        } else {
-          prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
-          prop.endState.set(endState);
-        }
-        if (!this._initial && !immediate) {
-          this._pe.wake();
-        } else if (wasSleeping) {
-          this._pe.sleep();
-        }
-        if (this.options.properties[propName] && this.options.properties[propName].length) {
-          prop.enabled = this.options.properties[propName];
-        } else {
-          prop.enabled = [this.options.properties[propName], this.options.properties[propName], this.options.properties[propName]];
-        }
-        prop.init = true;
-        prop.invalidated = true;
-      }
-    }
-    function _getIfNE2D(a1, a2) {
-      return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
-    }
-    function _getIfNE3D(a1, a2) {
-      return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
-    }
-    FlowLayoutNode.prototype.set = function(set, defaultSize) {
-      if (defaultSize) {
-        this._removing = false;
-      }
-      this._invalidated = true;
-      this.scrollLength = set.scrollLength;
-      this._specModified = true;
-      var prop = this._properties.opacity;
-      var value = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
-      if ((value !== undefined) || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'opacity', (value === undefined) ? undefined : [value, 0], DEFAULT.opacity2D);
-      }
-      prop = this._properties.align;
-      value = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'align', value, DEFAULT.align);
-      }
-      prop = this._properties.origin;
-      value = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'origin', value, DEFAULT.origin);
-      }
-      prop = this._properties.size;
-      value = set.size || defaultSize;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'size', value, defaultSize, this.usesTrueSize);
-      }
-      prop = this._properties.translate;
-      value = set.translate;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'translate', value, DEFAULT.translate, undefined, true);
-      }
-      prop = this._properties.scale;
-      value = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'scale', value, DEFAULT.scale);
-      }
-      prop = this._properties.rotate;
-      value = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'rotate', value, DEFAULT.rotate);
-      }
-      prop = this._properties.skew;
-      value = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
-      if (value || (prop && prop.init)) {
-        _setPropertyValue.call(this, prop, 'skew', value, DEFAULT.skew);
-      }
-    };
-    module.exports = FlowLayoutNode;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
 System.register("github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
@@ -7695,6 +6440,1261 @@ System.register("npm:famous@0.3.5/core/Engine", ["npm:famous@0.3.5/core/Context"
     }
   });
   module.exports = Engine;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/core/ElementOutput", ["npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Transform"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Entity = require("npm:famous@0.3.5/core/Entity");
+  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+  var Transform = require("npm:famous@0.3.5/core/Transform");
+  var usePrefix = !('transform' in document.documentElement.style);
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  function ElementOutput(element) {
+    this._matrix = null;
+    this._opacity = 1;
+    this._origin = null;
+    this._size = null;
+    this._eventOutput = new EventHandler();
+    this._eventOutput.bindThis(this);
+    this.eventForwarder = function eventForwarder(event) {
+      this._eventOutput.emit(event.type, event);
+    }.bind(this);
+    this.id = Entity.register(this);
+    this._element = null;
+    this._sizeDirty = false;
+    this._originDirty = false;
+    this._transformDirty = false;
+    this._invisible = false;
+    if (element)
+      this.attach(element);
+  }
+  ElementOutput.prototype.on = function on(type, fn) {
+    if (this._element)
+      this._element.addEventListener(type, this.eventForwarder);
+    this._eventOutput.on(type, fn);
+  };
+  ElementOutput.prototype.removeListener = function removeListener(type, fn) {
+    this._eventOutput.removeListener(type, fn);
+  };
+  ElementOutput.prototype.emit = function emit(type, event) {
+    if (event && !event.origin)
+      event.origin = this;
+    var handled = this._eventOutput.emit(type, event);
+    if (handled && event && event.stopPropagation)
+      event.stopPropagation();
+    return handled;
+  };
+  ElementOutput.prototype.pipe = function pipe(target) {
+    return this._eventOutput.pipe(target);
+  };
+  ElementOutput.prototype.unpipe = function unpipe(target) {
+    return this._eventOutput.unpipe(target);
+  };
+  ElementOutput.prototype.render = function render() {
+    return this.id;
+  };
+  function _addEventListeners(target) {
+    for (var i in this._eventOutput.listeners) {
+      target.addEventListener(i, this.eventForwarder);
+    }
+  }
+  function _removeEventListeners(target) {
+    for (var i in this._eventOutput.listeners) {
+      target.removeEventListener(i, this.eventForwarder);
+    }
+  }
+  function _formatCSSTransform(m) {
+    m[12] = Math.round(m[12] * devicePixelRatio) / devicePixelRatio;
+    m[13] = Math.round(m[13] * devicePixelRatio) / devicePixelRatio;
+    var result = 'matrix3d(';
+    for (var i = 0; i < 15; i++) {
+      result += m[i] < 0.000001 && m[i] > -0.000001 ? '0,' : m[i] + ',';
+    }
+    result += m[15] + ')';
+    return result;
+  }
+  var _setMatrix;
+  if (usePrefix) {
+    _setMatrix = function(element, matrix) {
+      element.style.webkitTransform = _formatCSSTransform(matrix);
+    };
+  } else {
+    _setMatrix = function(element, matrix) {
+      element.style.transform = _formatCSSTransform(matrix);
+    };
+  }
+  function _formatCSSOrigin(origin) {
+    return 100 * origin[0] + '% ' + 100 * origin[1] + '%';
+  }
+  var _setOrigin = usePrefix ? function(element, origin) {
+    element.style.webkitTransformOrigin = _formatCSSOrigin(origin);
+  } : function(element, origin) {
+    element.style.transformOrigin = _formatCSSOrigin(origin);
+  };
+  var _setInvisible = usePrefix ? function(element) {
+    element.style.webkitTransform = 'scale3d(0.0001,0.0001,0.0001)';
+    element.style.opacity = 0;
+  } : function(element) {
+    element.style.transform = 'scale3d(0.0001,0.0001,0.0001)';
+    element.style.opacity = 0;
+  };
+  function _xyNotEquals(a, b) {
+    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
+  }
+  ElementOutput.prototype.commit = function commit(context) {
+    var target = this._element;
+    if (!target)
+      return ;
+    var matrix = context.transform;
+    var opacity = context.opacity;
+    var origin = context.origin;
+    var size = context.size;
+    if (!matrix && this._matrix) {
+      this._matrix = null;
+      this._opacity = 0;
+      _setInvisible(target);
+      return ;
+    }
+    if (_xyNotEquals(this._origin, origin))
+      this._originDirty = true;
+    if (Transform.notEquals(this._matrix, matrix))
+      this._transformDirty = true;
+    if (this._invisible) {
+      this._invisible = false;
+      this._element.style.display = '';
+    }
+    if (this._opacity !== opacity) {
+      this._opacity = opacity;
+      target.style.opacity = opacity >= 1 ? '0.999999' : opacity;
+    }
+    if (this._transformDirty || this._originDirty || this._sizeDirty) {
+      if (this._sizeDirty)
+        this._sizeDirty = false;
+      if (this._originDirty) {
+        if (origin) {
+          if (!this._origin)
+            this._origin = [0, 0];
+          this._origin[0] = origin[0];
+          this._origin[1] = origin[1];
+        } else
+          this._origin = null;
+        _setOrigin(target, this._origin);
+        this._originDirty = false;
+      }
+      if (!matrix)
+        matrix = Transform.identity;
+      this._matrix = matrix;
+      var aaMatrix = this._size ? Transform.thenMove(matrix, [-this._size[0] * origin[0], -this._size[1] * origin[1], 0]) : matrix;
+      _setMatrix(target, aaMatrix);
+      this._transformDirty = false;
+    }
+  };
+  ElementOutput.prototype.cleanup = function cleanup() {
+    if (this._element) {
+      this._invisible = true;
+      this._element.style.display = 'none';
+    }
+  };
+  ElementOutput.prototype.attach = function attach(target) {
+    this._element = target;
+    _addEventListeners.call(this, target);
+  };
+  ElementOutput.prototype.detach = function detach() {
+    var target = this._element;
+    if (target) {
+      _removeEventListeners.call(this, target);
+      if (this._invisible) {
+        this._invisible = false;
+        this._element.style.display = '';
+      }
+    }
+    this._element = null;
+    return target;
+  };
+  module.exports = ElementOutput;
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", ["npm:famous@0.3.5/utilities/Utility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Utility = require("npm:famous@0.3.5/utilities/Utility");
+    function LayoutUtility() {}
+    LayoutUtility.registeredHelpers = {};
+    var Capabilities = {
+      SEQUENCE: 1,
+      DIRECTION_X: 2,
+      DIRECTION_Y: 4,
+      SCROLLING: 8
+    };
+    LayoutUtility.Capabilities = Capabilities;
+    LayoutUtility.normalizeMargins = function(margins) {
+      if (!margins) {
+        return [0, 0, 0, 0];
+      } else if (!Array.isArray(margins)) {
+        return [margins, margins, margins, margins];
+      } else if (margins.length === 0) {
+        return [0, 0, 0, 0];
+      } else if (margins.length === 1) {
+        return [margins[0], margins[0], margins[0], margins[0]];
+      } else if (margins.length === 2) {
+        return [margins[0], margins[1], margins[0], margins[1]];
+      } else {
+        return margins;
+      }
+    };
+    LayoutUtility.cloneSpec = function(spec) {
+      var clone = {};
+      if (spec.opacity !== undefined) {
+        clone.opacity = spec.opacity;
+      }
+      if (spec.size !== undefined) {
+        clone.size = spec.size.slice(0);
+      }
+      if (spec.transform !== undefined) {
+        clone.transform = spec.transform.slice(0);
+      }
+      if (spec.origin !== undefined) {
+        clone.origin = spec.origin.slice(0);
+      }
+      if (spec.align !== undefined) {
+        clone.align = spec.align.slice(0);
+      }
+      return clone;
+    };
+    function _isEqualArray(a, b) {
+      if (a === b) {
+        return true;
+      }
+      if ((a === undefined) || (b === undefined)) {
+        return false;
+      }
+      var i = a.length;
+      if (i !== b.length) {
+        return false;
+      }
+      while (i--) {
+        if (a[i] !== b[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
+    LayoutUtility.isEqualSpec = function(spec1, spec2) {
+      if (spec1.opacity !== spec2.opacity) {
+        return false;
+      }
+      if (!_isEqualArray(spec1.size, spec2.size)) {
+        return false;
+      }
+      if (!_isEqualArray(spec1.transform, spec2.transform)) {
+        return false;
+      }
+      if (!_isEqualArray(spec1.origin, spec2.origin)) {
+        return false;
+      }
+      if (!_isEqualArray(spec1.align, spec2.align)) {
+        return false;
+      }
+      return true;
+    };
+    LayoutUtility.getSpecDiffText = function(spec1, spec2) {
+      var result = 'spec diff:';
+      if (spec1.opacity !== spec2.opacity) {
+        result += '\nopacity: ' + spec1.opacity + ' != ' + spec2.opacity;
+      }
+      if (!_isEqualArray(spec1.size, spec2.size)) {
+        result += '\nsize: ' + JSON.stringify(spec1.size) + ' != ' + JSON.stringify(spec2.size);
+      }
+      if (!_isEqualArray(spec1.transform, spec2.transform)) {
+        result += '\ntransform: ' + JSON.stringify(spec1.transform) + ' != ' + JSON.stringify(spec2.transform);
+      }
+      if (!_isEqualArray(spec1.origin, spec2.origin)) {
+        result += '\norigin: ' + JSON.stringify(spec1.origin) + ' != ' + JSON.stringify(spec2.origin);
+      }
+      if (!_isEqualArray(spec1.align, spec2.align)) {
+        result += '\nalign: ' + JSON.stringify(spec1.align) + ' != ' + JSON.stringify(spec2.align);
+      }
+      return result;
+    };
+    LayoutUtility.error = function(message) {
+      console.log('ERROR: ' + message);
+      throw message;
+    };
+    LayoutUtility.warning = function(message) {
+      console.log('WARNING: ' + message);
+    };
+    LayoutUtility.log = function(args) {
+      var message = '';
+      for (var i = 0; i < arguments.length; i++) {
+        var arg = arguments[i];
+        if ((arg instanceof Object) || (arg instanceof Array)) {
+          message += JSON.stringify(arg);
+        } else {
+          message += arg;
+        }
+      }
+      console.log(message);
+    };
+    LayoutUtility.combineOptions = function(options1, options2, forceClone) {
+      if (options1 && !options2 && !forceClone) {
+        return options1;
+      } else if (!options1 && options2 && !forceClone) {
+        return options2;
+      }
+      var options = Utility.clone(options1 || {});
+      if (options2) {
+        for (var key in options2) {
+          options[key] = options2[key];
+        }
+      }
+      return options;
+    };
+    LayoutUtility.registerHelper = function(name, Helper) {
+      if (!Helper.prototype.parse) {
+        LayoutUtility.error('The layout-helper for name "' + name + '" is required to support the "parse" method');
+      }
+      if (this.registeredHelpers[name] !== undefined) {
+        LayoutUtility.warning('A layout-helper with the name "' + name + '" is already registered and will be overwritten');
+      }
+      this.registeredHelpers[name] = Helper;
+    };
+    LayoutUtility.unregisterHelper = function(name) {
+      delete this.registeredHelpers[name];
+    };
+    LayoutUtility.getRegisteredHelper = function(name) {
+      return this.registeredHelpers[name];
+    };
+    module.exports = LayoutUtility;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", [], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    function LayoutContext(methods) {
+      for (var n in methods) {
+        this[n] = methods[n];
+      }
+    }
+    LayoutContext.prototype.size = undefined;
+    LayoutContext.prototype.direction = undefined;
+    LayoutContext.prototype.scrollOffset = undefined;
+    LayoutContext.prototype.scrollStart = undefined;
+    LayoutContext.prototype.scrollEnd = undefined;
+    LayoutContext.prototype.next = function() {};
+    LayoutContext.prototype.prev = function() {};
+    LayoutContext.prototype.get = function(node) {};
+    LayoutContext.prototype.set = function(node, set) {};
+    LayoutContext.prototype.resolveSize = function(node) {};
+    module.exports = LayoutContext;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", ["npm:famous@0.3.5/core/Transform", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Transform = require("npm:famous@0.3.5/core/Transform");
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    function LayoutNode(renderNode, spec) {
+      this.renderNode = renderNode;
+      this._spec = spec ? LayoutUtility.cloneSpec(spec) : {};
+      this._spec.renderNode = renderNode;
+      this._specModified = true;
+      this._invalidated = false;
+      this._removing = false;
+    }
+    LayoutNode.prototype.setRenderNode = function(renderNode) {
+      this.renderNode = renderNode;
+      this._spec.renderNode = renderNode;
+    };
+    LayoutNode.prototype.setOptions = function(options) {};
+    LayoutNode.prototype.destroy = function() {
+      this.renderNode = undefined;
+      this._spec.renderNode = undefined;
+      this._viewSequence = undefined;
+    };
+    LayoutNode.prototype.reset = function() {
+      this._invalidated = false;
+      this.trueSizeRequested = false;
+    };
+    LayoutNode.prototype.setSpec = function(spec) {
+      this._specModified = true;
+      if (spec.align) {
+        if (!spec.align) {
+          this._spec.align = [0, 0];
+        }
+        this._spec.align[0] = spec.align[0];
+        this._spec.align[1] = spec.align[1];
+      } else {
+        this._spec.align = undefined;
+      }
+      if (spec.origin) {
+        if (!spec.origin) {
+          this._spec.origin = [0, 0];
+        }
+        this._spec.origin[0] = spec.origin[0];
+        this._spec.origin[1] = spec.origin[1];
+      } else {
+        this._spec.origin = undefined;
+      }
+      if (spec.size) {
+        if (!spec.size) {
+          this._spec.size = [0, 0];
+        }
+        this._spec.size[0] = spec.size[0];
+        this._spec.size[1] = spec.size[1];
+      } else {
+        this._spec.size = undefined;
+      }
+      if (spec.transform) {
+        if (!spec.transform) {
+          this._spec.transform = spec.transform.slice(0);
+        } else {
+          for (var i = 0; i < 16; i++) {
+            this._spec.transform[i] = spec.transform[i];
+          }
+        }
+      } else {
+        this._spec.transform = undefined;
+      }
+      this._spec.opacity = spec.opacity;
+    };
+    LayoutNode.prototype.set = function(set, size) {
+      this._invalidated = true;
+      this._specModified = true;
+      this._removing = false;
+      var spec = this._spec;
+      spec.opacity = set.opacity;
+      if (set.size) {
+        if (!spec.size) {
+          spec.size = [0, 0];
+        }
+        spec.size[0] = set.size[0];
+        spec.size[1] = set.size[1];
+      } else {
+        spec.size = undefined;
+      }
+      if (set.origin) {
+        if (!spec.origin) {
+          spec.origin = [0, 0];
+        }
+        spec.origin[0] = set.origin[0];
+        spec.origin[1] = set.origin[1];
+      } else {
+        spec.origin = undefined;
+      }
+      if (set.align) {
+        if (!spec.align) {
+          spec.align = [0, 0];
+        }
+        spec.align[0] = set.align[0];
+        spec.align[1] = set.align[1];
+      } else {
+        spec.align = undefined;
+      }
+      if (set.skew || set.rotate || set.scale) {
+        this._spec.transform = Transform.build({
+          translate: set.translate || [0, 0, 0],
+          skew: set.skew || [0, 0, 0],
+          scale: set.scale || [1, 1, 1],
+          rotate: set.rotate || [0, 0, 0]
+        });
+      } else if (set.translate) {
+        this._spec.transform = Transform.translate(set.translate[0], set.translate[1], set.translate[2]);
+      } else {
+        this._spec.transform = undefined;
+      }
+      this.scrollLength = set.scrollLength;
+    };
+    LayoutNode.prototype.getSpec = function() {
+      this._specModified = false;
+      this._spec.removed = !this._invalidated;
+      return this._spec;
+    };
+    LayoutNode.prototype.remove = function(removeSpec) {
+      this._removing = true;
+    };
+    module.exports = LayoutNode;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/physics/PhysicsEngine", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "npm:famous@0.3.5/transitions/Transitionable"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
+    var Transform = require("npm:famous@0.3.5/core/Transform");
+    var Vector = require("npm:famous@0.3.5/math/Vector");
+    var Particle = require("npm:famous@0.3.5/physics/bodies/Particle");
+    var Spring = require("npm:famous@0.3.5/physics/forces/Spring");
+    var PhysicsEngine = require("npm:famous@0.3.5/physics/PhysicsEngine");
+    var LayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
+    var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
+    function FlowLayoutNode(renderNode, spec) {
+      LayoutNode.apply(this, arguments);
+      if (!this.options) {
+        this.options = Object.create(this.constructor.DEFAULT_OPTIONS);
+        this._optionsManager = new OptionsManager(this.options);
+      }
+      if (!this._pe) {
+        this._pe = new PhysicsEngine();
+        this._pe.sleep();
+      }
+      if (!this._properties) {
+        this._properties = {};
+      } else {
+        for (var propName in this._properties) {
+          this._properties[propName].init = false;
+        }
+      }
+      if (!this._lockTransitionable) {
+        this._lockTransitionable = new Transitionable(1);
+      } else {
+        this._lockTransitionable.halt();
+        this._lockTransitionable.reset(1);
+      }
+      this._specModified = true;
+      this._initial = true;
+      this._spec.endState = {};
+      if (spec) {
+        this.setSpec(spec);
+      }
+    }
+    FlowLayoutNode.prototype = Object.create(LayoutNode.prototype);
+    FlowLayoutNode.prototype.constructor = FlowLayoutNode;
+    FlowLayoutNode.DEFAULT_OPTIONS = {
+      spring: {
+        dampingRatio: 0.8,
+        period: 300
+      },
+      properties: {
+        opacity: true,
+        align: true,
+        origin: true,
+        size: true,
+        translate: true,
+        skew: true,
+        rotate: true,
+        scale: true
+      },
+      particleRounding: 0.001
+    };
+    var DEFAULT = {
+      opacity: 1,
+      opacity2D: [1, 0],
+      size: [0, 0],
+      origin: [0, 0],
+      align: [0, 0],
+      scale: [1, 1, 1],
+      translate: [0, 0, 0],
+      rotate: [0, 0, 0],
+      skew: [0, 0, 0]
+    };
+    FlowLayoutNode.prototype.setOptions = function(options) {
+      this._optionsManager.setOptions(options);
+      var wasSleeping = this._pe.isSleeping();
+      for (var propName in this._properties) {
+        var prop = this._properties[propName];
+        if (options.spring && prop.force) {
+          prop.force.setOptions(this.options.spring);
+        }
+        if (options.properties && (options.properties[propName] !== undefined)) {
+          if (this.options.properties[propName].length) {
+            prop.enabled = this.options.properties[propName];
+          } else {
+            prop.enabled = [this.options.properties[propName], this.options.properties[propName], this.options.properties[propName]];
+          }
+        }
+      }
+      if (wasSleeping) {
+        this._pe.sleep();
+      }
+      return this;
+    };
+    FlowLayoutNode.prototype.setSpec = function(spec) {
+      var set;
+      if (spec.transform) {
+        set = Transform.interpret(spec.transform);
+      }
+      if (!set) {
+        set = {};
+      }
+      set.opacity = spec.opacity;
+      set.size = spec.size;
+      set.align = spec.align;
+      set.origin = spec.origin;
+      var oldRemoving = this._removing;
+      var oldInvalidated = this._invalidated;
+      this.set(set);
+      this._removing = oldRemoving;
+      this._invalidated = oldInvalidated;
+    };
+    FlowLayoutNode.prototype.reset = function() {
+      if (this._invalidated) {
+        for (var propName in this._properties) {
+          this._properties[propName].invalidated = false;
+        }
+        this._invalidated = false;
+      }
+      this.trueSizeRequested = false;
+      this.usesTrueSize = false;
+    };
+    FlowLayoutNode.prototype.remove = function(removeSpec) {
+      this._removing = true;
+      if (removeSpec) {
+        this.setSpec(removeSpec);
+      } else {
+        this._pe.sleep();
+        this._specModified = false;
+      }
+      this._invalidated = false;
+    };
+    FlowLayoutNode.prototype.releaseLock = function(enable) {
+      this._lockTransitionable.halt();
+      this._lockTransitionable.reset(0);
+      if (enable) {
+        this._lockTransitionable.set(1, {duration: this.options.spring.period || 1000});
+      }
+    };
+    function _getRoundedValue3D(prop, def, precision, lockValue) {
+      if (!prop || !prop.init) {
+        return def;
+      }
+      return [prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / precision) * precision) : prop.endState.x, prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / precision) * precision) : prop.endState.y, prop.enabled[2] ? (Math.round((prop.curState.z + ((prop.endState.z - prop.curState.z) * lockValue)) / precision) * precision) : prop.endState.z];
+    }
+    FlowLayoutNode.prototype.getSpec = function() {
+      var endStateReached = this._pe.isSleeping();
+      if (!this._specModified && endStateReached) {
+        this._spec.removed = !this._invalidated;
+        return this._spec;
+      }
+      this._initial = false;
+      this._specModified = !endStateReached;
+      this._spec.removed = false;
+      if (!endStateReached) {
+        this._pe.step();
+      }
+      var spec = this._spec;
+      var precision = this.options.particleRounding;
+      var lockValue = this._lockTransitionable.get();
+      var prop = this._properties.opacity;
+      if (prop && prop.init) {
+        spec.opacity = prop.enabled[0] ? (Math.round(Math.max(0, Math.min(1, prop.curState.x)) / precision) * precision) : prop.endState.x;
+        spec.endState.opacity = prop.endState.x;
+      } else {
+        spec.opacity = undefined;
+        spec.endState.opacity = undefined;
+      }
+      prop = this._properties.size;
+      if (prop && prop.init) {
+        spec.size = spec.size || [0, 0];
+        spec.size[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+        spec.size[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
+        spec.endState.size = spec.endState.size || [0, 0];
+        spec.endState.size[0] = prop.endState.x;
+        spec.endState.size[1] = prop.endState.y;
+      } else {
+        spec.size = undefined;
+        spec.endState.size = undefined;
+      }
+      prop = this._properties.align;
+      if (prop && prop.init) {
+        spec.align = spec.align || [0, 0];
+        spec.align[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+        spec.align[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
+        spec.endState.align = spec.endState.align || [0, 0];
+        spec.endState.align[0] = prop.endState.x;
+        spec.endState.align[1] = prop.endState.y;
+      } else {
+        spec.align = undefined;
+        spec.endState.align = undefined;
+      }
+      prop = this._properties.origin;
+      if (prop && prop.init) {
+        spec.origin = spec.origin || [0, 0];
+        spec.origin[0] = prop.enabled[0] ? (Math.round((prop.curState.x + ((prop.endState.x - prop.curState.x) * lockValue)) / 0.1) * 0.1) : prop.endState.x;
+        spec.origin[1] = prop.enabled[1] ? (Math.round((prop.curState.y + ((prop.endState.y - prop.curState.y) * lockValue)) / 0.1) * 0.1) : prop.endState.y;
+        spec.endState.origin = spec.endState.origin || [0, 0];
+        spec.endState.origin[0] = prop.endState.x;
+        spec.endState.origin[1] = prop.endState.y;
+      } else {
+        spec.origin = undefined;
+        spec.endState.origin = undefined;
+      }
+      var translate = this._properties.translate;
+      var translateX;
+      var translateY;
+      var translateZ;
+      if (translate && translate.init) {
+        translateX = translate.enabled[0] ? (Math.round((translate.curState.x + ((translate.endState.x - translate.curState.x) * lockValue)) / precision) * precision) : translate.endState.x;
+        translateY = translate.enabled[1] ? (Math.round((translate.curState.y + ((translate.endState.y - translate.curState.y) * lockValue)) / precision) * precision) : translate.endState.y;
+        translateZ = translate.enabled[2] ? (Math.round((translate.curState.z + ((translate.endState.z - translate.curState.z) * lockValue)) / precision) * precision) : translate.endState.z;
+      } else {
+        translateX = 0;
+        translateY = 0;
+        translateZ = 0;
+      }
+      var scale = this._properties.scale;
+      var skew = this._properties.skew;
+      var rotate = this._properties.rotate;
+      if (scale || skew || rotate) {
+        spec.transform = Transform.build({
+          translate: [translateX, translateY, translateZ],
+          skew: _getRoundedValue3D.call(this, skew, DEFAULT.skew, this.options.particleRounding, lockValue),
+          scale: _getRoundedValue3D.call(this, scale, DEFAULT.scale, this.options.particleRounding, lockValue),
+          rotate: _getRoundedValue3D.call(this, rotate, DEFAULT.rotate, this.options.particleRounding, lockValue)
+        });
+        spec.endState.transform = Transform.build({
+          translate: translate ? [translate.endState.x, translate.endState.y, translate.endState.z] : DEFAULT.translate,
+          scale: scale ? [scale.endState.x, scale.endState.y, scale.endState.z] : DEFAULT.scale,
+          skew: skew ? [skew.endState.x, skew.endState.y, skew.endState.z] : DEFAULT.skew,
+          rotate: rotate ? [rotate.endState.x, rotate.endState.y, rotate.endState.z] : DEFAULT.rotate
+        });
+      } else if (translate) {
+        if (!spec.transform) {
+          spec.transform = Transform.translate(translateX, translateY, translateZ);
+        } else {
+          spec.transform[12] = translateX;
+          spec.transform[13] = translateY;
+          spec.transform[14] = translateZ;
+        }
+        if (!spec.endState.transform) {
+          spec.endState.transform = Transform.translate(translate.endState.x, translate.endState.y, translate.endState.z);
+        } else {
+          spec.endState.transform[12] = translate.endState.x;
+          spec.endState.transform[13] = translate.endState.y;
+          spec.endState.transform[14] = translate.endState.z;
+        }
+      } else {
+        spec.transform = undefined;
+        spec.endState.transform = undefined;
+      }
+      return this._spec;
+    };
+    function _setPropertyValue(prop, propName, endState, defaultValue, immediate, isTranslate) {
+      prop = prop || this._properties[propName];
+      if (prop && prop.init) {
+        prop.invalidated = true;
+        var value = defaultValue;
+        if (endState !== undefined) {
+          value = endState;
+        } else if (this._removing) {
+          value = prop.particle.getPosition();
+        }
+        prop.endState.x = value[0];
+        prop.endState.y = (value.length > 1) ? value[1] : 0;
+        prop.endState.z = (value.length > 2) ? value[2] : 0;
+        if (immediate) {
+          prop.curState.x = prop.endState.x;
+          prop.curState.y = prop.endState.y;
+          prop.curState.z = prop.endState.z;
+          prop.velocity.x = 0;
+          prop.velocity.y = 0;
+          prop.velocity.z = 0;
+        } else if ((prop.endState.x !== prop.curState.x) || (prop.endState.y !== prop.curState.y) || (prop.endState.z !== prop.curState.z)) {
+          this._pe.wake();
+        }
+        return ;
+      } else {
+        var wasSleeping = this._pe.isSleeping();
+        if (!prop) {
+          prop = {
+            particle: new Particle({position: (this._initial || immediate) ? endState : defaultValue}),
+            endState: new Vector(endState)
+          };
+          prop.curState = prop.particle.position;
+          prop.velocity = prop.particle.velocity;
+          prop.force = new Spring(this.options.spring);
+          prop.force.setOptions({anchor: prop.endState});
+          this._pe.addBody(prop.particle);
+          prop.forceId = this._pe.attach(prop.force, prop.particle);
+          this._properties[propName] = prop;
+        } else {
+          prop.particle.setPosition((this._initial || immediate) ? endState : defaultValue);
+          prop.endState.set(endState);
+        }
+        if (!this._initial && !immediate) {
+          this._pe.wake();
+        } else if (wasSleeping) {
+          this._pe.sleep();
+        }
+        if (this.options.properties[propName] && this.options.properties[propName].length) {
+          prop.enabled = this.options.properties[propName];
+        } else {
+          prop.enabled = [this.options.properties[propName], this.options.properties[propName], this.options.properties[propName]];
+        }
+        prop.init = true;
+        prop.invalidated = true;
+      }
+    }
+    function _getIfNE2D(a1, a2) {
+      return ((a1[0] === a2[0]) && (a1[1] === a2[1])) ? undefined : a1;
+    }
+    function _getIfNE3D(a1, a2) {
+      return ((a1[0] === a2[0]) && (a1[1] === a2[1]) && (a1[2] === a2[2])) ? undefined : a1;
+    }
+    FlowLayoutNode.prototype.set = function(set, defaultSize) {
+      if (defaultSize) {
+        this._removing = false;
+      }
+      this._invalidated = true;
+      this.scrollLength = set.scrollLength;
+      this._specModified = true;
+      var prop = this._properties.opacity;
+      var value = (set.opacity === DEFAULT.opacity) ? undefined : set.opacity;
+      if ((value !== undefined) || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'opacity', (value === undefined) ? undefined : [value, 0], DEFAULT.opacity2D);
+      }
+      prop = this._properties.align;
+      value = set.align ? _getIfNE2D(set.align, DEFAULT.align) : undefined;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'align', value, DEFAULT.align);
+      }
+      prop = this._properties.origin;
+      value = set.origin ? _getIfNE2D(set.origin, DEFAULT.origin) : undefined;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'origin', value, DEFAULT.origin);
+      }
+      prop = this._properties.size;
+      value = set.size || defaultSize;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'size', value, defaultSize, this.usesTrueSize);
+      }
+      prop = this._properties.translate;
+      value = set.translate;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'translate', value, DEFAULT.translate, undefined, true);
+      }
+      prop = this._properties.scale;
+      value = set.scale ? _getIfNE3D(set.scale, DEFAULT.scale) : undefined;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'scale', value, DEFAULT.scale);
+      }
+      prop = this._properties.rotate;
+      value = set.rotate ? _getIfNE3D(set.rotate, DEFAULT.rotate) : undefined;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'rotate', value, DEFAULT.rotate);
+      }
+      prop = this._properties.skew;
+      value = set.skew ? _getIfNE3D(set.skew, DEFAULT.skew) : undefined;
+      if (value || (prop && prop.init)) {
+        _setPropertyValue.call(this, prop, 'skew', value, DEFAULT.skew);
+      }
+    };
+    module.exports = FlowLayoutNode;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    function LayoutDockHelper(context, options) {
+      var size = context.size;
+      this._size = size;
+      this._context = context;
+      this._options = options;
+      this._z = (options && options.translateZ) ? options.translateZ : 0;
+      if (options && options.margins) {
+        var margins = LayoutUtility.normalizeMargins(options.margins);
+        this._left = margins[3];
+        this._top = margins[0];
+        this._right = size[0] - margins[1];
+        this._bottom = size[1] - margins[2];
+      } else {
+        this._left = 0;
+        this._top = 0;
+        this._right = size[0];
+        this._bottom = size[1];
+      }
+    }
+    LayoutDockHelper.prototype.parse = function(data) {
+      for (var i = 0; i < data.length; i++) {
+        var rule = data[i];
+        var value = (rule.length >= 3) ? rule[2] : undefined;
+        if (rule[0] === 'top') {
+          this.top(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
+        } else if (rule[0] === 'left') {
+          this.left(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
+        } else if (rule[0] === 'right') {
+          this.right(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
+        } else if (rule[0] === 'bottom') {
+          this.bottom(rule[1], value, (rule.length >= 4) ? rule[3] : undefined);
+        } else if (rule[0] === 'fill') {
+          this.fill(rule[1], (rule.length >= 3) ? rule[2] : undefined);
+        } else if (rule[0] === 'margins') {
+          this.margins(rule[1]);
+        }
+      }
+    };
+    LayoutDockHelper.prototype.top = function(node, height, z) {
+      if (height instanceof Array) {
+        height = height[1];
+      }
+      if (height === undefined) {
+        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+        height = size[1];
+      }
+      this._context.set(node, {
+        size: [this._right - this._left, height],
+        origin: [0, 0],
+        align: [0, 0],
+        translate: [this._left, this._top, (z === undefined) ? this._z : z]
+      });
+      this._top += height;
+      return this;
+    };
+    LayoutDockHelper.prototype.left = function(node, width, z) {
+      if (width instanceof Array) {
+        width = width[0];
+      }
+      if (width === undefined) {
+        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+        width = size[0];
+      }
+      this._context.set(node, {
+        size: [width, this._bottom - this._top],
+        origin: [0, 0],
+        align: [0, 0],
+        translate: [this._left, this._top, (z === undefined) ? this._z : z]
+      });
+      this._left += width;
+      return this;
+    };
+    LayoutDockHelper.prototype.bottom = function(node, height, z) {
+      if (height instanceof Array) {
+        height = height[1];
+      }
+      if (height === undefined) {
+        var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+        height = size[1];
+      }
+      this._context.set(node, {
+        size: [this._right - this._left, height],
+        origin: [0, 1],
+        align: [0, 1],
+        translate: [this._left, -(this._size[1] - this._bottom), (z === undefined) ? this._z : z]
+      });
+      this._bottom -= height;
+      return this;
+    };
+    LayoutDockHelper.prototype.right = function(node, width, z) {
+      if (width instanceof Array) {
+        width = width[0];
+      }
+      if (node) {
+        if (width === undefined) {
+          var size = this._context.resolveSize(node, [this._right - this._left, this._bottom - this._top]);
+          width = size[0];
+        }
+        this._context.set(node, {
+          size: [width, this._bottom - this._top],
+          origin: [1, 0],
+          align: [1, 0],
+          translate: [-(this._size[0] - this._right), this._top, (z === undefined) ? this._z : z]
+        });
+      }
+      if (width) {
+        this._right -= width;
+      }
+      return this;
+    };
+    LayoutDockHelper.prototype.fill = function(node, z) {
+      this._context.set(node, {
+        size: [this._right - this._left, this._bottom - this._top],
+        translate: [this._left, this._top, (z === undefined) ? this._z : z]
+      });
+      return this;
+    };
+    LayoutDockHelper.prototype.margins = function(margins) {
+      margins = LayoutUtility.normalizeMargins(margins);
+      this._left += margins[3];
+      this._top += margins[0];
+      this._right -= margins[1];
+      this._bottom -= margins[2];
+      return this;
+    };
+    LayoutUtility.registerHelper('dock', LayoutDockHelper);
+    module.exports = LayoutDockHelper;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Utility = require("npm:famous@0.3.5/utilities/Utility");
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var capabilities = {
+      sequence: true,
+      direction: [Utility.Direction.X, Utility.Direction.Y],
+      trueSize: true
+    };
+    var size;
+    var direction;
+    var revDirection;
+    var items;
+    var spacers;
+    var margins;
+    var spacing;
+    var sizeLeft;
+    var set = {
+      size: [0, 0],
+      translate: [0, 0, 0],
+      align: [0, 0],
+      origin: [0, 0]
+    };
+    var nodeSize;
+    var offset;
+    var zIncrement;
+    function TabBarLayout(context, options) {
+      size = context.size;
+      direction = context.direction;
+      revDirection = direction ? 0 : 1;
+      spacing = options.spacing || 0;
+      items = context.get('items');
+      spacers = context.get('spacers');
+      margins = LayoutUtility.normalizeMargins(options.margins);
+      zIncrement = options.zIncrement || 0.001;
+      set.size[0] = context.size[0];
+      set.size[1] = context.size[1];
+      set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
+      set.translate[0] = 0;
+      set.translate[1] = 0;
+      set.translate[2] = zIncrement;
+      set.translate[revDirection] = margins[direction ? 3 : 0];
+      set.align[0] = 0;
+      set.align[1] = 0;
+      set.origin[0] = 0;
+      set.origin[1] = 0;
+      offset = direction ? margins[0] : margins[3];
+      sizeLeft = size[direction] - (offset + (direction ? margins[2] : margins[1]));
+      sizeLeft -= ((items.length - 1) * spacing);
+      for (var i = 0; i < items.length; i++) {
+        if (options.itemSize === undefined) {
+          nodeSize = Math.round(sizeLeft / (items.length - i));
+        } else {
+          nodeSize = (options.itemSize === true) ? context.resolveSize(items[i], size)[direction] : options.itemSize;
+        }
+        set.scrollLength = nodeSize;
+        if (i === 0) {
+          set.scrollLength += direction ? margins[0] : margins[3];
+        }
+        if (i === (items.length - 1)) {
+          set.scrollLength += direction ? margins[2] : margins[1];
+        } else {
+          set.scrollLength += spacing;
+        }
+        set.size[direction] = nodeSize;
+        set.translate[direction] = offset;
+        context.set(items[i], set);
+        offset += nodeSize;
+        sizeLeft -= nodeSize;
+        if (i === options.selectedItemIndex) {
+          set.scrollLength = 0;
+          set.translate[direction] += (nodeSize / 2);
+          set.translate[2] = zIncrement * 2;
+          set.origin[direction] = 0.5;
+          context.set('selectedItemOverlay', set);
+          set.origin[direction] = 0;
+          set.translate[2] = zIncrement;
+        }
+        if (i < (items.length - 1)) {
+          if (spacers && (i < spacers.length)) {
+            set.size[direction] = spacing;
+            set.translate[direction] = offset;
+            context.set(spacers[i], set);
+          }
+          offset += spacing;
+        } else {
+          offset += direction ? margins[2] : margins[1];
+        }
+      }
+      set.scrollLength = 0;
+      set.size[0] = size[0];
+      set.size[1] = size[1];
+      set.size[direction] = size[direction];
+      set.translate[0] = 0;
+      set.translate[1] = 0;
+      set.translate[2] = 0;
+      set.translate[direction] = 0;
+      context.set('background', set);
+    }
+    TabBarLayout.Capabilities = capabilities;
+    TabBarLayout.Name = 'TabBarLayout';
+    TabBarLayout.Description = 'TabBar widget layout';
+    module.exports = TabBarLayout;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var prefix = typeof Object.create !== 'function' ? '~' : false;
+  function EE(fn, context, once) {
+    this.fn = fn;
+    this.context = context;
+    this.once = once || false;
+  }
+  function EventEmitter() {}
+  EventEmitter.prototype._events = undefined;
+  EventEmitter.prototype.listeners = function listeners(event, exists) {
+    var evt = prefix ? prefix + event : event,
+        available = this._events && this._events[evt];
+    if (exists)
+      return !!available;
+    if (!available)
+      return [];
+    if (this._events[evt].fn)
+      return [this._events[evt].fn];
+    for (var i = 0,
+        l = this._events[evt].length,
+        ee = new Array(l); i < l; i++) {
+      ee[i] = this._events[evt][i].fn;
+    }
+    return ee;
+  };
+  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return false;
+    var listeners = this._events[evt],
+        len = arguments.length,
+        args,
+        i;
+    if ('function' === typeof listeners.fn) {
+      if (listeners.once)
+        this.removeListener(event, listeners.fn, undefined, true);
+      switch (len) {
+        case 1:
+          return listeners.fn.call(listeners.context), true;
+        case 2:
+          return listeners.fn.call(listeners.context, a1), true;
+        case 3:
+          return listeners.fn.call(listeners.context, a1, a2), true;
+        case 4:
+          return listeners.fn.call(listeners.context, a1, a2, a3), true;
+        case 5:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+        case 6:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+      }
+      for (i = 1, args = new Array(len - 1); i < len; i++) {
+        args[i - 1] = arguments[i];
+      }
+      listeners.fn.apply(listeners.context, args);
+    } else {
+      var length = listeners.length,
+          j;
+      for (i = 0; i < length; i++) {
+        if (listeners[i].once)
+          this.removeListener(event, listeners[i].fn, undefined, true);
+        switch (len) {
+          case 1:
+            listeners[i].fn.call(listeners[i].context);
+            break;
+          case 2:
+            listeners[i].fn.call(listeners[i].context, a1);
+            break;
+          case 3:
+            listeners[i].fn.call(listeners[i].context, a1, a2);
+            break;
+          default:
+            if (!args)
+              for (j = 1, args = new Array(len - 1); j < len; j++) {
+                args[j - 1] = arguments[j];
+              }
+            listeners[i].fn.apply(listeners[i].context, args);
+        }
+      }
+    }
+    return true;
+  };
+  EventEmitter.prototype.on = function on(event, fn, context) {
+    var listener = new EE(fn, context || this),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.once = function once(event, fn, context) {
+    var listener = new EE(fn, context || this, true),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return this;
+    var listeners = this._events[evt],
+        events = [];
+    if (fn) {
+      if (listeners.fn) {
+        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
+          events.push(listeners);
+        }
+      } else {
+        for (var i = 0,
+            length = listeners.length; i < length; i++) {
+          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
+            events.push(listeners[i]);
+          }
+        }
+      }
+    }
+    if (events.length) {
+      this._events[evt] = events.length === 1 ? events[0] : events;
+    } else {
+      delete this._events[evt];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+    if (!this._events)
+      return this;
+    if (event)
+      delete this._events[prefix ? prefix + event : event];
+    else
+      this._events = prefix ? {} : Object.create(null);
+    return this;
+  };
+  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+    return this;
+  };
+  EventEmitter.prefixed = prefix;
+  module.exports = EventEmitter;
   global.define = __define;
   return module.exports;
 });
@@ -15246,307 +15246,6 @@ System.register("npm:famous@0.3.5/transitions/MultipleTransition", ["npm:famous@
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/Surface", ["npm:famous@0.3.5/core/ElementOutput"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var ElementOutput = require("npm:famous@0.3.5/core/ElementOutput");
-  function Surface(options) {
-    ElementOutput.call(this);
-    this.options = {};
-    this.properties = {};
-    this.attributes = {};
-    this.content = '';
-    this.classList = [];
-    this.size = null;
-    this._classesDirty = true;
-    this._stylesDirty = true;
-    this._attributesDirty = true;
-    this._sizeDirty = true;
-    this._contentDirty = true;
-    this._trueSizeCheck = true;
-    this._dirtyClasses = [];
-    if (options)
-      this.setOptions(options);
-    this._currentTarget = null;
-  }
-  Surface.prototype = Object.create(ElementOutput.prototype);
-  Surface.prototype.constructor = Surface;
-  Surface.prototype.elementType = 'div';
-  Surface.prototype.elementClass = 'famous-surface';
-  Surface.prototype.setAttributes = function setAttributes(attributes) {
-    for (var n in attributes) {
-      if (n === 'style')
-        throw new Error('Cannot set styles via "setAttributes" as it will break Famo.us.  Use "setProperties" instead.');
-      this.attributes[n] = attributes[n];
-    }
-    this._attributesDirty = true;
-  };
-  Surface.prototype.getAttributes = function getAttributes() {
-    return this.attributes;
-  };
-  Surface.prototype.setProperties = function setProperties(properties) {
-    for (var n in properties) {
-      this.properties[n] = properties[n];
-    }
-    this._stylesDirty = true;
-    return this;
-  };
-  Surface.prototype.getProperties = function getProperties() {
-    return this.properties;
-  };
-  Surface.prototype.addClass = function addClass(className) {
-    if (this.classList.indexOf(className) < 0) {
-      this.classList.push(className);
-      this._classesDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.removeClass = function removeClass(className) {
-    var i = this.classList.indexOf(className);
-    if (i >= 0) {
-      this._dirtyClasses.push(this.classList.splice(i, 1)[0]);
-      this._classesDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.toggleClass = function toggleClass(className) {
-    var i = this.classList.indexOf(className);
-    if (i >= 0) {
-      this.removeClass(className);
-    } else {
-      this.addClass(className);
-    }
-    return this;
-  };
-  Surface.prototype.setClasses = function setClasses(classList) {
-    var i = 0;
-    var removal = [];
-    for (i = 0; i < this.classList.length; i++) {
-      if (classList.indexOf(this.classList[i]) < 0)
-        removal.push(this.classList[i]);
-    }
-    for (i = 0; i < removal.length; i++)
-      this.removeClass(removal[i]);
-    for (i = 0; i < classList.length; i++)
-      this.addClass(classList[i]);
-    return this;
-  };
-  Surface.prototype.getClassList = function getClassList() {
-    return this.classList;
-  };
-  Surface.prototype.setContent = function setContent(content) {
-    if (this.content !== content) {
-      this.content = content;
-      this._contentDirty = true;
-    }
-    return this;
-  };
-  Surface.prototype.getContent = function getContent() {
-    return this.content;
-  };
-  Surface.prototype.setOptions = function setOptions(options) {
-    if (options.size)
-      this.setSize(options.size);
-    if (options.classes)
-      this.setClasses(options.classes);
-    if (options.properties)
-      this.setProperties(options.properties);
-    if (options.attributes)
-      this.setAttributes(options.attributes);
-    if (options.content)
-      this.setContent(options.content);
-    return this;
-  };
-  function _cleanupClasses(target) {
-    for (var i = 0; i < this._dirtyClasses.length; i++)
-      target.classList.remove(this._dirtyClasses[i]);
-    this._dirtyClasses = [];
-  }
-  function _applyStyles(target) {
-    for (var n in this.properties) {
-      target.style[n] = this.properties[n];
-    }
-  }
-  function _cleanupStyles(target) {
-    for (var n in this.properties) {
-      target.style[n] = '';
-    }
-  }
-  function _applyAttributes(target) {
-    for (var n in this.attributes) {
-      target.setAttribute(n, this.attributes[n]);
-    }
-  }
-  function _cleanupAttributes(target) {
-    for (var n in this.attributes) {
-      target.removeAttribute(n);
-    }
-  }
-  function _xyNotEquals(a, b) {
-    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
-  }
-  Surface.prototype.setup = function setup(allocator) {
-    var target = allocator.allocate(this.elementType);
-    if (this.elementClass) {
-      if (this.elementClass instanceof Array) {
-        for (var i = 0; i < this.elementClass.length; i++) {
-          target.classList.add(this.elementClass[i]);
-        }
-      } else {
-        target.classList.add(this.elementClass);
-      }
-    }
-    target.style.display = '';
-    this.attach(target);
-    this._opacity = null;
-    this._currentTarget = target;
-    this._stylesDirty = true;
-    this._classesDirty = true;
-    this._attributesDirty = true;
-    this._sizeDirty = true;
-    this._contentDirty = true;
-    this._originDirty = true;
-    this._transformDirty = true;
-  };
-  Surface.prototype.commit = function commit(context) {
-    if (!this._currentTarget)
-      this.setup(context.allocator);
-    var target = this._currentTarget;
-    var size = context.size;
-    if (this._classesDirty) {
-      _cleanupClasses.call(this, target);
-      var classList = this.getClassList();
-      for (var i = 0; i < classList.length; i++)
-        target.classList.add(classList[i]);
-      this._classesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this._stylesDirty) {
-      _applyStyles.call(this, target);
-      this._stylesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this._attributesDirty) {
-      _applyAttributes.call(this, target);
-      this._attributesDirty = false;
-      this._trueSizeCheck = true;
-    }
-    if (this.size) {
-      var origSize = context.size;
-      size = [this.size[0], this.size[1]];
-      if (size[0] === undefined)
-        size[0] = origSize[0];
-      if (size[1] === undefined)
-        size[1] = origSize[1];
-      if (size[0] === true || size[1] === true) {
-        if (size[0] === true) {
-          if (this._trueSizeCheck || this._size[0] === 0) {
-            var width = target.offsetWidth;
-            if (this._size && this._size[0] !== width) {
-              this._size[0] = width;
-              this._sizeDirty = true;
-            }
-            size[0] = width;
-          } else {
-            if (this._size)
-              size[0] = this._size[0];
-          }
-        }
-        if (size[1] === true) {
-          if (this._trueSizeCheck || this._size[1] === 0) {
-            var height = target.offsetHeight;
-            if (this._size && this._size[1] !== height) {
-              this._size[1] = height;
-              this._sizeDirty = true;
-            }
-            size[1] = height;
-          } else {
-            if (this._size)
-              size[1] = this._size[1];
-          }
-        }
-        this._trueSizeCheck = false;
-      }
-    }
-    if (_xyNotEquals(this._size, size)) {
-      if (!this._size)
-        this._size = [0, 0];
-      this._size[0] = size[0];
-      this._size[1] = size[1];
-      this._sizeDirty = true;
-    }
-    if (this._sizeDirty) {
-      if (this._size) {
-        target.style.width = this.size && this.size[0] === true ? '' : this._size[0] + 'px';
-        target.style.height = this.size && this.size[1] === true ? '' : this._size[1] + 'px';
-      }
-      this._eventOutput.emit('resize');
-    }
-    if (this._contentDirty) {
-      this.deploy(target);
-      this._eventOutput.emit('deploy');
-      this._contentDirty = false;
-      this._trueSizeCheck = true;
-    }
-    ElementOutput.prototype.commit.call(this, context);
-  };
-  Surface.prototype.cleanup = function cleanup(allocator) {
-    var i = 0;
-    var target = this._currentTarget;
-    this._eventOutput.emit('recall');
-    this.recall(target);
-    target.style.display = 'none';
-    target.style.opacity = '';
-    target.style.width = '';
-    target.style.height = '';
-    _cleanupStyles.call(this, target);
-    _cleanupAttributes.call(this, target);
-    var classList = this.getClassList();
-    _cleanupClasses.call(this, target);
-    for (i = 0; i < classList.length; i++)
-      target.classList.remove(classList[i]);
-    if (this.elementClass) {
-      if (this.elementClass instanceof Array) {
-        for (i = 0; i < this.elementClass.length; i++) {
-          target.classList.remove(this.elementClass[i]);
-        }
-      } else {
-        target.classList.remove(this.elementClass);
-      }
-    }
-    this.detach(target);
-    this._currentTarget = null;
-    allocator.deallocate(target);
-  };
-  Surface.prototype.deploy = function deploy(target) {
-    var content = this.getContent();
-    if (content instanceof Node) {
-      while (target.hasChildNodes())
-        target.removeChild(target.firstChild);
-      target.appendChild(content);
-    } else
-      target.innerHTML = content;
-  };
-  Surface.prototype.recall = function recall(target) {
-    var df = document.createDocumentFragment();
-    while (target.hasChildNodes())
-      df.appendChild(target.firstChild);
-    this.setContent(df);
-  };
-  Surface.prototype.getSize = function getSize() {
-    return this._size ? this._size : this.size;
-  };
-  Surface.prototype.setSize = function setSize(size) {
-    this.size = size ? [size[0], size[1]] : null;
-    this._sizeDirty = true;
-    return this;
-  };
-  module.exports = Surface;
-  global.define = __define;
-  return module.exports;
-});
-
 System.register("npm:famous@0.3.5/core/View", ["npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Utility"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -15593,10 +15292,10 @@ System.register("npm:famous@0.3.5/core/View", ["npm:famous@0.3.5/core/EventHandl
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
-    var LayoutContext = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext");
-    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutContext = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext");
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
     var MAX_POOL_SIZE = 100;
     function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
       this.LayoutNode = LayoutNode;
@@ -16380,175 +16079,654 @@ System.register("npm:famous@0.3.5/physics/forces/Spring", ["npm:famous@0.3.5/phy
   return module.exports;
 });
 
-(function() {
-function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var Surface = require("npm:famous@0.3.5/core/Surface");
-    var View = require("npm:famous@0.3.5/core/View");
-    var LayoutController = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController");
-    var TabBarLayout = require("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout");
-    function TabBar(options) {
-      View.apply(this, arguments);
-      this._selectedItemIndex = -1;
-      options = options || {};
-      this.classes = options.classes ? this.classes.concat(options.classes) : this.classes;
-      this.layout = new LayoutController(this.options.layoutController);
-      this.add(this.layout);
-      this.layout.pipe(this._eventOutput);
-      this._renderables = {
-        items: [],
-        spacers: [],
-        background: _createRenderable.call(this, 'background'),
-        selectedItemOverlay: _createRenderable.call(this, 'selectedItemOverlay')
-      };
-      this.setOptions(this.options);
-    }
-    TabBar.prototype = Object.create(View.prototype);
-    TabBar.prototype.constructor = TabBar;
-    TabBar.prototype.classes = ['ff-widget', 'ff-tabbar'];
-    TabBar.DEFAULT_OPTIONS = {
-      tabBarLayout: {
-        margins: [0, 0, 0, 0],
-        spacing: 0
-      },
-      createRenderables: {
-        item: true,
-        background: false,
-        selectedItemOverlay: false,
-        spacer: false
-      },
-      layoutController: {
-        autoPipeEvents: true,
-        layout: TabBarLayout,
-        flow: true,
-        flowOptions: {
-          reflowOnResize: false,
-          spring: {
-            dampingRatio: 0.8,
-            period: 300
-          }
-        }
-      }
-    };
-    function _setSelectedItem(index) {
-      if (index !== this._selectedItemIndex) {
-        var oldIndex = this._selectedItemIndex;
-        this._selectedItemIndex = index;
-        this.layout.setLayoutOptions({selectedItemIndex: index});
-        if ((oldIndex >= 0) && this._renderables.items[oldIndex].removeClass) {
-          this._renderables.items[oldIndex].removeClass('selected');
-        }
-        if (this._renderables.items[index].addClass) {
-          this._renderables.items[index].addClass('selected');
-        }
-        if (oldIndex >= 0) {
-          this._eventOutput.emit('tabchange', {
-            target: this,
-            index: index,
-            oldIndex: oldIndex,
-            item: this._renderables.items[index],
-            oldItem: ((oldIndex >= 0) && (oldIndex < this._renderables.items.length)) ? this._renderables.items[oldIndex] : undefined
-          });
-        }
-      }
-    }
-    function _createRenderable(id, data) {
-      var option = this.options.createRenderables[id];
-      if (option instanceof Function) {
-        return option.call(this, id, data);
-      } else if (!option) {
-        return undefined;
-      }
-      if ((data !== undefined) && (data instanceof Object)) {
-        return data;
-      }
-      var surface = new Surface({
-        classes: this.classes,
-        content: data ? ('<div>' + data + '</div>') : undefined
-      });
-      surface.addClass(id);
-      if (id === 'item') {
-        if (this.options.tabBarLayout && this.options.tabBarLayout.itemSize && (this.options.tabBarLayout.itemSize === true)) {
-          surface.setSize(this.layout.getDirection() ? [undefined, true] : [true, undefined]);
-        }
-      }
-      return surface;
-    }
-    TabBar.prototype.setOptions = function(options) {
-      View.prototype.setOptions.call(this, options);
-      if (!this.layout) {
-        return this;
-      }
-      if (options.tabBarLayout !== undefined) {
-        this.layout.setLayoutOptions(options.tabBarLayout);
-      }
-      if (options.layoutController) {
-        this.layout.setOptions(options.layoutController);
-      }
-      return this;
-    };
-    TabBar.prototype.setItems = function(items) {
-      var currentIndex = this._selectedItemIndex;
-      this._selectedItemIndex = -1;
-      this._renderables.items = [];
-      this._renderables.spacers = [];
-      if (items) {
-        for (var i = 0; i < items.length; i++) {
-          var item = _createRenderable.call(this, 'item', items[i]);
-          if (item.on) {
-            item.on('click', _setSelectedItem.bind(this, i));
-          }
-          this._renderables.items.push(item);
-          if ((i < (items.length - 1))) {
-            var spacer = _createRenderable.call(this, 'spacer', ' ');
-            if (spacer) {
-              this._renderables.spacers.push(spacer);
-            }
-          }
-        }
-      }
-      this.layout.setDataSource(this._renderables);
-      if (this._renderables.items.length) {
-        _setSelectedItem.call(this, Math.max(Math.min(currentIndex, this._renderables.items.length - 1), 0));
-      }
-      return this;
-    };
-    TabBar.prototype.getItems = function() {
-      return this._renderables.items;
-    };
-    TabBar.prototype.getItemSpec = function(index, normalize) {
-      return this.layout.getSpec(this._renderables.items[index], normalize);
-    };
-    TabBar.prototype.setSelectedItemIndex = function(index) {
-      _setSelectedItem.call(this, index);
-      return this;
-    };
-    TabBar.prototype.getSelectedItemIndex = function() {
-      return this._selectedItemIndex;
-    };
-    TabBar.prototype.getSize = function() {
-      return this.options.size || (this.layout ? this.layout.getSize() : View.prototype.getSize.call(this));
-    };
-    module.exports = TabBar;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/core/Modifier", ["npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/transitions/Transitionable", "npm:famous@0.3.5/transitions/TransitionableTransform"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  module.exports = require("npm:eventemitter3@1.1.0/index");
+  var Transform = require("npm:famous@0.3.5/core/Transform");
+  var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
+  var TransitionableTransform = require("npm:famous@0.3.5/transitions/TransitionableTransform");
+  function Modifier(options) {
+    this._transformGetter = null;
+    this._opacityGetter = null;
+    this._originGetter = null;
+    this._alignGetter = null;
+    this._sizeGetter = null;
+    this._proportionGetter = null;
+    this._legacyStates = {};
+    this._output = {
+      transform: Transform.identity,
+      opacity: 1,
+      origin: null,
+      align: null,
+      size: null,
+      proportions: null,
+      target: null
+    };
+    if (options) {
+      if (options.transform)
+        this.transformFrom(options.transform);
+      if (options.opacity !== undefined)
+        this.opacityFrom(options.opacity);
+      if (options.origin)
+        this.originFrom(options.origin);
+      if (options.align)
+        this.alignFrom(options.align);
+      if (options.size)
+        this.sizeFrom(options.size);
+      if (options.proportions)
+        this.proportionsFrom(options.proportions);
+    }
+  }
+  Modifier.prototype.transformFrom = function transformFrom(transform) {
+    if (transform instanceof Function)
+      this._transformGetter = transform;
+    else if (transform instanceof Object && transform.get)
+      this._transformGetter = transform.get.bind(transform);
+    else {
+      this._transformGetter = null;
+      this._output.transform = transform;
+    }
+    return this;
+  };
+  Modifier.prototype.opacityFrom = function opacityFrom(opacity) {
+    if (opacity instanceof Function)
+      this._opacityGetter = opacity;
+    else if (opacity instanceof Object && opacity.get)
+      this._opacityGetter = opacity.get.bind(opacity);
+    else {
+      this._opacityGetter = null;
+      this._output.opacity = opacity;
+    }
+    return this;
+  };
+  Modifier.prototype.originFrom = function originFrom(origin) {
+    if (origin instanceof Function)
+      this._originGetter = origin;
+    else if (origin instanceof Object && origin.get)
+      this._originGetter = origin.get.bind(origin);
+    else {
+      this._originGetter = null;
+      this._output.origin = origin;
+    }
+    return this;
+  };
+  Modifier.prototype.alignFrom = function alignFrom(align) {
+    if (align instanceof Function)
+      this._alignGetter = align;
+    else if (align instanceof Object && align.get)
+      this._alignGetter = align.get.bind(align);
+    else {
+      this._alignGetter = null;
+      this._output.align = align;
+    }
+    return this;
+  };
+  Modifier.prototype.sizeFrom = function sizeFrom(size) {
+    if (size instanceof Function)
+      this._sizeGetter = size;
+    else if (size instanceof Object && size.get)
+      this._sizeGetter = size.get.bind(size);
+    else {
+      this._sizeGetter = null;
+      this._output.size = size;
+    }
+    return this;
+  };
+  Modifier.prototype.proportionsFrom = function proportionsFrom(proportions) {
+    if (proportions instanceof Function)
+      this._proportionGetter = proportions;
+    else if (proportions instanceof Object && proportions.get)
+      this._proportionGetter = proportions.get.bind(proportions);
+    else {
+      this._proportionGetter = null;
+      this._output.proportions = proportions;
+    }
+    return this;
+  };
+  Modifier.prototype.setTransform = function setTransform(transform, transition, callback) {
+    if (transition || this._legacyStates.transform) {
+      if (!this._legacyStates.transform) {
+        this._legacyStates.transform = new TransitionableTransform(this._output.transform);
+      }
+      if (!this._transformGetter)
+        this.transformFrom(this._legacyStates.transform);
+      this._legacyStates.transform.set(transform, transition, callback);
+      return this;
+    } else
+      return this.transformFrom(transform);
+  };
+  Modifier.prototype.setOpacity = function setOpacity(opacity, transition, callback) {
+    if (transition || this._legacyStates.opacity) {
+      if (!this._legacyStates.opacity) {
+        this._legacyStates.opacity = new Transitionable(this._output.opacity);
+      }
+      if (!this._opacityGetter)
+        this.opacityFrom(this._legacyStates.opacity);
+      return this._legacyStates.opacity.set(opacity, transition, callback);
+    } else
+      return this.opacityFrom(opacity);
+  };
+  Modifier.prototype.setOrigin = function setOrigin(origin, transition, callback) {
+    if (transition || this._legacyStates.origin) {
+      if (!this._legacyStates.origin) {
+        this._legacyStates.origin = new Transitionable(this._output.origin || [0, 0]);
+      }
+      if (!this._originGetter)
+        this.originFrom(this._legacyStates.origin);
+      this._legacyStates.origin.set(origin, transition, callback);
+      return this;
+    } else
+      return this.originFrom(origin);
+  };
+  Modifier.prototype.setAlign = function setAlign(align, transition, callback) {
+    if (transition || this._legacyStates.align) {
+      if (!this._legacyStates.align) {
+        this._legacyStates.align = new Transitionable(this._output.align || [0, 0]);
+      }
+      if (!this._alignGetter)
+        this.alignFrom(this._legacyStates.align);
+      this._legacyStates.align.set(align, transition, callback);
+      return this;
+    } else
+      return this.alignFrom(align);
+  };
+  Modifier.prototype.setSize = function setSize(size, transition, callback) {
+    if (size && (transition || this._legacyStates.size)) {
+      if (!this._legacyStates.size) {
+        this._legacyStates.size = new Transitionable(this._output.size || [0, 0]);
+      }
+      if (!this._sizeGetter)
+        this.sizeFrom(this._legacyStates.size);
+      this._legacyStates.size.set(size, transition, callback);
+      return this;
+    } else
+      return this.sizeFrom(size);
+  };
+  Modifier.prototype.setProportions = function setProportions(proportions, transition, callback) {
+    if (proportions && (transition || this._legacyStates.proportions)) {
+      if (!this._legacyStates.proportions) {
+        this._legacyStates.proportions = new Transitionable(this._output.proportions || [0, 0]);
+      }
+      if (!this._proportionGetter)
+        this.proportionsFrom(this._legacyStates.proportions);
+      this._legacyStates.proportions.set(proportions, transition, callback);
+      return this;
+    } else
+      return this.proportionsFrom(proportions);
+  };
+  Modifier.prototype.halt = function halt() {
+    if (this._legacyStates.transform)
+      this._legacyStates.transform.halt();
+    if (this._legacyStates.opacity)
+      this._legacyStates.opacity.halt();
+    if (this._legacyStates.origin)
+      this._legacyStates.origin.halt();
+    if (this._legacyStates.align)
+      this._legacyStates.align.halt();
+    if (this._legacyStates.size)
+      this._legacyStates.size.halt();
+    if (this._legacyStates.proportions)
+      this._legacyStates.proportions.halt();
+    this._transformGetter = null;
+    this._opacityGetter = null;
+    this._originGetter = null;
+    this._alignGetter = null;
+    this._sizeGetter = null;
+    this._proportionGetter = null;
+  };
+  Modifier.prototype.getTransform = function getTransform() {
+    return this._transformGetter();
+  };
+  Modifier.prototype.getFinalTransform = function getFinalTransform() {
+    return this._legacyStates.transform ? this._legacyStates.transform.getFinal() : this._output.transform;
+  };
+  Modifier.prototype.getOpacity = function getOpacity() {
+    return this._opacityGetter();
+  };
+  Modifier.prototype.getOrigin = function getOrigin() {
+    return this._originGetter();
+  };
+  Modifier.prototype.getAlign = function getAlign() {
+    return this._alignGetter();
+  };
+  Modifier.prototype.getSize = function getSize() {
+    return this._sizeGetter ? this._sizeGetter() : this._output.size;
+  };
+  Modifier.prototype.getProportions = function getProportions() {
+    return this._proportionGetter ? this._proportionGetter() : this._output.proportions;
+  };
+  function _update() {
+    if (this._transformGetter)
+      this._output.transform = this._transformGetter();
+    if (this._opacityGetter)
+      this._output.opacity = this._opacityGetter();
+    if (this._originGetter)
+      this._output.origin = this._originGetter();
+    if (this._alignGetter)
+      this._output.align = this._alignGetter();
+    if (this._sizeGetter)
+      this._output.size = this._sizeGetter();
+    if (this._proportionGetter)
+      this._output.proportions = this._proportionGetter();
+  }
+  Modifier.prototype.modify = function modify(target) {
+    _update.call(this);
+    this._output.target = target;
+    return this._output;
+  };
+  module.exports = Modifier;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/utilities/Timer", ["npm:famous@0.3.5/core/Engine"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var FamousEngine = require("npm:famous@0.3.5/core/Engine");
+  var _event = 'prerender';
+  var getTime = window.performance && window.performance.now ? function() {
+    return window.performance.now();
+  } : function() {
+    return Date.now();
+  };
+  function addTimerFunction(fn) {
+    FamousEngine.on(_event, fn);
+    return fn;
+  }
+  function setTimeout(fn, duration) {
+    var t = getTime();
+    var callback = function() {
+      var t2 = getTime();
+      if (t2 - t >= duration) {
+        fn.apply(this, arguments);
+        FamousEngine.removeListener(_event, callback);
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function setInterval(fn, duration) {
+    var t = getTime();
+    var callback = function() {
+      var t2 = getTime();
+      if (t2 - t >= duration) {
+        fn.apply(this, arguments);
+        t = getTime();
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function after(fn, numTicks) {
+    if (numTicks === undefined)
+      return undefined;
+    var callback = function() {
+      numTicks--;
+      if (numTicks <= 0) {
+        fn.apply(this, arguments);
+        clear(callback);
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function every(fn, numTicks) {
+    numTicks = numTicks || 1;
+    var initial = numTicks;
+    var callback = function() {
+      numTicks--;
+      if (numTicks <= 0) {
+        fn.apply(this, arguments);
+        numTicks = initial;
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function clear(fn) {
+    FamousEngine.removeListener(_event, fn);
+  }
+  function debounce(func, wait) {
+    var timeout;
+    var ctx;
+    var timestamp;
+    var result;
+    var args;
+    return function() {
+      ctx = this;
+      args = arguments;
+      timestamp = getTime();
+      var fn = function() {
+        var last = getTime - timestamp;
+        if (last < wait) {
+          timeout = setTimeout(fn, wait - last);
+        } else {
+          timeout = null;
+          result = func.apply(ctx, args);
+        }
+      };
+      clear(timeout);
+      timeout = setTimeout(fn, wait);
+      return result;
+    };
+  }
+  module.exports = {
+    setTimeout: setTimeout,
+    setInterval: setInterval,
+    debounce: debounce,
+    after: after,
+    every: every,
+    clear: clear
+  };
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/core/Surface", ["npm:famous@0.3.5/core/ElementOutput"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var ElementOutput = require("npm:famous@0.3.5/core/ElementOutput");
+  function Surface(options) {
+    ElementOutput.call(this);
+    this.options = {};
+    this.properties = {};
+    this.attributes = {};
+    this.content = '';
+    this.classList = [];
+    this.size = null;
+    this._classesDirty = true;
+    this._stylesDirty = true;
+    this._attributesDirty = true;
+    this._sizeDirty = true;
+    this._contentDirty = true;
+    this._trueSizeCheck = true;
+    this._dirtyClasses = [];
+    if (options)
+      this.setOptions(options);
+    this._currentTarget = null;
+  }
+  Surface.prototype = Object.create(ElementOutput.prototype);
+  Surface.prototype.constructor = Surface;
+  Surface.prototype.elementType = 'div';
+  Surface.prototype.elementClass = 'famous-surface';
+  Surface.prototype.setAttributes = function setAttributes(attributes) {
+    for (var n in attributes) {
+      if (n === 'style')
+        throw new Error('Cannot set styles via "setAttributes" as it will break Famo.us.  Use "setProperties" instead.');
+      this.attributes[n] = attributes[n];
+    }
+    this._attributesDirty = true;
+  };
+  Surface.prototype.getAttributes = function getAttributes() {
+    return this.attributes;
+  };
+  Surface.prototype.setProperties = function setProperties(properties) {
+    for (var n in properties) {
+      this.properties[n] = properties[n];
+    }
+    this._stylesDirty = true;
+    return this;
+  };
+  Surface.prototype.getProperties = function getProperties() {
+    return this.properties;
+  };
+  Surface.prototype.addClass = function addClass(className) {
+    if (this.classList.indexOf(className) < 0) {
+      this.classList.push(className);
+      this._classesDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.removeClass = function removeClass(className) {
+    var i = this.classList.indexOf(className);
+    if (i >= 0) {
+      this._dirtyClasses.push(this.classList.splice(i, 1)[0]);
+      this._classesDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.toggleClass = function toggleClass(className) {
+    var i = this.classList.indexOf(className);
+    if (i >= 0) {
+      this.removeClass(className);
+    } else {
+      this.addClass(className);
+    }
+    return this;
+  };
+  Surface.prototype.setClasses = function setClasses(classList) {
+    var i = 0;
+    var removal = [];
+    for (i = 0; i < this.classList.length; i++) {
+      if (classList.indexOf(this.classList[i]) < 0)
+        removal.push(this.classList[i]);
+    }
+    for (i = 0; i < removal.length; i++)
+      this.removeClass(removal[i]);
+    for (i = 0; i < classList.length; i++)
+      this.addClass(classList[i]);
+    return this;
+  };
+  Surface.prototype.getClassList = function getClassList() {
+    return this.classList;
+  };
+  Surface.prototype.setContent = function setContent(content) {
+    if (this.content !== content) {
+      this.content = content;
+      this._contentDirty = true;
+    }
+    return this;
+  };
+  Surface.prototype.getContent = function getContent() {
+    return this.content;
+  };
+  Surface.prototype.setOptions = function setOptions(options) {
+    if (options.size)
+      this.setSize(options.size);
+    if (options.classes)
+      this.setClasses(options.classes);
+    if (options.properties)
+      this.setProperties(options.properties);
+    if (options.attributes)
+      this.setAttributes(options.attributes);
+    if (options.content)
+      this.setContent(options.content);
+    return this;
+  };
+  function _cleanupClasses(target) {
+    for (var i = 0; i < this._dirtyClasses.length; i++)
+      target.classList.remove(this._dirtyClasses[i]);
+    this._dirtyClasses = [];
+  }
+  function _applyStyles(target) {
+    for (var n in this.properties) {
+      target.style[n] = this.properties[n];
+    }
+  }
+  function _cleanupStyles(target) {
+    for (var n in this.properties) {
+      target.style[n] = '';
+    }
+  }
+  function _applyAttributes(target) {
+    for (var n in this.attributes) {
+      target.setAttribute(n, this.attributes[n]);
+    }
+  }
+  function _cleanupAttributes(target) {
+    for (var n in this.attributes) {
+      target.removeAttribute(n);
+    }
+  }
+  function _xyNotEquals(a, b) {
+    return a && b ? a[0] !== b[0] || a[1] !== b[1] : a !== b;
+  }
+  Surface.prototype.setup = function setup(allocator) {
+    var target = allocator.allocate(this.elementType);
+    if (this.elementClass) {
+      if (this.elementClass instanceof Array) {
+        for (var i = 0; i < this.elementClass.length; i++) {
+          target.classList.add(this.elementClass[i]);
+        }
+      } else {
+        target.classList.add(this.elementClass);
+      }
+    }
+    target.style.display = '';
+    this.attach(target);
+    this._opacity = null;
+    this._currentTarget = target;
+    this._stylesDirty = true;
+    this._classesDirty = true;
+    this._attributesDirty = true;
+    this._sizeDirty = true;
+    this._contentDirty = true;
+    this._originDirty = true;
+    this._transformDirty = true;
+  };
+  Surface.prototype.commit = function commit(context) {
+    if (!this._currentTarget)
+      this.setup(context.allocator);
+    var target = this._currentTarget;
+    var size = context.size;
+    if (this._classesDirty) {
+      _cleanupClasses.call(this, target);
+      var classList = this.getClassList();
+      for (var i = 0; i < classList.length; i++)
+        target.classList.add(classList[i]);
+      this._classesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this._stylesDirty) {
+      _applyStyles.call(this, target);
+      this._stylesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this._attributesDirty) {
+      _applyAttributes.call(this, target);
+      this._attributesDirty = false;
+      this._trueSizeCheck = true;
+    }
+    if (this.size) {
+      var origSize = context.size;
+      size = [this.size[0], this.size[1]];
+      if (size[0] === undefined)
+        size[0] = origSize[0];
+      if (size[1] === undefined)
+        size[1] = origSize[1];
+      if (size[0] === true || size[1] === true) {
+        if (size[0] === true) {
+          if (this._trueSizeCheck || this._size[0] === 0) {
+            var width = target.offsetWidth;
+            if (this._size && this._size[0] !== width) {
+              this._size[0] = width;
+              this._sizeDirty = true;
+            }
+            size[0] = width;
+          } else {
+            if (this._size)
+              size[0] = this._size[0];
+          }
+        }
+        if (size[1] === true) {
+          if (this._trueSizeCheck || this._size[1] === 0) {
+            var height = target.offsetHeight;
+            if (this._size && this._size[1] !== height) {
+              this._size[1] = height;
+              this._sizeDirty = true;
+            }
+            size[1] = height;
+          } else {
+            if (this._size)
+              size[1] = this._size[1];
+          }
+        }
+        this._trueSizeCheck = false;
+      }
+    }
+    if (_xyNotEquals(this._size, size)) {
+      if (!this._size)
+        this._size = [0, 0];
+      this._size[0] = size[0];
+      this._size[1] = size[1];
+      this._sizeDirty = true;
+    }
+    if (this._sizeDirty) {
+      if (this._size) {
+        target.style.width = this.size && this.size[0] === true ? '' : this._size[0] + 'px';
+        target.style.height = this.size && this.size[1] === true ? '' : this._size[1] + 'px';
+      }
+      this._eventOutput.emit('resize');
+    }
+    if (this._contentDirty) {
+      this.deploy(target);
+      this._eventOutput.emit('deploy');
+      this._contentDirty = false;
+      this._trueSizeCheck = true;
+    }
+    ElementOutput.prototype.commit.call(this, context);
+  };
+  Surface.prototype.cleanup = function cleanup(allocator) {
+    var i = 0;
+    var target = this._currentTarget;
+    this._eventOutput.emit('recall');
+    this.recall(target);
+    target.style.display = 'none';
+    target.style.opacity = '';
+    target.style.width = '';
+    target.style.height = '';
+    _cleanupStyles.call(this, target);
+    _cleanupAttributes.call(this, target);
+    var classList = this.getClassList();
+    _cleanupClasses.call(this, target);
+    for (i = 0; i < classList.length; i++)
+      target.classList.remove(classList[i]);
+    if (this.elementClass) {
+      if (this.elementClass instanceof Array) {
+        for (i = 0; i < this.elementClass.length; i++) {
+          target.classList.remove(this.elementClass[i]);
+        }
+      } else {
+        target.classList.remove(this.elementClass);
+      }
+    }
+    this.detach(target);
+    this._currentTarget = null;
+    allocator.deallocate(target);
+  };
+  Surface.prototype.deploy = function deploy(target) {
+    var content = this.getContent();
+    if (content instanceof Node) {
+      while (target.hasChildNodes())
+        target.removeChild(target.firstChild);
+      target.appendChild(content);
+    } else
+      target.innerHTML = content;
+  };
+  Surface.prototype.recall = function recall(target) {
+    var df = document.createDocumentFragment();
+    while (target.hasChildNodes())
+      df.appendChild(target.firstChild);
+    this.setContent(df);
+  };
+  Surface.prototype.getSize = function getSize() {
+    return this._size ? this._size : this.size;
+  };
+  Surface.prototype.setSize = function setSize(size) {
+    this.size = size ? [size[0], size[1]] : null;
+    this._sizeDirty = true;
+    return this;
+  };
+  module.exports = Surface;
   global.define = __define;
   return module.exports;
 });
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
-    var LayoutContext = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutContext");
-    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutContext = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutContext");
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
     var MAX_POOL_SIZE = 100;
     function LayoutNodeManager(LayoutNode, initLayoutNodeFn) {
       this.LayoutNode = LayoutNode;
@@ -17023,343 +17201,165 @@ System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", ["
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:famous@0.3.5/core/Modifier", ["npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/transitions/Transitionable", "npm:famous@0.3.5/transitions/TransitionableTransform"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Transform = require("npm:famous@0.3.5/core/Transform");
-  var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
-  var TransitionableTransform = require("npm:famous@0.3.5/transitions/TransitionableTransform");
-  function Modifier(options) {
-    this._transformGetter = null;
-    this._opacityGetter = null;
-    this._originGetter = null;
-    this._alignGetter = null;
-    this._sizeGetter = null;
-    this._proportionGetter = null;
-    this._legacyStates = {};
-    this._output = {
-      transform: Transform.identity,
-      opacity: 1,
-      origin: null,
-      align: null,
-      size: null,
-      proportions: null,
-      target: null
-    };
-    if (options) {
-      if (options.transform)
-        this.transformFrom(options.transform);
-      if (options.opacity !== undefined)
-        this.opacityFrom(options.opacity);
-      if (options.origin)
-        this.originFrom(options.origin);
-      if (options.align)
-        this.alignFrom(options.align);
-      if (options.size)
-        this.sizeFrom(options.size);
-      if (options.proportions)
-        this.proportionsFrom(options.proportions);
-    }
-  }
-  Modifier.prototype.transformFrom = function transformFrom(transform) {
-    if (transform instanceof Function)
-      this._transformGetter = transform;
-    else if (transform instanceof Object && transform.get)
-      this._transformGetter = transform.get.bind(transform);
-    else {
-      this._transformGetter = null;
-      this._output.transform = transform;
-    }
-    return this;
-  };
-  Modifier.prototype.opacityFrom = function opacityFrom(opacity) {
-    if (opacity instanceof Function)
-      this._opacityGetter = opacity;
-    else if (opacity instanceof Object && opacity.get)
-      this._opacityGetter = opacity.get.bind(opacity);
-    else {
-      this._opacityGetter = null;
-      this._output.opacity = opacity;
-    }
-    return this;
-  };
-  Modifier.prototype.originFrom = function originFrom(origin) {
-    if (origin instanceof Function)
-      this._originGetter = origin;
-    else if (origin instanceof Object && origin.get)
-      this._originGetter = origin.get.bind(origin);
-    else {
-      this._originGetter = null;
-      this._output.origin = origin;
-    }
-    return this;
-  };
-  Modifier.prototype.alignFrom = function alignFrom(align) {
-    if (align instanceof Function)
-      this._alignGetter = align;
-    else if (align instanceof Object && align.get)
-      this._alignGetter = align.get.bind(align);
-    else {
-      this._alignGetter = null;
-      this._output.align = align;
-    }
-    return this;
-  };
-  Modifier.prototype.sizeFrom = function sizeFrom(size) {
-    if (size instanceof Function)
-      this._sizeGetter = size;
-    else if (size instanceof Object && size.get)
-      this._sizeGetter = size.get.bind(size);
-    else {
-      this._sizeGetter = null;
-      this._output.size = size;
-    }
-    return this;
-  };
-  Modifier.prototype.proportionsFrom = function proportionsFrom(proportions) {
-    if (proportions instanceof Function)
-      this._proportionGetter = proportions;
-    else if (proportions instanceof Object && proportions.get)
-      this._proportionGetter = proportions.get.bind(proportions);
-    else {
-      this._proportionGetter = null;
-      this._output.proportions = proportions;
-    }
-    return this;
-  };
-  Modifier.prototype.setTransform = function setTransform(transform, transition, callback) {
-    if (transition || this._legacyStates.transform) {
-      if (!this._legacyStates.transform) {
-        this._legacyStates.transform = new TransitionableTransform(this._output.transform);
-      }
-      if (!this._transformGetter)
-        this.transformFrom(this._legacyStates.transform);
-      this._legacyStates.transform.set(transform, transition, callback);
-      return this;
-    } else
-      return this.transformFrom(transform);
-  };
-  Modifier.prototype.setOpacity = function setOpacity(opacity, transition, callback) {
-    if (transition || this._legacyStates.opacity) {
-      if (!this._legacyStates.opacity) {
-        this._legacyStates.opacity = new Transitionable(this._output.opacity);
-      }
-      if (!this._opacityGetter)
-        this.opacityFrom(this._legacyStates.opacity);
-      return this._legacyStates.opacity.set(opacity, transition, callback);
-    } else
-      return this.opacityFrom(opacity);
-  };
-  Modifier.prototype.setOrigin = function setOrigin(origin, transition, callback) {
-    if (transition || this._legacyStates.origin) {
-      if (!this._legacyStates.origin) {
-        this._legacyStates.origin = new Transitionable(this._output.origin || [0, 0]);
-      }
-      if (!this._originGetter)
-        this.originFrom(this._legacyStates.origin);
-      this._legacyStates.origin.set(origin, transition, callback);
-      return this;
-    } else
-      return this.originFrom(origin);
-  };
-  Modifier.prototype.setAlign = function setAlign(align, transition, callback) {
-    if (transition || this._legacyStates.align) {
-      if (!this._legacyStates.align) {
-        this._legacyStates.align = new Transitionable(this._output.align || [0, 0]);
-      }
-      if (!this._alignGetter)
-        this.alignFrom(this._legacyStates.align);
-      this._legacyStates.align.set(align, transition, callback);
-      return this;
-    } else
-      return this.alignFrom(align);
-  };
-  Modifier.prototype.setSize = function setSize(size, transition, callback) {
-    if (size && (transition || this._legacyStates.size)) {
-      if (!this._legacyStates.size) {
-        this._legacyStates.size = new Transitionable(this._output.size || [0, 0]);
-      }
-      if (!this._sizeGetter)
-        this.sizeFrom(this._legacyStates.size);
-      this._legacyStates.size.set(size, transition, callback);
-      return this;
-    } else
-      return this.sizeFrom(size);
-  };
-  Modifier.prototype.setProportions = function setProportions(proportions, transition, callback) {
-    if (proportions && (transition || this._legacyStates.proportions)) {
-      if (!this._legacyStates.proportions) {
-        this._legacyStates.proportions = new Transitionable(this._output.proportions || [0, 0]);
-      }
-      if (!this._proportionGetter)
-        this.proportionsFrom(this._legacyStates.proportions);
-      this._legacyStates.proportions.set(proportions, transition, callback);
-      return this;
-    } else
-      return this.proportionsFrom(proportions);
-  };
-  Modifier.prototype.halt = function halt() {
-    if (this._legacyStates.transform)
-      this._legacyStates.transform.halt();
-    if (this._legacyStates.opacity)
-      this._legacyStates.opacity.halt();
-    if (this._legacyStates.origin)
-      this._legacyStates.origin.halt();
-    if (this._legacyStates.align)
-      this._legacyStates.align.halt();
-    if (this._legacyStates.size)
-      this._legacyStates.size.halt();
-    if (this._legacyStates.proportions)
-      this._legacyStates.proportions.halt();
-    this._transformGetter = null;
-    this._opacityGetter = null;
-    this._originGetter = null;
-    this._alignGetter = null;
-    this._sizeGetter = null;
-    this._proportionGetter = null;
-  };
-  Modifier.prototype.getTransform = function getTransform() {
-    return this._transformGetter();
-  };
-  Modifier.prototype.getFinalTransform = function getFinalTransform() {
-    return this._legacyStates.transform ? this._legacyStates.transform.getFinal() : this._output.transform;
-  };
-  Modifier.prototype.getOpacity = function getOpacity() {
-    return this._opacityGetter();
-  };
-  Modifier.prototype.getOrigin = function getOrigin() {
-    return this._originGetter();
-  };
-  Modifier.prototype.getAlign = function getAlign() {
-    return this._alignGetter();
-  };
-  Modifier.prototype.getSize = function getSize() {
-    return this._sizeGetter ? this._sizeGetter() : this._output.size;
-  };
-  Modifier.prototype.getProportions = function getProportions() {
-    return this._proportionGetter ? this._proportionGetter() : this._output.proportions;
-  };
-  function _update() {
-    if (this._transformGetter)
-      this._output.transform = this._transformGetter();
-    if (this._opacityGetter)
-      this._output.opacity = this._opacityGetter();
-    if (this._originGetter)
-      this._output.origin = this._originGetter();
-    if (this._alignGetter)
-      this._output.align = this._alignGetter();
-    if (this._sizeGetter)
-      this._output.size = this._sizeGetter();
-    if (this._proportionGetter)
-      this._output.proportions = this._proportionGetter();
-  }
-  Modifier.prototype.modify = function modify(target) {
-    _update.call(this);
-    this._output.target = target;
-    return this._output;
-  };
-  module.exports = Modifier;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/utilities/Timer", ["npm:famous@0.3.5/core/Engine"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var FamousEngine = require("npm:famous@0.3.5/core/Engine");
-  var _event = 'prerender';
-  var getTime = window.performance && window.performance.now ? function() {
-    return window.performance.now();
-  } : function() {
-    return Date.now();
-  };
-  function addTimerFunction(fn) {
-    FamousEngine.on(_event, fn);
-    return fn;
-  }
-  function setTimeout(fn, duration) {
-    var t = getTime();
-    var callback = function() {
-      var t2 = getTime();
-      if (t2 - t >= duration) {
-        fn.apply(this, arguments);
-        FamousEngine.removeListener(_event, callback);
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function setInterval(fn, duration) {
-    var t = getTime();
-    var callback = function() {
-      var t2 = getTime();
-      if (t2 - t >= duration) {
-        fn.apply(this, arguments);
-        t = getTime();
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function after(fn, numTicks) {
-    if (numTicks === undefined)
-      return undefined;
-    var callback = function() {
-      numTicks--;
-      if (numTicks <= 0) {
-        fn.apply(this, arguments);
-        clear(callback);
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function every(fn, numTicks) {
-    numTicks = numTicks || 1;
-    var initial = numTicks;
-    var callback = function() {
-      numTicks--;
-      if (numTicks <= 0) {
-        fn.apply(this, arguments);
-        numTicks = initial;
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function clear(fn) {
-    FamousEngine.removeListener(_event, fn);
-  }
-  function debounce(func, wait) {
-    var timeout;
-    var ctx;
-    var timestamp;
-    var result;
-    var args;
-    return function() {
-      ctx = this;
-      args = arguments;
-      timestamp = getTime();
-      var fn = function() {
-        var last = getTime - timestamp;
-        if (last < wait) {
-          timeout = setTimeout(fn, wait - last);
-        } else {
-          timeout = null;
-          result = func.apply(ctx, args);
-        }
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Surface = require("npm:famous@0.3.5/core/Surface");
+    var View = require("npm:famous@0.3.5/core/View");
+    var LayoutController = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController");
+    var TabBarLayout = require("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout");
+    function TabBar(options) {
+      View.apply(this, arguments);
+      this._selectedItemIndex = -1;
+      options = options || {};
+      this.classes = options.classes ? this.classes.concat(options.classes) : this.classes;
+      this.layout = new LayoutController(this.options.layoutController);
+      this.add(this.layout);
+      this.layout.pipe(this._eventOutput);
+      this._renderables = {
+        items: [],
+        spacers: [],
+        background: _createRenderable.call(this, 'background'),
+        selectedItemOverlay: _createRenderable.call(this, 'selectedItemOverlay')
       };
-      clear(timeout);
-      timeout = setTimeout(fn, wait);
-      return result;
+      this.setOptions(this.options);
+    }
+    TabBar.prototype = Object.create(View.prototype);
+    TabBar.prototype.constructor = TabBar;
+    TabBar.prototype.classes = ['ff-widget', 'ff-tabbar'];
+    TabBar.DEFAULT_OPTIONS = {
+      tabBarLayout: {
+        margins: [0, 0, 0, 0],
+        spacing: 0
+      },
+      createRenderables: {
+        item: true,
+        background: false,
+        selectedItemOverlay: false,
+        spacer: false
+      },
+      layoutController: {
+        autoPipeEvents: true,
+        layout: TabBarLayout,
+        flow: true,
+        flowOptions: {
+          reflowOnResize: false,
+          spring: {
+            dampingRatio: 0.8,
+            period: 300
+          }
+        }
+      }
     };
-  }
-  module.exports = {
-    setTimeout: setTimeout,
-    setInterval: setInterval,
-    debounce: debounce,
-    after: after,
-    every: every,
-    clear: clear
-  };
+    function _setSelectedItem(index) {
+      if (index !== this._selectedItemIndex) {
+        var oldIndex = this._selectedItemIndex;
+        this._selectedItemIndex = index;
+        this.layout.setLayoutOptions({selectedItemIndex: index});
+        if ((oldIndex >= 0) && this._renderables.items[oldIndex].removeClass) {
+          this._renderables.items[oldIndex].removeClass('selected');
+        }
+        if (this._renderables.items[index].addClass) {
+          this._renderables.items[index].addClass('selected');
+        }
+        if (oldIndex >= 0) {
+          this._eventOutput.emit('tabchange', {
+            target: this,
+            index: index,
+            oldIndex: oldIndex,
+            item: this._renderables.items[index],
+            oldItem: ((oldIndex >= 0) && (oldIndex < this._renderables.items.length)) ? this._renderables.items[oldIndex] : undefined
+          });
+        }
+      }
+    }
+    function _createRenderable(id, data) {
+      var option = this.options.createRenderables[id];
+      if (option instanceof Function) {
+        return option.call(this, id, data);
+      } else if (!option) {
+        return undefined;
+      }
+      if ((data !== undefined) && (data instanceof Object)) {
+        return data;
+      }
+      var surface = new Surface({
+        classes: this.classes,
+        content: data ? ('<div>' + data + '</div>') : undefined
+      });
+      surface.addClass(id);
+      if (id === 'item') {
+        if (this.options.tabBarLayout && this.options.tabBarLayout.itemSize && (this.options.tabBarLayout.itemSize === true)) {
+          surface.setSize(this.layout.getDirection() ? [undefined, true] : [true, undefined]);
+        }
+      }
+      return surface;
+    }
+    TabBar.prototype.setOptions = function(options) {
+      View.prototype.setOptions.call(this, options);
+      if (!this.layout) {
+        return this;
+      }
+      if (options.tabBarLayout !== undefined) {
+        this.layout.setLayoutOptions(options.tabBarLayout);
+      }
+      if (options.layoutController) {
+        this.layout.setOptions(options.layoutController);
+      }
+      return this;
+    };
+    TabBar.prototype.setItems = function(items) {
+      var currentIndex = this._selectedItemIndex;
+      this._selectedItemIndex = -1;
+      this._renderables.items = [];
+      this._renderables.spacers = [];
+      if (items) {
+        for (var i = 0; i < items.length; i++) {
+          var item = _createRenderable.call(this, 'item', items[i]);
+          if (item.on) {
+            item.on('click', _setSelectedItem.bind(this, i));
+          }
+          this._renderables.items.push(item);
+          if ((i < (items.length - 1))) {
+            var spacer = _createRenderable.call(this, 'spacer', ' ');
+            if (spacer) {
+              this._renderables.spacers.push(spacer);
+            }
+          }
+        }
+      }
+      this.layout.setDataSource(this._renderables);
+      if (this._renderables.items.length) {
+        _setSelectedItem.call(this, Math.max(Math.min(currentIndex, this._renderables.items.length - 1), 0));
+      }
+      return this;
+    };
+    TabBar.prototype.getItems = function() {
+      return this._renderables.items;
+    };
+    TabBar.prototype.getItemSpec = function(index, normalize) {
+      return this.layout.getSpec(this._renderables.items[index], normalize);
+    };
+    TabBar.prototype.setSelectedItemIndex = function(index) {
+      _setSelectedItem.call(this, index);
+      return this;
+    };
+    TabBar.prototype.getSelectedItemIndex = function() {
+      return this._selectedItemIndex;
+    };
+    TabBar.prototype.getSize = function() {
+      return this.options.size || (this.layout ? this.layout.getSize() : View.prototype.getSize.call(this));
+    };
+    module.exports = TabBar;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("npm:eventemitter3@1.1.0/index");
   global.define = __define;
   return module.exports;
 });
@@ -18894,7 +18894,7 @@ System.register("npm:famous@0.3.5/transitions/Transitionable", ["npm:famous@0.3.
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/physics/PhysicsEngine", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "npm:famous@0.3.5/transitions/Transitionable"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/physics/PhysicsEngine", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "npm:famous@0.3.5/transitions/Transitionable"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
     var Transform = require("npm:famous@0.3.5/core/Transform");
@@ -18902,7 +18902,7 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm
     var Particle = require("npm:famous@0.3.5/physics/bodies/Particle");
     var Spring = require("npm:famous@0.3.5/physics/forces/Spring");
     var PhysicsEngine = require("npm:famous@0.3.5/physics/PhysicsEngine");
-    var LayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
+    var LayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
     var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
     function FlowLayoutNode(renderNode, spec) {
       LayoutNode.apply(this, arguments);
@@ -19261,19 +19261,19 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm
 })();
 (function() {
 function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["npm:famous@0.3.5/utilities/Utility", "npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/ViewSequence", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "npm:famous@0.3.5/core/Transform", "github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper"], false, function(__require, __exports, __module) {
+System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["npm:famous@0.3.5/utilities/Utility", "npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/ViewSequence", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/EventHandler", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "npm:famous@0.3.5/core/Transform", "github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Utility = require("npm:famous@0.3.5/utilities/Utility");
     var Entity = require("npm:famous@0.3.5/core/Entity");
     var ViewSequence = require("npm:famous@0.3.5/core/ViewSequence");
     var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
     var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
-    var LayoutNodeManager = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager");
-    var LayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
-    var FlowLayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode");
+    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutNodeManager = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager");
+    var LayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
+    var FlowLayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode");
     var Transform = require("npm:famous@0.3.5/core/Transform");
-    require("github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper");
+    require("github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper");
     function LayoutController(options, nodeManager) {
       this.id = Entity.register(this);
       this._isDirty = true;
@@ -20420,19 +20420,19 @@ System.register("npm:famous@0.3.5/core/Context", ["npm:famous@0.3.5/core/RenderN
 
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["npm:famous@0.3.5/utilities/Utility", "npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/ViewSequence", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/EventHandler", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "npm:famous@0.3.5/core/Transform", "github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["npm:famous@0.3.5/utilities/Utility", "npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/ViewSequence", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "npm:famous@0.3.5/core/Transform", "github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Utility = require("npm:famous@0.3.5/utilities/Utility");
     var Entity = require("npm:famous@0.3.5/core/Entity");
     var ViewSequence = require("npm:famous@0.3.5/core/ViewSequence");
     var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
     var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-    var LayoutUtility = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
-    var LayoutNodeManager = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager");
-    var LayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
-    var FlowLayoutNode = require("github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode");
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutNodeManager = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager");
+    var LayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
+    var FlowLayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode");
     var Transform = require("npm:famous@0.3.5/core/Transform");
-    require("github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper");
+    require("github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper");
     function LayoutController(options, nodeManager) {
       this.id = Entity.register(this);
       this._isDirty = true;
@@ -21057,467 +21057,6 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["n
       }
     };
     module.exports = LayoutController;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-(function() {
-function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-flex@0.3.2/src/AnimationController", ["npm:famous@0.3.5/core/View", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/Modifier", "npm:famous@0.3.5/modifiers/StateModifier", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Timer", "npm:famous@0.3.5/transitions/Easing"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    var View = require("npm:famous@0.3.5/core/View");
-    var LayoutController = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController");
-    var Transform = require("npm:famous@0.3.5/core/Transform");
-    var Modifier = require("npm:famous@0.3.5/core/Modifier");
-    var StateModifier = require("npm:famous@0.3.5/modifiers/StateModifier");
-    var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
-    var Timer = require("npm:famous@0.3.5/utilities/Timer");
-    var Easing = require("npm:famous@0.3.5/transitions/Easing");
-    function AnimationController(options) {
-      View.apply(this, arguments);
-      _createLayout.call(this);
-      if (options) {
-        this.setOptions(options);
-      }
-    }
-    AnimationController.prototype = Object.create(View.prototype);
-    AnimationController.prototype.constructor = AnimationController;
-    AnimationController.Animation = {
-      Slide: {
-        Left: function(show, size) {
-          return {transform: Transform.translate(show ? size[0] : -size[0], 0, 0)};
-        },
-        Right: function(show, size) {
-          return {transform: Transform.translate(show ? -size[0] : size[0], 0, 0)};
-        },
-        Up: function(show, size) {
-          return {transform: Transform.translate(0, show ? size[1] : -size[1], 0)};
-        },
-        Down: function(show, size) {
-          return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
-        }
-      },
-      Fade: function(show, size) {
-        return {opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0};
-      },
-      Zoom: function(show, size) {
-        var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
-        return {
-          transform: Transform.scale(scale, scale, 1),
-          align: [0.5, 0.5],
-          origin: [0.5, 0.5]
-        };
-      },
-      FadedZoom: function(show, size) {
-        var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
-        return {
-          opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
-          transform: Transform.scale(scale, scale, 1),
-          align: [0.5, 0.5],
-          origin: [0.5, 0.5]
-        };
-      }
-    };
-    AnimationController.DEFAULT_OPTIONS = {
-      transition: {
-        duration: 400,
-        curve: Easing.inOutQuad
-      },
-      animation: AnimationController.Animation.Fade,
-      show: {},
-      hide: {},
-      transfer: {
-        fastResize: true,
-        zIndex: 10
-      },
-      zIndexOffset: 0
-    };
-    var ItemState = {
-      NONE: 0,
-      HIDE: 1,
-      HIDING: 2,
-      SHOW: 3,
-      SHOWING: 4,
-      VISIBLE: 5,
-      QUEUED: 6
-    };
-    function ViewStackLayout(context, options) {
-      var set = {
-        size: context.size,
-        translate: [0, 0, 0]
-      };
-      var views = context.get('views');
-      var transferables = context.get('transferables');
-      for (var i = 0; i < Math.min(views.length, 2); i++) {
-        var item = this._viewStack[i];
-        switch (item.state) {
-          case ItemState.HIDE:
-          case ItemState.HIDING:
-          case ItemState.VISIBLE:
-          case ItemState.SHOW:
-          case ItemState.SHOWING:
-            var view = views[i];
-            context.set(view, set);
-            for (var j = 0; j < transferables.length; j++) {
-              for (var k = 0; k < item.transferables.length; k++) {
-                if (transferables[j].renderNode === item.transferables[k].renderNode) {
-                  context.set(transferables[j], {
-                    translate: [0, 0, set.translate[2]],
-                    size: [context.size[0], context.size[1]]
-                  });
-                }
-              }
-            }
-            set.translate[2] += options.zIndexOffset;
-            break;
-        }
-      }
-    }
-    function _createLayout() {
-      this._renderables = {
-        views: [],
-        transferables: []
-      };
-      this._viewStack = [];
-      this.layout = new LayoutController({
-        layout: ViewStackLayout.bind(this),
-        layoutOptions: this.options,
-        dataSource: this._renderables
-      });
-      this.add(this.layout);
-      this.layout.on('layoutend', _startAnimations.bind(this));
-    }
-    function _getViewSpec(item, view, id, callback) {
-      if (!item.view) {
-        return ;
-      }
-      var spec = view.getSpec(id);
-      if (spec) {
-        callback(spec);
-      } else {
-        Timer.after(_getViewSpec.bind(this, item, view, id, callback), 1);
-      }
-    }
-    function _getTransferable(item, view, id) {
-      if (view.getTransferable) {
-        return view.getTransferable(id);
-      }
-      if (view.getSpec && view.get && view.replace) {
-        if (view.get(id) !== undefined) {
-          return {
-            get: function() {
-              return view.get(id);
-            },
-            show: function(renderable) {
-              view.replace(id, renderable);
-            },
-            getSpec: _getViewSpec.bind(this, item, view, id)
-          };
-        }
-      }
-      if (view.layout) {
-        return _getTransferable.call(this, item, view.layout, id);
-      }
-    }
-    function _startTransferableAnimations(item, prevItem) {
-      for (var sourceId in item.options.transfer.items) {
-        _startTransferableAnimation.call(this, item, prevItem, sourceId);
-      }
-    }
-    function _startTransferableAnimation(item, prevItem, sourceId) {
-      var target = item.options.transfer.items[sourceId];
-      var transferable = {};
-      transferable.source = _getTransferable.call(this, prevItem, prevItem.view, sourceId);
-      if (Array.isArray(target)) {
-        for (var i = 0; i < target.length; i++) {
-          transferable.target = _getTransferable.call(this, item, item.view, target[i]);
-          if (transferable.target) {
-            break;
-          }
-        }
-      } else {
-        transferable.target = _getTransferable.call(this, item, item.view, target);
-      }
-      if (transferable.source && transferable.target) {
-        transferable.source.getSpec(function(sourceSpec) {
-          transferable.originalSource = transferable.source.get();
-          transferable.source.show(new RenderNode(new Modifier(sourceSpec)));
-          transferable.originalTarget = transferable.target.get();
-          var targetNode = new RenderNode(new Modifier({opacity: 0}));
-          targetNode.add(transferable.originalTarget);
-          transferable.target.show(targetNode);
-          var zIndexMod = new Modifier({transform: Transform.translate(0, 0, item.options.transfer.zIndex)});
-          var mod = new StateModifier(sourceSpec);
-          transferable.renderNode = new RenderNode(zIndexMod);
-          transferable.renderNode.add(mod).add(transferable.originalSource);
-          item.transferables.push(transferable);
-          this._renderables.transferables.push(transferable.renderNode);
-          this.layout.reflowLayout();
-          Timer.after(function() {
-            transferable.target.getSpec(function(targetSpec, transition) {
-              mod.halt();
-              if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
-                mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition || item.options.transfer.transition);
-              }
-              if (item.options.transfer.fastResize) {
-                if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
-                  var transform = targetSpec.transform || Transform.identity;
-                  if (sourceSpec.size && targetSpec.size) {
-                    transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
-                  }
-                  mod.setTransform(transform, transition || item.options.transfer.transition);
-                }
-              } else {
-                if (sourceSpec.transform || targetSpec.transform) {
-                  mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
-                }
-                if (sourceSpec.size || targetSpec.size) {
-                  mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
-                }
-              }
-            }, true);
-          }, 1);
-        }.bind(this), false);
-      }
-    }
-    function _endTransferableAnimations(item) {
-      for (var j = 0; j < item.transferables.length; j++) {
-        var transferable = item.transferables[j];
-        for (var i = 0; i < this._renderables.transferables.length; i++) {
-          if (this._renderables.transferables[i] === transferable.renderNode) {
-            this._renderables.transferables.splice(i, 1);
-            break;
-          }
-        }
-        transferable.source.show(transferable.originalSource);
-        transferable.target.show(transferable.originalTarget);
-      }
-      item.transferables = [];
-      this.layout.reflowLayout();
-    }
-    function _startAnimations(event) {
-      var prevItem;
-      for (var i = 0; i < this._viewStack.length; i++) {
-        var item = this._viewStack[i];
-        switch (item.state) {
-          case ItemState.HIDE:
-            item.state = ItemState.HIDING;
-            _startAnimation.call(this, item, prevItem, event.size, false);
-            _updateState.call(this);
-            break;
-          case ItemState.SHOW:
-            item.state = ItemState.SHOWING;
-            _startAnimation.call(this, item, prevItem, event.size, true);
-            _updateState.call(this);
-            break;
-        }
-        prevItem = item;
-      }
-    }
-    function _startAnimation(item, prevItem, size, show) {
-      var animation = show ? item.options.show.animation : item.options.hide.animation;
-      var spec = animation ? animation.call(undefined, show, size) : {};
-      item.mod.halt();
-      var callback;
-      if (show) {
-        callback = item.showCallback;
-        if (spec.transform) {
-          item.mod.setTransform(spec.transform);
-          item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
-          callback = undefined;
-        }
-        if (spec.opacity !== undefined) {
-          item.mod.setOpacity(spec.opacity);
-          item.mod.setOpacity(1, item.options.show.transition, callback);
-          callback = undefined;
-        }
-        if (spec.align) {
-          item.mod.setAlign(spec.align);
-        }
-        if (spec.origin) {
-          item.mod.setOrigin(spec.origin);
-        }
-        if (prevItem) {
-          _startTransferableAnimations.call(this, item, prevItem);
-        }
-        if (callback) {
-          callback();
-        }
-      } else {
-        callback = item.hideCallback;
-        if (spec.transform) {
-          item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
-          callback = undefined;
-        }
-        if (spec.opacity !== undefined) {
-          item.mod.setOpacity(spec.opacity, item.options.hide.transition, callback);
-          callback = undefined;
-        }
-        if (callback) {
-          callback();
-        }
-      }
-    }
-    function _setItemOptions(item, options) {
-      item.options = {
-        show: {
-          transition: this.options.show.transition || this.options.transition,
-          animation: this.options.show.animation || this.options.animation
-        },
-        hide: {
-          transition: this.options.hide.transition || this.options.transition,
-          animation: this.options.hide.animation || this.options.animation
-        },
-        transfer: {
-          transition: this.options.transfer.transition || this.options.transition,
-          items: this.options.transfer.items || {},
-          zIndex: this.options.transfer.zIndex,
-          fastResize: this.options.transfer.fastResize
-        }
-      };
-      if (options) {
-        item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
-        if (options && options.show && (options.show.animation !== undefined)) {
-          item.options.show.animation = options.show.animation;
-        } else if (options && (options.animation !== undefined)) {
-          item.options.show.animation = options.animation;
-        }
-        item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
-        item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
-        item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
-        item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
-      }
-    }
-    function _updateState() {
-      var prevItem;
-      var invalidated = false;
-      for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
-        var item = this._viewStack[i];
-        if (item.state === ItemState.QUEUED) {
-          if (!prevItem || (prevItem.state === ItemState.VISIBLE) || (prevItem.state === ItemState.HIDING)) {
-            if (prevItem && (prevItem.state === ItemState.VISIBLE)) {
-              prevItem.state = ItemState.HIDE;
-            }
-            item.state = ItemState.SHOW;
-            invalidated = true;
-          }
-          break;
-        } else if ((item.state === ItemState.VISIBLE) && item.hide) {
-          item.state = ItemState.HIDE;
-        }
-        if ((item.state === ItemState.SHOW) || (item.state === ItemState.HIDE)) {
-          this.layout.reflowLayout();
-        }
-        prevItem = item;
-      }
-      if (invalidated) {
-        _updateState.call(this);
-        this.layout.reflowLayout();
-      }
-    }
-    AnimationController.prototype.show = function(renderable, options, callback) {
-      if (!renderable) {
-        return this.hide(options, callback);
-      }
-      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
-      if (item && (item.view === renderable)) {
-        item.hide = false;
-        if (item.state === ItemState.HIDE) {
-          item.state = ItemState.QUEUED;
-          _setItemOptions.call(this, item, options);
-          _updateState.call(this);
-        }
-        return this;
-      }
-      if (item && (item.state !== ItemState.HIDING) && options) {
-        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-        if (options && options.hide && (options.hide.animation !== undefined)) {
-          item.options.hide.animation = options.hide.animation;
-        } else if (options && (options.animation !== undefined)) {
-          item.options.hide.animation = options.animation;
-        }
-      }
-      item = {
-        view: renderable,
-        mod: new StateModifier(),
-        state: ItemState.QUEUED,
-        callback: callback,
-        transferables: []
-      };
-      item.node = new RenderNode(item.mod);
-      item.node.add(renderable);
-      _setItemOptions.call(this, item, options);
-      item.showCallback = function() {
-        item.state = ItemState.VISIBLE;
-        _updateState.call(this);
-        _endTransferableAnimations.call(this, item);
-        if (callback) {
-          callback();
-        }
-      }.bind(this);
-      item.hideCallback = function() {
-        var index = this._viewStack.indexOf(item);
-        this._renderables.views.splice(index, 1);
-        this._viewStack.splice(index, 1);
-        item.view = undefined;
-        _updateState.call(this);
-        this.layout.reflowLayout();
-      }.bind(this);
-      this._renderables.views.push(item.node);
-      this._viewStack.push(item);
-      _updateState.call(this);
-      return this;
-    };
-    AnimationController.prototype.hide = function(options, callback) {
-      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
-      if (!item || (item.state === ItemState.HIDING)) {
-        return this;
-      }
-      item.hide = true;
-      if (options) {
-        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
-        if (options && options.hide && (options.hide.animation !== undefined)) {
-          item.options.hide.animation = options.hide.animation;
-        } else if (options && (options.animation !== undefined)) {
-          item.options.hide.animation = options.animation;
-        }
-      }
-      item.hideCallback = function() {
-        var index = this._viewStack.indexOf(item);
-        this._renderables.views.splice(index, 1);
-        this._viewStack.splice(index, 1);
-        item.view = undefined;
-        _updateState.call(this);
-        this.layout.reflowLayout();
-        if (callback) {
-          callback();
-        }
-      }.bind(this);
-      _updateState.call(this);
-      return this;
-    };
-    AnimationController.prototype.halt = function() {
-      for (var i = 0; i < this._viewStack.length; i++) {
-        var item = this._viewStack[this._viewStack.length - 1];
-        if ((item.state === ItemState.QUEUED) || (item.state === ItemState.SHOW)) {
-          this._renderables.views.splice(this._viewStack.length - 1, 1);
-          this._viewStack.splice(this._viewStack.length - 1, 1);
-          item.view = undefined;
-        } else {
-          break;
-        }
-      }
-      return this;
-    };
-    AnimationController.prototype.get = function() {
-      for (var i = 0; i < this._viewStack.length; i++) {
-        var item = this._viewStack[i];
-        if ((item.state === ItemState.VISIBLE) || (item.state === ItemState.SHOW) || (item.state === ItemState.SHOWING)) {
-          return item.view;
-        }
-      }
-      return undefined;
-    };
-    module.exports = AnimationController;
   }).call(__exports, __require, __exports, __module);
 });
 })();
@@ -25824,6 +25363,467 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
   return module.exports;
 });
 
+(function() {
+function define(){};  define.amd = {};
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/AnimationController", ["npm:famous@0.3.5/core/View", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/Modifier", "npm:famous@0.3.5/modifiers/StateModifier", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Timer", "npm:famous@0.3.5/transitions/Easing"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var View = require("npm:famous@0.3.5/core/View");
+    var LayoutController = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController");
+    var Transform = require("npm:famous@0.3.5/core/Transform");
+    var Modifier = require("npm:famous@0.3.5/core/Modifier");
+    var StateModifier = require("npm:famous@0.3.5/modifiers/StateModifier");
+    var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
+    var Timer = require("npm:famous@0.3.5/utilities/Timer");
+    var Easing = require("npm:famous@0.3.5/transitions/Easing");
+    function AnimationController(options) {
+      View.apply(this, arguments);
+      _createLayout.call(this);
+      if (options) {
+        this.setOptions(options);
+      }
+    }
+    AnimationController.prototype = Object.create(View.prototype);
+    AnimationController.prototype.constructor = AnimationController;
+    AnimationController.Animation = {
+      Slide: {
+        Left: function(show, size) {
+          return {transform: Transform.translate(show ? size[0] : -size[0], 0, 0)};
+        },
+        Right: function(show, size) {
+          return {transform: Transform.translate(show ? -size[0] : size[0], 0, 0)};
+        },
+        Up: function(show, size) {
+          return {transform: Transform.translate(0, show ? size[1] : -size[1], 0)};
+        },
+        Down: function(show, size) {
+          return {transform: Transform.translate(0, show ? -size[1] : size[1], 0)};
+        }
+      },
+      Fade: function(show, size) {
+        return {opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0};
+      },
+      Zoom: function(show, size) {
+        var scale = (this && (this.scale !== undefined)) ? this.scale : 0.5;
+        return {
+          transform: Transform.scale(scale, scale, 1),
+          align: [0.5, 0.5],
+          origin: [0.5, 0.5]
+        };
+      },
+      FadedZoom: function(show, size) {
+        var scale = show ? ((this && (this.showScale !== undefined)) ? this.showScale : 0.9) : ((this && (this.hideScale !== undefined)) ? this.hideScale : 1.1);
+        return {
+          opacity: (this && (this.opacity !== undefined)) ? this.opacity : 0,
+          transform: Transform.scale(scale, scale, 1),
+          align: [0.5, 0.5],
+          origin: [0.5, 0.5]
+        };
+      }
+    };
+    AnimationController.DEFAULT_OPTIONS = {
+      transition: {
+        duration: 400,
+        curve: Easing.inOutQuad
+      },
+      animation: AnimationController.Animation.Fade,
+      show: {},
+      hide: {},
+      transfer: {
+        fastResize: true,
+        zIndex: 10
+      },
+      zIndexOffset: 0
+    };
+    var ItemState = {
+      NONE: 0,
+      HIDE: 1,
+      HIDING: 2,
+      SHOW: 3,
+      SHOWING: 4,
+      VISIBLE: 5,
+      QUEUED: 6
+    };
+    function ViewStackLayout(context, options) {
+      var set = {
+        size: context.size,
+        translate: [0, 0, 0]
+      };
+      var views = context.get('views');
+      var transferables = context.get('transferables');
+      for (var i = 0; i < Math.min(views.length, 2); i++) {
+        var item = this._viewStack[i];
+        switch (item.state) {
+          case ItemState.HIDE:
+          case ItemState.HIDING:
+          case ItemState.VISIBLE:
+          case ItemState.SHOW:
+          case ItemState.SHOWING:
+            var view = views[i];
+            context.set(view, set);
+            for (var j = 0; j < transferables.length; j++) {
+              for (var k = 0; k < item.transferables.length; k++) {
+                if (transferables[j].renderNode === item.transferables[k].renderNode) {
+                  context.set(transferables[j], {
+                    translate: [0, 0, set.translate[2]],
+                    size: [context.size[0], context.size[1]]
+                  });
+                }
+              }
+            }
+            set.translate[2] += options.zIndexOffset;
+            break;
+        }
+      }
+    }
+    function _createLayout() {
+      this._renderables = {
+        views: [],
+        transferables: []
+      };
+      this._viewStack = [];
+      this.layout = new LayoutController({
+        layout: ViewStackLayout.bind(this),
+        layoutOptions: this.options,
+        dataSource: this._renderables
+      });
+      this.add(this.layout);
+      this.layout.on('layoutend', _startAnimations.bind(this));
+    }
+    function _getViewSpec(item, view, id, callback) {
+      if (!item.view) {
+        return ;
+      }
+      var spec = view.getSpec(id);
+      if (spec) {
+        callback(spec);
+      } else {
+        Timer.after(_getViewSpec.bind(this, item, view, id, callback), 1);
+      }
+    }
+    function _getTransferable(item, view, id) {
+      if (view.getTransferable) {
+        return view.getTransferable(id);
+      }
+      if (view.getSpec && view.get && view.replace) {
+        if (view.get(id) !== undefined) {
+          return {
+            get: function() {
+              return view.get(id);
+            },
+            show: function(renderable) {
+              view.replace(id, renderable);
+            },
+            getSpec: _getViewSpec.bind(this, item, view, id)
+          };
+        }
+      }
+      if (view.layout) {
+        return _getTransferable.call(this, item, view.layout, id);
+      }
+    }
+    function _startTransferableAnimations(item, prevItem) {
+      for (var sourceId in item.options.transfer.items) {
+        _startTransferableAnimation.call(this, item, prevItem, sourceId);
+      }
+    }
+    function _startTransferableAnimation(item, prevItem, sourceId) {
+      var target = item.options.transfer.items[sourceId];
+      var transferable = {};
+      transferable.source = _getTransferable.call(this, prevItem, prevItem.view, sourceId);
+      if (Array.isArray(target)) {
+        for (var i = 0; i < target.length; i++) {
+          transferable.target = _getTransferable.call(this, item, item.view, target[i]);
+          if (transferable.target) {
+            break;
+          }
+        }
+      } else {
+        transferable.target = _getTransferable.call(this, item, item.view, target);
+      }
+      if (transferable.source && transferable.target) {
+        transferable.source.getSpec(function(sourceSpec) {
+          transferable.originalSource = transferable.source.get();
+          transferable.source.show(new RenderNode(new Modifier(sourceSpec)));
+          transferable.originalTarget = transferable.target.get();
+          var targetNode = new RenderNode(new Modifier({opacity: 0}));
+          targetNode.add(transferable.originalTarget);
+          transferable.target.show(targetNode);
+          var zIndexMod = new Modifier({transform: Transform.translate(0, 0, item.options.transfer.zIndex)});
+          var mod = new StateModifier(sourceSpec);
+          transferable.renderNode = new RenderNode(zIndexMod);
+          transferable.renderNode.add(mod).add(transferable.originalSource);
+          item.transferables.push(transferable);
+          this._renderables.transferables.push(transferable.renderNode);
+          this.layout.reflowLayout();
+          Timer.after(function() {
+            transferable.target.getSpec(function(targetSpec, transition) {
+              mod.halt();
+              if ((sourceSpec.opacity !== undefined) || (targetSpec.opacity !== undefined)) {
+                mod.setOpacity((targetSpec.opacity === undefined) ? 1 : targetSpec.opacity, transition || item.options.transfer.transition);
+              }
+              if (item.options.transfer.fastResize) {
+                if (sourceSpec.transform || targetSpec.transform || sourceSpec.size || targetSpec.size) {
+                  var transform = targetSpec.transform || Transform.identity;
+                  if (sourceSpec.size && targetSpec.size) {
+                    transform = Transform.multiply(transform, Transform.scale(targetSpec.size[0] / sourceSpec.size[0], targetSpec.size[1] / sourceSpec.size[1], 1));
+                  }
+                  mod.setTransform(transform, transition || item.options.transfer.transition);
+                }
+              } else {
+                if (sourceSpec.transform || targetSpec.transform) {
+                  mod.setTransform(targetSpec.transform || Transform.identity, transition || item.options.transfer.transition);
+                }
+                if (sourceSpec.size || targetSpec.size) {
+                  mod.setSize(targetSpec.size || sourceSpec.size, transition || item.options.transfer.transition);
+                }
+              }
+            }, true);
+          }, 1);
+        }.bind(this), false);
+      }
+    }
+    function _endTransferableAnimations(item) {
+      for (var j = 0; j < item.transferables.length; j++) {
+        var transferable = item.transferables[j];
+        for (var i = 0; i < this._renderables.transferables.length; i++) {
+          if (this._renderables.transferables[i] === transferable.renderNode) {
+            this._renderables.transferables.splice(i, 1);
+            break;
+          }
+        }
+        transferable.source.show(transferable.originalSource);
+        transferable.target.show(transferable.originalTarget);
+      }
+      item.transferables = [];
+      this.layout.reflowLayout();
+    }
+    function _startAnimations(event) {
+      var prevItem;
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[i];
+        switch (item.state) {
+          case ItemState.HIDE:
+            item.state = ItemState.HIDING;
+            _startAnimation.call(this, item, prevItem, event.size, false);
+            _updateState.call(this);
+            break;
+          case ItemState.SHOW:
+            item.state = ItemState.SHOWING;
+            _startAnimation.call(this, item, prevItem, event.size, true);
+            _updateState.call(this);
+            break;
+        }
+        prevItem = item;
+      }
+    }
+    function _startAnimation(item, prevItem, size, show) {
+      var animation = show ? item.options.show.animation : item.options.hide.animation;
+      var spec = animation ? animation.call(undefined, show, size) : {};
+      item.mod.halt();
+      var callback;
+      if (show) {
+        callback = item.showCallback;
+        if (spec.transform) {
+          item.mod.setTransform(spec.transform);
+          item.mod.setTransform(Transform.identity, item.options.show.transition, callback);
+          callback = undefined;
+        }
+        if (spec.opacity !== undefined) {
+          item.mod.setOpacity(spec.opacity);
+          item.mod.setOpacity(1, item.options.show.transition, callback);
+          callback = undefined;
+        }
+        if (spec.align) {
+          item.mod.setAlign(spec.align);
+        }
+        if (spec.origin) {
+          item.mod.setOrigin(spec.origin);
+        }
+        if (prevItem) {
+          _startTransferableAnimations.call(this, item, prevItem);
+        }
+        if (callback) {
+          callback();
+        }
+      } else {
+        callback = item.hideCallback;
+        if (spec.transform) {
+          item.mod.setTransform(spec.transform, item.options.hide.transition, callback);
+          callback = undefined;
+        }
+        if (spec.opacity !== undefined) {
+          item.mod.setOpacity(spec.opacity, item.options.hide.transition, callback);
+          callback = undefined;
+        }
+        if (callback) {
+          callback();
+        }
+      }
+    }
+    function _setItemOptions(item, options) {
+      item.options = {
+        show: {
+          transition: this.options.show.transition || this.options.transition,
+          animation: this.options.show.animation || this.options.animation
+        },
+        hide: {
+          transition: this.options.hide.transition || this.options.transition,
+          animation: this.options.hide.animation || this.options.animation
+        },
+        transfer: {
+          transition: this.options.transfer.transition || this.options.transition,
+          items: this.options.transfer.items || {},
+          zIndex: this.options.transfer.zIndex,
+          fastResize: this.options.transfer.fastResize
+        }
+      };
+      if (options) {
+        item.options.show.transition = (options.show ? options.show.transition : undefined) || options.transition || item.options.show.transition;
+        if (options && options.show && (options.show.animation !== undefined)) {
+          item.options.show.animation = options.show.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.show.animation = options.animation;
+        }
+        item.options.transfer.transition = (options.transfer ? options.transfer.transition : undefined) || options.transition || item.options.transfer.transition;
+        item.options.transfer.items = (options.transfer ? options.transfer.items : undefined) || item.options.transfer.items;
+        item.options.transfer.zIndex = (options.transfer && (options.transfer.zIndex !== undefined)) ? options.transfer.zIndex : item.options.transfer.zIndex;
+        item.options.transfer.fastResize = (options.transfer && (options.transfer.fastResize !== undefined)) ? options.transfer.fastResize : item.options.transfer.fastResize;
+      }
+    }
+    function _updateState() {
+      var prevItem;
+      var invalidated = false;
+      for (var i = 0; i < Math.min(this._viewStack.length, 2); i++) {
+        var item = this._viewStack[i];
+        if (item.state === ItemState.QUEUED) {
+          if (!prevItem || (prevItem.state === ItemState.VISIBLE) || (prevItem.state === ItemState.HIDING)) {
+            if (prevItem && (prevItem.state === ItemState.VISIBLE)) {
+              prevItem.state = ItemState.HIDE;
+            }
+            item.state = ItemState.SHOW;
+            invalidated = true;
+          }
+          break;
+        } else if ((item.state === ItemState.VISIBLE) && item.hide) {
+          item.state = ItemState.HIDE;
+        }
+        if ((item.state === ItemState.SHOW) || (item.state === ItemState.HIDE)) {
+          this.layout.reflowLayout();
+        }
+        prevItem = item;
+      }
+      if (invalidated) {
+        _updateState.call(this);
+        this.layout.reflowLayout();
+      }
+    }
+    AnimationController.prototype.show = function(renderable, options, callback) {
+      if (!renderable) {
+        return this.hide(options, callback);
+      }
+      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
+      if (item && (item.view === renderable)) {
+        item.hide = false;
+        if (item.state === ItemState.HIDE) {
+          item.state = ItemState.QUEUED;
+          _setItemOptions.call(this, item, options);
+          _updateState.call(this);
+        }
+        return this;
+      }
+      if (item && (item.state !== ItemState.HIDING) && options) {
+        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+        if (options && options.hide && (options.hide.animation !== undefined)) {
+          item.options.hide.animation = options.hide.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.hide.animation = options.animation;
+        }
+      }
+      item = {
+        view: renderable,
+        mod: new StateModifier(),
+        state: ItemState.QUEUED,
+        callback: callback,
+        transferables: []
+      };
+      item.node = new RenderNode(item.mod);
+      item.node.add(renderable);
+      _setItemOptions.call(this, item, options);
+      item.showCallback = function() {
+        item.state = ItemState.VISIBLE;
+        _updateState.call(this);
+        _endTransferableAnimations.call(this, item);
+        if (callback) {
+          callback();
+        }
+      }.bind(this);
+      item.hideCallback = function() {
+        var index = this._viewStack.indexOf(item);
+        this._renderables.views.splice(index, 1);
+        this._viewStack.splice(index, 1);
+        item.view = undefined;
+        _updateState.call(this);
+        this.layout.reflowLayout();
+      }.bind(this);
+      this._renderables.views.push(item.node);
+      this._viewStack.push(item);
+      _updateState.call(this);
+      return this;
+    };
+    AnimationController.prototype.hide = function(options, callback) {
+      var item = this._viewStack.length ? this._viewStack[this._viewStack.length - 1] : undefined;
+      if (!item || (item.state === ItemState.HIDING)) {
+        return this;
+      }
+      item.hide = true;
+      if (options) {
+        item.options.hide.transition = (options.hide ? options.hide.transition : undefined) || options.transition || item.options.hide.transition;
+        if (options && options.hide && (options.hide.animation !== undefined)) {
+          item.options.hide.animation = options.hide.animation;
+        } else if (options && (options.animation !== undefined)) {
+          item.options.hide.animation = options.animation;
+        }
+      }
+      item.hideCallback = function() {
+        var index = this._viewStack.indexOf(item);
+        this._renderables.views.splice(index, 1);
+        this._viewStack.splice(index, 1);
+        item.view = undefined;
+        _updateState.call(this);
+        this.layout.reflowLayout();
+        if (callback) {
+          callback();
+        }
+      }.bind(this);
+      _updateState.call(this);
+      return this;
+    };
+    AnimationController.prototype.halt = function() {
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[this._viewStack.length - 1];
+        if ((item.state === ItemState.QUEUED) || (item.state === ItemState.SHOW)) {
+          this._renderables.views.splice(this._viewStack.length - 1, 1);
+          this._viewStack.splice(this._viewStack.length - 1, 1);
+          item.view = undefined;
+        } else {
+          break;
+        }
+      }
+      return this;
+    };
+    AnimationController.prototype.get = function() {
+      for (var i = 0; i < this._viewStack.length; i++) {
+        var item = this._viewStack[i];
+        if ((item.state === ItemState.VISIBLE) || (item.state === ItemState.SHOW) || (item.state === ItemState.SHOWING)) {
+          return item.view;
+        }
+      }
+      return undefined;
+    };
+    module.exports = AnimationController;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
 System.register("npm:lodash@3.9.1", ["npm:lodash@3.9.1/index"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -26114,6 +26114,73 @@ System.register("github:Bizboard/di.js@master/providers", ["github:Bizboard/di.j
             return this.provider.apply(undefined, args);
           }}, {});
       }());
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-ds@develop/core/DataSource";
+  var DataSource;
+  return {
+    setters: [],
+    execute: function() {
+      'use strict';
+      DataSource = (function() {
+        function DataSource(path) {
+          this._dataReference = null;
+        }
+        return ($traceurRuntime.createClass)(DataSource, {
+          get inheritable() {
+            return false;
+          },
+          child: function(childName) {},
+          path: function() {},
+          key: function() {},
+          set: function(newData) {},
+          remove: function() {},
+          push: function(newData) {},
+          setWithPriority: function(newData, priority) {},
+          setPriority: function(newPriority) {},
+          setValueChangedCallback: function(callback) {},
+          removeValueChangedCallback: function() {},
+          setChildAddedCallback: function(callback) {},
+          removeChildAddedCallback: function() {},
+          setChildChangedCallback: function(callback) {},
+          removeChildChangedCallback: function() {},
+          setChildMovedCallback: function(callback) {},
+          removeChildMovedCallback: function() {},
+          setChildRemovedCallback: function(callback) {},
+          removeChildRemovedCallback: function() {}
+        }, {});
+      }());
+      $__export("DataSource", DataSource);
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-context@master/Context", [], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-context@master/Context";
+  var contextContainer,
+      Context;
+  return {
+    setters: [],
+    execute: function() {
+      contextContainer = {};
+      Context = {
+        getContext: function() {
+          var contextName = arguments[0] !== (void 0) ? arguments[0] : null;
+          if (contextName)
+            return contextContainer[contextName];
+          else
+            return contextContainer['Default'];
+        },
+        setContext: function(contextName, context) {
+          contextContainer[contextName] = context;
+        }
+      };
+      $__export("Context", Context);
     }
   };
 });
@@ -26413,73 +26480,6 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/snapshot", [], funct
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-ds@develop/core/DataSource";
-  var DataSource;
-  return {
-    setters: [],
-    execute: function() {
-      'use strict';
-      DataSource = (function() {
-        function DataSource(path) {
-          this._dataReference = null;
-        }
-        return ($traceurRuntime.createClass)(DataSource, {
-          get inheritable() {
-            return false;
-          },
-          child: function(childName) {},
-          path: function() {},
-          key: function() {},
-          set: function(newData) {},
-          remove: function() {},
-          push: function(newData) {},
-          setWithPriority: function(newData, priority) {},
-          setPriority: function(newPriority) {},
-          setValueChangedCallback: function(callback) {},
-          removeValueChangedCallback: function() {},
-          setChildAddedCallback: function(callback) {},
-          removeChildAddedCallback: function() {},
-          setChildChangedCallback: function(callback) {},
-          removeChildChangedCallback: function() {},
-          setChildMovedCallback: function(callback) {},
-          removeChildMovedCallback: function() {},
-          setChildRemovedCallback: function(callback) {},
-          removeChildRemovedCallback: function() {}
-        }, {});
-      }());
-      $__export("DataSource", DataSource);
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-context@master/Context", [], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-context@master/Context";
-  var contextContainer,
-      Context;
-  return {
-    setters: [],
-    execute: function() {
-      contextContainer = {};
-      Context = {
-        getContext: function() {
-          var contextName = arguments[0] !== (void 0) ? arguments[0] : null;
-          if (contextName)
-            return contextContainer[contextName];
-          else
-            return contextContainer['Default'];
-        },
-        setContext: function(contextName, context) {
-          contextContainer[contextName] = context;
-        }
-      };
-      $__export("Context", Context);
-    }
-  };
-});
-
 System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", ["github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context", "npm:eventemitter3@1.1.0"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedArray";
@@ -26742,12 +26742,57 @@ System.register("models/Avatar", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
+System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
+  "use strict";
+  var __moduleName = "models/Invite";
+  var Model;
+  return {
+    setters: [function($__m) {
+      Model = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Invite() {
+          $traceurRuntime.superConstructor(Invite).apply(this, arguments);
+        }
+        return ($traceurRuntime.createClass)(Invite, {
+          get from() {},
+          get gameId() {}
+        }, {}, $__super);
+      }(Model)));
+    }
+  };
+});
+
+System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Invite"], function($__export) {
+  "use strict";
+  var __moduleName = "collections/Invites";
+  var PrioritisedArray,
+      Invite;
+  return {
+    setters: [function($__m) {
+      PrioritisedArray = $__m.default;
+    }, function($__m) {
+      Invite = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Invites() {
+          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
+          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
+          $traceurRuntime.superConstructor(Invites).call(this, Invite, datasource, datasnapshot);
+        }
+        return ($traceurRuntime.createClass)(Invites, {}, {}, $__super);
+      }(PrioritisedArray)));
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash@3.9.1", "github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Controller";
   var _,
       Inject,
-      annotate,
       Router,
       ObjectHelper,
       EventHandler,
@@ -26758,9 +26803,8 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
       _ = $__m.default;
     }, function($__m) {
       Inject = $__m.Inject;
-      annotate = $__m.annotate;
     }, function($__m) {
-      Router = $__m.Router;
+      Router = $__m.default;
     }, function($__m) {
       ObjectHelper = $__m.default;
     }, function($__m) {
@@ -26795,12 +26839,18 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
                     $__0.context.show(delegatedresult, _.extend(route.spec, $__0.spec), (function() {
                       $__0._eventOutput.emit('renderend', route.method);
                     }));
+                    $__0._eventOutput.emit('rendering', route.method);
                   }));
                 } else {
                   this.context.show(result, _.extend(route.spec, this.spec), (function() {
                     $__0._eventOutput.emit('renderend', route.method);
                   }));
+                  this._eventOutput.emit('rendering', route.method);
                 }
+                this.context.show(result, _.extend(route.spec, this.spec), function() {
+                  this._eventOutput.emit('renderend', route.method);
+                }.bind(this));
+                this._eventOutput.emit('rendering', route.method);
               }
             } else {
               console.log('Route does not exist!');
@@ -26809,30 +26859,9 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
         }, {});
       }());
       $__export("Controller", Controller);
-      annotate(Controller, new Inject(Router));
-      annotate(Controller, new Inject(AnimationController));
-    }
-  };
-});
-
-System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
-  "use strict";
-  var __moduleName = "models/Invite";
-  var Model;
-  return {
-    setters: [function($__m) {
-      Model = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Invite() {
-          $traceurRuntime.superConstructor(Invite).apply(this, arguments);
-        }
-        return ($traceurRuntime.createClass)(Invite, {
-          get from() {},
-          get gameId() {}
-        }, {}, $__super);
-      }(Model)));
+      Object.defineProperty(Controller, "annotations", {get: function() {
+          return [new Inject(Router, AnimationController)];
+        }});
     }
   };
 });
@@ -26992,30 +27021,6 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
         }, {}, $__super);
       }(View));
       $__export("PlayView", PlayView);
-    }
-  };
-});
-
-System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Invite"], function($__export) {
-  "use strict";
-  var __moduleName = "collections/Invites";
-  var PrioritisedArray,
-      Invite;
-  return {
-    setters: [function($__m) {
-      PrioritisedArray = $__m.default;
-    }, function($__m) {
-      Invite = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Invites() {
-          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
-          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
-          $traceurRuntime.superConstructor(Invites).call(this, Invite, datasource, datasnapshot);
-        }
-        return ($traceurRuntime.createClass)(Invites, {}, {}, $__super);
-      }(PrioritisedArray)));
     }
   };
 });
@@ -28193,6 +28198,78 @@ System.register("github:Bizboard/di.js@master/index", ["github:Bizboard/di.js@ma
   };
 });
 
+System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Shared/Navigation";
+  var Surface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      TabBar,
+      Arena,
+      Play,
+      Profile,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.default;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      TabBar = $__m.default;
+    }, function($__m) {
+      Arena = $__m.default;
+    }, function($__m) {
+      Play = $__m.default;
+    }, function($__m) {
+      Profile = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {};
+      $__export('default', (function($__super) {
+        function Navigation() {
+          $traceurRuntime.superConstructor(Navigation).call(this, DEFAULT_OPTIONS);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+        }
+        return ($traceurRuntime.createClass)(Navigation, {
+          _createRenderables: function() {
+            var tabBar = new TabBar({createRenderables: {
+                background: true,
+                selectedItemOverlay: true
+              }});
+            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Play', '<div>' + Profile + '</div>Settings']);
+            this._renderables = {tabBar: tabBar};
+          },
+          _createLayout: function() {
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('tabBar', {
+                  size: [context.size[0], 40],
+                  align: [0, 1],
+                  origin: [0, 1],
+                  translate: [0, 0, 20]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          }
+        }, {}, $__super);
+      }(View)));
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.1", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model";
@@ -28427,78 +28504,6 @@ System.register("github:Bizboard/di.js@master", ["github:Bizboard/di.js@master/i
   };
 });
 
-System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
-  "use strict";
-  var __moduleName = "views/Shared/Navigation";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      TabBar,
-      Arena,
-      Play,
-      Profile,
-      DEFAULT_OPTIONS;
-  return {
-    setters: [function($__m) {
-      Surface = $__m.default;
-    }, function($__m) {
-      View = $__m.default;
-    }, function($__m) {
-      ObjectHelper = $__m.default;
-    }, function($__m) {
-      LayoutController = $__m.default;
-    }, function($__m) {
-      TabBar = $__m.default;
-    }, function($__m) {
-      Arena = $__m.default;
-    }, function($__m) {
-      Play = $__m.default;
-    }, function($__m) {
-      Profile = $__m.default;
-    }],
-    execute: function() {
-      DEFAULT_OPTIONS = {};
-      $__export('default', (function($__super) {
-        function Navigation() {
-          $traceurRuntime.superConstructor(Navigation).call(this, DEFAULT_OPTIONS);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          this._createRenderables();
-          this._createLayout();
-        }
-        return ($traceurRuntime.createClass)(Navigation, {
-          _createRenderables: function() {
-            var tabBar = new TabBar({createRenderables: {
-                background: true,
-                selectedItemOverlay: true
-              }});
-            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Play', '<div>' + Profile + '</div>Settings']);
-            this._renderables = {tabBar: tabBar};
-          },
-          _createLayout: function() {
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('tabBar', {
-                  size: [context.size[0], 40],
-                  align: [0, 1],
-                  origin: [0, 1],
-                  translate: [0, 0, 20]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
-          }
-        }, {}, $__super);
-      }(View)));
-    }
-  };
-});
-
 System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
   "use strict";
   var __moduleName = "models/Player";
@@ -28526,13 +28531,104 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Home/InvitePlayerView";
+  var Surface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      DataboundFlexScrollView,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.default;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      DataboundFlexScrollView = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {headerHeight: 75};
+      $__export('default', (function($__super) {
+        function InvitePlayerView() {
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          $traceurRuntime.superConstructor(InvitePlayerView).call(this, DEFAULT_OPTIONS);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          if (options.dataSource)
+            this._dataSource = options.dataSource;
+          this._createRenderables();
+          this._createLayout();
+        }
+        return ($traceurRuntime.createClass)(InvitePlayerView, {
+          _createRenderables: function() {
+            var contextView = this;
+            var invitePlayers = new DataboundFlexScrollView({
+              template: function(player) {
+                var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
+                var surface = new Surface({
+                  size: [undefined, 50],
+                  classes: ['arena-item'],
+                  properties: {
+                    lineHeight: '50px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    data: player
+                  },
+                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
+                });
+                surface.on('click', function() {
+                  contextView._eventOutput.emit('invite', this.properties.data);
+                });
+                return surface;
+              },
+              dataStore: this._dataSource
+            });
+            this._renderables = {
+              header: new Surface({
+                content: '<div>B K E E</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
+                classes: ['header']
+              }),
+              players: invitePlayers
+            };
+          },
+          _createLayout: function() {
+            var top = this.options.headerHeight;
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('header', {
+                  size: [context.size[0], top],
+                  translate: [0, 0, 20]
+                });
+                context.set('players', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, top, 1]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          }
+        }, {}, $__super);
+      }(View)));
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lodash@3.9.1", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/di.js@master", "npm:famous@0.3.5/transitions/Easing", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/routers/ArvaRouter";
   var _,
       Router,
       Provide,
-      annotate,
       Easing,
       AnimationController,
       ArvaRouter;
@@ -28540,10 +28636,9 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
     setters: [function($__m) {
       _ = $__m.default;
     }, function($__m) {
-      Router = $__m.Router;
+      Router = $__m.default;
     }, function($__m) {
       Provide = $__m.Provide;
-      annotate = $__m.annotate;
     }, function($__m) {
       Easing = $__m.default;
     }, function($__m) {
@@ -28737,99 +28832,9 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
         }, {}, $__super);
       }(Router));
       $__export("ArvaRouter", ArvaRouter);
-      annotate(ArvaRouter, new Provide(Router));
-    }
-  };
-});
-
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView"], function($__export) {
-  "use strict";
-  var __moduleName = "views/Home/InvitePlayerView";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      DataboundFlexScrollView,
-      DEFAULT_OPTIONS;
-  return {
-    setters: [function($__m) {
-      Surface = $__m.default;
-    }, function($__m) {
-      View = $__m.default;
-    }, function($__m) {
-      ObjectHelper = $__m.default;
-    }, function($__m) {
-      LayoutController = $__m.default;
-    }, function($__m) {
-      DataboundFlexScrollView = $__m.default;
-    }],
-    execute: function() {
-      DEFAULT_OPTIONS = {headerHeight: 75};
-      $__export('default', (function($__super) {
-        function InvitePlayerView() {
-          var options = arguments[0] !== (void 0) ? arguments[0] : {};
-          $traceurRuntime.superConstructor(InvitePlayerView).call(this, DEFAULT_OPTIONS);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          if (options.dataSource)
-            this._dataSource = options.dataSource;
-          this._createRenderables();
-          this._createLayout();
-        }
-        return ($traceurRuntime.createClass)(InvitePlayerView, {
-          _createRenderables: function() {
-            var contextView = this;
-            var invitePlayers = new DataboundFlexScrollView({
-              template: function(player) {
-                var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
-                var surface = new Surface({
-                  size: [undefined, 50],
-                  classes: ['arena-item'],
-                  properties: {
-                    lineHeight: '50px',
-                    paddingLeft: '10px',
-                    paddingRight: '10px',
-                    data: player
-                  },
-                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
-                });
-                surface.on('click', function() {
-                  contextView._eventOutput.emit('invite', this.properties.data);
-                });
-                return surface;
-              },
-              dataStore: this._dataSource
-            });
-            this._renderables = {
-              header: new Surface({
-                content: '<div>B K E E</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
-                classes: ['header']
-              }),
-              players: invitePlayers
-            };
-          },
-          _createLayout: function() {
-            var top = this.options.headerHeight;
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('header', {
-                  size: [context.size[0], top],
-                  translate: [0, 0, 20]
-                });
-                context.set('players', {
-                  size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, top, 1]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
-          }
-        }, {}, $__super);
-      }(View)));
+      Object.defineProperty(ArvaRouter, "annotations", {get: function() {
+          return [new Provide(Router)];
+        }});
     }
   };
 });
@@ -28898,67 +28903,6 @@ System.register("utils/GameContext", ["models/Player", "collections/Players", "c
           }
         }, {});
       }()));
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "npm:famous@0.3.5/core/Engine", "github:Bizboard/arva-context@master/Context", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/DefaultContext";
-  var Injector,
-      annotate,
-      Provide,
-      ArvaRouter,
-      Engine,
-      ArvaContext,
-      Context,
-      AnimationController,
-      famouscontext;
-  function famousContext() {
-    if (famouscontext) {
-      return famouscontext;
-    }
-    famouscontext = Engine.createContext();
-    return famouscontext;
-  }
-  function newAnimationController() {
-    famouscontext = famousContext();
-    var controller = new AnimationController();
-    famouscontext.add(controller);
-    return controller;
-  }
-  function GetDefaultContext() {
-    return ArvaContext.getContext('Default');
-  }
-  function reCreateDefaultContext() {
-    var arrayOfInjectors = [ArvaRouter, famousContext, newAnimationController];
-    for (var i = 0; i < arguments.length; i++) {
-      arrayOfInjectors.push(arguments[i]);
-    }
-    ArvaContext.setContext('Default', new Injector(arrayOfInjectors));
-    return ArvaContext.getContext('Default');
-  }
-  $__export("GetDefaultContext", GetDefaultContext);
-  $__export("reCreateDefaultContext", reCreateDefaultContext);
-  return {
-    setters: [function($__m) {
-      Injector = $__m.Injector;
-      annotate = $__m.annotate;
-      Provide = $__m.Provide;
-    }, function($__m) {
-      ArvaRouter = $__m.ArvaRouter;
-    }, function($__m) {
-      Engine = $__m.default;
-    }, function($__m) {
-      ArvaContext = $__m.Context;
-    }, function($__m) {
-      Context = $__m.default;
-    }, function($__m) {
-      AnimationController = $__m.default;
-    }],
-    execute: function() {
-      annotate(famousContext, new Provide(Context));
-      annotate(newAnimationController, new Provide(AnimationController));
     }
   };
 });
@@ -29194,7 +29138,7 @@ System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lod
                 {
                   var value = rootObject[name];
                   if (value !== null && value !== undefined && typeof value !== 'function') {
-                    if (typeof value === 'object') {
+                    if (typeof value == 'object') {
                       result[name] = ObjectHelper.getEnumerableProperties(value);
                     } else {
                       result[name] = value;
@@ -29232,7 +29176,7 @@ System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lod
                   if (descriptor && descriptor.enumerable) {
                     var value$__16 = rootObject[name$__15];
                     if (value$__16 !== null && value$__16 !== undefined && typeof value$__16 !== 'function') {
-                      if (typeof value$__16 === 'object') {
+                      if (typeof value$__16 == 'object') {
                         result[name$__15] = ObjectHelper.getEnumerableProperties(value$__16);
                       } else {
                         result[name$__15] = value$__16;
@@ -29256,7 +29200,8 @@ System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lod
               }
             }
             var superPrototype = Object.getPrototypeOf(prototype);
-            if (superPrototype.constructor.name !== 'Object' && superPrototype.constructor.name !== 'Array') {
+            var ignorableTypes = ['Object', 'Array', 'EventEmitter'];
+            if (ignorableTypes.indexOf(superPrototype.constructor.name) === -1) {
               var prototypeEnumerables = ObjectHelper.getPrototypeEnumerableProperties(rootObject, superPrototype);
               _.merge(result, prototypeEnumerables);
             }
@@ -29268,17 +29213,82 @@ System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lod
   };
 });
 
+System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "npm:famous@0.3.5/core/Engine", "github:Bizboard/arva-context@master/Context", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/DefaultContext";
+  var Injector,
+      annotate,
+      Provide,
+      ArvaRouter,
+      Engine,
+      ArvaContext,
+      Context,
+      AnimationController,
+      famousContext;
+  function createFamousContext() {
+    if (famousContext) {
+      return famousContext;
+    }
+    famousContext = Engine.createContext();
+    return famousContext;
+  }
+  function newAnimationController() {
+    famousContext = createFamousContext();
+    var controller = new AnimationController();
+    famousContext.add(controller);
+    return controller;
+  }
+  function GetDefaultContext() {
+    return ArvaContext.getContext('Default');
+  }
+  function reCreateDefaultContext() {
+    var arrayOfInjectors = [ArvaRouter, createFamousContext, newAnimationController];
+    for (var i = 0; i < arguments.length; i++) {
+      arrayOfInjectors.push(arguments[i]);
+    }
+    ArvaContext.setContext('Default', new Injector(arrayOfInjectors));
+    return ArvaContext.getContext('Default');
+  }
+  $__export("GetDefaultContext", GetDefaultContext);
+  $__export("reCreateDefaultContext", reCreateDefaultContext);
+  return {
+    setters: [function($__m) {
+      Injector = $__m.Injector;
+      annotate = $__m.annotate;
+      Provide = $__m.Provide;
+    }, function($__m) {
+      ArvaRouter = $__m.ArvaRouter;
+    }, function($__m) {
+      Engine = $__m.default;
+    }, function($__m) {
+      ArvaContext = $__m.Context;
+    }, function($__m) {
+      Context = $__m.default;
+    }, function($__m) {
+      AnimationController = $__m.default;
+    }],
+    execute: function() {
+      famousContext = null;
+      Object.defineProperty(createFamousContext, "annotations", {get: function() {
+          return [new Provide(Context)];
+        }});
+      Object.defineProperty(newAnimationController, "annotations", {get: function() {
+          return [new Provide(AnimationController)];
+        }});
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboard/arva-mvc@develop/utils/objectHelper"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Router";
-  var ObjectHelper,
-      Router;
+  var ObjectHelper;
   return {
     setters: [function($__m) {
       ObjectHelper = $__m.default;
     }],
     execute: function() {
-      Router = (function() {
+      $__export('default', (function() {
         function Router() {
           ObjectHelper.bindAllMethods(this, this);
           this.controllers = [];
@@ -29291,8 +29301,7 @@ System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboar
           add: function(route, handler) {},
           go: function(controller, method, params) {}
         }, {});
-      }());
-      $__export("Router", Router);
+      }()));
     }
   };
 });
@@ -29324,52 +29333,57 @@ System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/d
         return ($traceurRuntime.createClass)(App, {}, {});
       }());
       $__export("App", App);
-      annotate(App, new Inject(Router));
-      annotate(App, new Inject(Context));
+      Object.defineProperty(App, "annotations", {get: function() {
+          return [new Inject(Router, Context)];
+        }});
     }
   };
 });
 
-System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "views/Shared/Navigation", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController", "models/Invite", "collections/Invites"], function($__export) {
+System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-mvc@develop/DefaultContext", "views/Shared/Navigation", "utils/GameContext", "models/Invite", "collections/Invites", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController"], function($__export) {
   "use strict";
   var __moduleName = "BkeeApp";
   var Inject,
-      annotate,
       App,
+      Router,
+      Context,
+      DataSource,
+      GetDefaultContext,
       Navigation,
       GameContext,
-      GetDefaultContext,
-      DataSource,
+      Invite,
+      Invites,
       HomeController,
       PlayController,
       ProfileController,
-      Invite,
-      Invites,
       BkeeApp;
   return {
     setters: [function($__m) {
       Inject = $__m.Inject;
-      annotate = $__m.annotate;
     }, function($__m) {
       App = $__m.App;
+    }, function($__m) {
+      Router = $__m.default;
+    }, function($__m) {
+      Context = $__m.default;
+    }, function($__m) {
+      DataSource = $__m.DataSource;
+    }, function($__m) {
+      GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
       Navigation = $__m.default;
     }, function($__m) {
       GameContext = $__m.default;
     }, function($__m) {
-      GetDefaultContext = $__m.GetDefaultContext;
+      Invite = $__m.default;
     }, function($__m) {
-      DataSource = $__m.DataSource;
+      Invites = $__m.default;
     }, function($__m) {
       HomeController = $__m.HomeController;
     }, function($__m) {
       PlayController = $__m.PlayController;
     }, function($__m) {
       ProfileController = $__m.ProfileController;
-    }, function($__m) {
-      Invite = $__m.default;
-    }, function($__m) {
-      Invites = $__m.default;
     }],
     execute: function() {
       BkeeApp = (function($__super) {
@@ -29410,9 +29424,9 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
           }}, {}, $__super);
       }(App));
       $__export("BkeeApp", BkeeApp);
-      annotate(BkeeApp, new Inject(HomeController));
-      annotate(BkeeApp, new Inject(PlayController));
-      annotate(BkeeApp, new Inject(ProfileController));
+      Object.defineProperty(BkeeApp, "annotations", {get: function() {
+          return [new Inject(Router, Context, HomeController, PlayController, ProfileController)];
+        }});
     }
   };
 });

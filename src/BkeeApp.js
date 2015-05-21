@@ -2,21 +2,24 @@
  * Created by mysim1 on 20/04/15.
  */
 
-import {Inject, annotate}       from 'di.js';
+import {Inject}                 from 'di.js';
 import {App}                    from 'arva-mvc/core/App';
+import Router                   from 'arva-mvc/core/Router';
+import Context                  from 'famous/core/Context';
+import {DataSource}             from 'arva-ds/core/DataSource';
+import {GetDefaultContext}      from 'arva-mvc/DefaultContext';
 
 import Navigation               from './views/Shared/Navigation';
 import GameContext              from './utils/GameContext';
-import {GetDefaultContext}      from 'arva-mvc/DefaultContext';
-import {DataSource}             from 'arva-ds/core/DataSource';
+import Invite                   from './models/Invite';
+import Invites                  from './collections/Invites';
 
 import {HomeController}         from './controllers/HomeController';
 import {PlayController}         from './controllers/PlayController';
 import {ProfileController}      from './controllers/ProfileController';
-import Invite                   from './models/Invite';
-import Invites                  from './collections/Invites';
 
 
+@Inject(Router, Context, HomeController, PlayController, ProfileController)
 export class BkeeApp extends App {
 
 
@@ -74,6 +77,4 @@ export class BkeeApp extends App {
     }
 }
 
-annotate(BkeeApp, new Inject(HomeController));
-annotate(BkeeApp, new Inject(PlayController));
-annotate(BkeeApp, new Inject(ProfileController));
+
