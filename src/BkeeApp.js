@@ -6,7 +6,6 @@ import {Inject}                 from 'di.js';
 import {App}                    from 'arva-mvc/core/App';
 import Router                   from 'arva-mvc/core/Router';
 import Context                  from 'famous/core/Context';
-import {DataSource}             from 'arva-ds/core/DataSource';
 import {GetDefaultContext}      from 'arva-mvc/DefaultContext';
 import AnimationController      from 'famous-flex/src/AnimationController';
 import Easing                   from 'famous/transitions/Easing';
@@ -112,6 +111,7 @@ export class BkeeApp extends App {
         this.gameContext.trackOnline();
 
         // set myself as active user
+        this.gameContext.onInvite();
 
         // watch my invites scope
         var ds = GetDefaultContext().get(DataSource);

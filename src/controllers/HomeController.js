@@ -12,7 +12,6 @@ import Invite               from '../models/Invite';
 import Players              from '../collections/Players';
 import GameContext          from '../utils/GameContext';
 import {GetDefaultContext}  from 'arva-mvc/DefaultContext';
-
 import {ProfileController}  from './ProfileController';
 import {PlayController}     from './PlayController';
 
@@ -31,7 +30,11 @@ export class HomeController extends Controller {
 
         this.invitePlayerView.on('invite',
             (player) => {
-                if (window.confirm(`Challenge ${player.name}?`)) {
+
+                if (this.gameContext.hasGame(player.id)) {
+                    this.router.go(PlayController, 'Play', {gameId: this.gameContext.getGameId(player.id)});
+                }
+                else if (window.confirm(`Challenge ${player.name}?`)) {
                     this.router.go(this, 'SendChallenge', {playerId: player.id});
                 }
         });
@@ -60,25 +63,7 @@ export class HomeController extends Controller {
      * @constructor
      */
     SendChallenge(playerId) {
-
-        /*
-        let dice = (Math.random()*10)+1;
-        let newGame = new Game();
-
-        newGame.on('ready', function() {
-            newGame.progressState = 'invited';
-            //newGame.activeSince = null;
-            //newGame.winner = null;
-            //newGame.startingPlayer = dice>5?playerId:GameContext.getPlayerId();
-            //newGame.gameState = [];
-        });*/
-
-        let sendInvite = new Invite(playerId);
-
-        sendInvite.on('ready', function() {
-            sendInvite.from = this.gameContext.getPlayerId();
-            //sendInvite.gameId = newGame.id;
-        });
+        this.gameContext.invitePlayer(playerId);
     }
 
     /**
@@ -87,13 +72,8 @@ export class HomeController extends Controller {
      * @constructor
      */
     AcceptChallenge(gameId) {
-        let newGame = new Game(gameId);
-        newGame.progressState = 'active';
-        newGame.activeSince = Date.now();
 
         // indicate game has started
-        GameContext.startGame(gameId);
-
-        this.router.go(PlayController, 'Main', { gameId: gameId});
+        this.gameContext.acceptGame(gameId);
     }
 }

@@ -6,6 +6,8 @@
 import {Controller}         from 'arva-mvc/core/Controller';
 import {PlayView}           from '../views/Play/PlayView';
 import InvitePlayerView     from '../views/Home/InvitePlayerView';
+import FireOnceAndWait      from '../utils/helpers';
+import BKEEEngine           from '../utils/BKEEEngine';
 
 
 export class PlayController extends Controller {
@@ -13,41 +15,37 @@ export class PlayController extends Controller {
     constructor(router, context) {
         super(router, context);
 
-        this.playView = new PlayView();
-    }
-
-    /**
-     * Setup a game against person
-     * @param playerId
-     * @constructor
-     */
-    SetupGame(playerId) {
-        //
-    }
-
-    SetupAvatar() {
+        this.gameContext = GetDefaultContext().get(GameContext);
 
     }
 
-    StartGame() {
 
 
+    async Play(gameId) {
+
+        let gameView = new PlayView();
+        let gameState = new Game(gameId);
+        await FireOnceAndWait(gameState);
+        gameView.set(gameState);
+
+        let gameEngine = new BKEEEngine(gameState);
+
+        // when this player made a move. have the GameEngine evaluate
+        gameView.on('move', function(by, position) {
+            gameEngine.move(by, position);
+        });
+
+        // when data is updated by the game engine. reflect the view
+        gameState.on('value', function() {
+            gameEngine = new BKEEEngine(gameState);
+            gameView.set(gameState);
+        });
+
+        return gameView();
     }
 
-    EndGame() {
-
-    }
-
-    /*
-     SetupAvatar
-
-     StartGame
-
-     EndGame
-
-    * */
 
     Main() {
-        return this.playView;
+        this.router.go(this, 'Play', { gameId: this.gameContext.getLastActiveGame()});
     }
 }

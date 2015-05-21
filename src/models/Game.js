@@ -4,9 +4,14 @@ import Model                from 'arva-ds/core/Model';
 export default class Game extends Model {
 
     /**
-     * invited, active, finished
+     * inviting player
      */
-    get progressState() { }
+    get player1() {}
+
+    /**
+     * Invited player
+     */
+    get player2() {}
 
     /**
      * indicates when the game started.
@@ -19,16 +24,17 @@ export default class Game extends Model {
     get winner() {}
 
     /**
-     * Defines who will start the game
+     * Next player that should make a move
      */
-    get startingPlayer() {}
+    get nextPlayer() {}
+
     /**
-     * Stores a list of moves like
-     * [{ by: 'player-34394', position: 0 },
-     *  { by: 'player-14299', position: 1 },
-     *  { by: 'player-34394', position: 3 },
-     *  { by: 'player-14299', position: 6 }
-     * ]
+     * moves in string
      */
-    get gameState() {}
+    get state() {}
+
+    /**
+     * active, finished
+     */
+    get status() {}
 }
