@@ -8150,79 +8150,6 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/ListLayout", [
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:famous@0.3.5/surfaces/InputSurface", ["npm:famous@0.3.5/core/Surface"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Surface = require("npm:famous@0.3.5/core/Surface");
-  function InputSurface(options) {
-    this._placeholder = options.placeholder || '';
-    this._value = options.value || '';
-    this._type = options.type || 'text';
-    this._name = options.name || '';
-    Surface.apply(this, arguments);
-    this.on('click', this.focus.bind(this));
-    window.addEventListener('click', function(event) {
-      if (event.target !== this._currentTarget)
-        this.blur();
-    }.bind(this));
-  }
-  InputSurface.prototype = Object.create(Surface.prototype);
-  InputSurface.prototype.constructor = InputSurface;
-  InputSurface.prototype.elementType = 'input';
-  InputSurface.prototype.elementClass = 'famous-surface';
-  InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
-    this._placeholder = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.focus = function focus() {
-    if (this._currentTarget)
-      this._currentTarget.focus();
-    return this;
-  };
-  InputSurface.prototype.blur = function blur() {
-    if (this._currentTarget)
-      this._currentTarget.blur();
-    return this;
-  };
-  InputSurface.prototype.setValue = function setValue(str) {
-    this._value = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.setType = function setType(str) {
-    this._type = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.getValue = function getValue() {
-    if (this._currentTarget) {
-      return this._currentTarget.value;
-    } else {
-      return this._value;
-    }
-  };
-  InputSurface.prototype.setName = function setName(str) {
-    this._name = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.getName = function getName() {
-    return this._name;
-  };
-  InputSurface.prototype.deploy = function deploy(target) {
-    if (this._placeholder !== '')
-      target.placeholder = this._placeholder;
-    target.value = this._value;
-    target.type = this._type;
-    target.name = this._name;
-  };
-  module.exports = InputSurface;
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 function define(){};  define.amd = {};
 System.register("github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", ["npm:famous@0.3.5/core/Surface"], false, function(__require, __exports, __module) {
@@ -8326,6 +8253,79 @@ System.register("github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface",
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/surfaces/InputSurface", ["npm:famous@0.3.5/core/Surface"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Surface = require("npm:famous@0.3.5/core/Surface");
+  function InputSurface(options) {
+    this._placeholder = options.placeholder || '';
+    this._value = options.value || '';
+    this._type = options.type || 'text';
+    this._name = options.name || '';
+    Surface.apply(this, arguments);
+    this.on('click', this.focus.bind(this));
+    window.addEventListener('click', function(event) {
+      if (event.target !== this._currentTarget)
+        this.blur();
+    }.bind(this));
+  }
+  InputSurface.prototype = Object.create(Surface.prototype);
+  InputSurface.prototype.constructor = InputSurface;
+  InputSurface.prototype.elementType = 'input';
+  InputSurface.prototype.elementClass = 'famous-surface';
+  InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
+    this._placeholder = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.focus = function focus() {
+    if (this._currentTarget)
+      this._currentTarget.focus();
+    return this;
+  };
+  InputSurface.prototype.blur = function blur() {
+    if (this._currentTarget)
+      this._currentTarget.blur();
+    return this;
+  };
+  InputSurface.prototype.setValue = function setValue(str) {
+    this._value = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.setType = function setType(str) {
+    this._type = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.getValue = function getValue() {
+    if (this._currentTarget) {
+      return this._currentTarget.value;
+    } else {
+      return this._value;
+    }
+  };
+  InputSurface.prototype.setName = function setName(str) {
+    this._name = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.getName = function getName() {
+    return this._name;
+  };
+  InputSurface.prototype.deploy = function deploy(target) {
+    if (this._placeholder !== '')
+      target.placeholder = this._placeholder;
+    target.value = this._value;
+    target.type = this._type;
+    target.name = this._name;
+  };
+  module.exports = InputSurface;
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
@@ -27064,13 +27064,14 @@ System.register("utils/helpers", [], function($__export) {
   };
 });
 
-System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController"], function($__export) {
+System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Play/PlayView";
   var Surface,
       View,
       ObjectHelper,
       LayoutController,
+      Background,
       DEFAULT_OPTIONS,
       PlayView;
   return {
@@ -27082,6 +27083,8 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
       ObjectHelper = $__m.default;
     }, function($__m) {
       LayoutController = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {headerHeight: 75};
@@ -27097,6 +27100,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
         return ($traceurRuntime.createClass)(PlayView, {
           _createRenderables: function() {
             this._renderables = {
+              background: new Background(),
               header: new Surface({
                 content: 'BKEE!',
                 classes: ['header']
@@ -27154,19 +27158,23 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
                 var middle = top + (diameter);
                 var bottom = top + (diameter * 2);
                 var grid = {
-                  TopLeft: [0, top, 1],
-                  TopCenter: [diameter, top, 1],
-                  TopRight: [diameter * 2, top, 1],
-                  MiddleLeft: [0, middle, 1],
-                  MiddleCenter: [diameter, middle, 1],
-                  MiddleRight: [diameter * 2, middle, 1],
-                  BottomLeft: [0, bottom, 1],
-                  BottomCenter: [diameter, bottom, 1],
-                  BottomRight: [diameter * 2, bottom, 1]
+                  TopLeft: [0, top, 2],
+                  TopCenter: [diameter, top, 2],
+                  TopRight: [diameter * 2, top, 2],
+                  MiddleLeft: [0, middle, 2],
+                  MiddleCenter: [diameter, middle, 2],
+                  MiddleRight: [diameter * 2, middle, 2],
+                  BottomLeft: [0, bottom, 2],
+                  BottomCenter: [diameter, bottom, 2],
+                  BottomRight: [diameter * 2, bottom, 2]
                 };
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
                 context.set('header', {
                   size: [context.size[0], top],
-                  translate: [0, 0, 1]
+                  translate: [0, 0, 2]
                 });
                 context.set('surface1', {
                   size: sizing,
@@ -27511,7 +27519,29 @@ System.register("collections/Avatars", ["github:Bizboard/arva-ds@develop/core/Mo
   };
 });
 
-System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface"], function($__export) {
+System.register("components/Background", ["github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface"], function($__export) {
+  "use strict";
+  var __moduleName = "components/Background";
+  var BkImageSurface;
+  return {
+    setters: [function($__m) {
+      BkImageSurface = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Background() {
+          $traceurRuntime.superConstructor(Background).call(this, {
+            content: 'img/back.png',
+            sizeMode: BkImageSurface.SizeMode.ASPECTFIT
+          });
+        }
+        return ($traceurRuntime.createClass)(Background, {}, {}, $__super);
+      }(BkImageSurface)));
+    }
+  };
+});
+
+System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ProfileView";
   var Surface,
@@ -27520,6 +27550,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
       ObjectHelper,
       LayoutController,
       BkImageSurface,
+      Background,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
@@ -27534,6 +27565,8 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
       LayoutController = $__m.default;
     }, function($__m) {
       BkImageSurface = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {
@@ -27566,6 +27599,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
           },
           _createRenderables: function() {
             this._renderables = {
+              background: new Background(),
               header: new Surface({classes: ['header']}),
               avatar: new BkImageSurface(),
               name: new InputSurface({
@@ -27585,21 +27619,25 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
                 var avatarSpan = rows * 0.6;
                 var nameSpan = 1;
                 var scoreSpan = rows * 0.3;
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
                 context.set('header', {
                   size: [context.size[0], this.options.headerHeight],
-                  translate: [0, 0, 1]
+                  translate: [0, 0, 2]
                 });
                 context.set('avatar', {
                   size: [context.size[0], avatarSpan * this.options.rowSize],
-                  translate: [0, this.options.headerHeight, 1]
+                  translate: [0, this.options.headerHeight, 2]
                 });
                 context.set('name', {
                   size: [context.size[0], nameSpan * this.options.rowSize],
-                  translate: [0, (avatarSpan * this.options.rowSize) + this.options.headerHeight, 1]
+                  translate: [0, (avatarSpan * this.options.rowSize) + this.options.headerHeight, 2]
                 });
                 context.set('score', {
                   size: [context.size[0], scoreSpan * this.options.rowSize],
-                  translate: [0, ((avatarSpan + nameSpan) * this.options.rowSize) + this.options.headerHeight, 1]
+                  translate: [0, ((avatarSpan + nameSpan) * this.options.rowSize) + this.options.headerHeight, 2]
                 });
               }.bind(this),
               dataSource: this._renderables
@@ -27613,7 +27651,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence"], function($__export) {
+System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ChangeAvatarView";
   var Surface,
@@ -27625,6 +27663,7 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
       FlexScrollView,
       CollectionLayout,
       ViewSequence,
+      Background,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
@@ -27645,6 +27684,8 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
       CollectionLayout = $__m.default;
     }, function($__m) {
       ViewSequence = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {
@@ -27675,12 +27716,13 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
           },
           _createRenderables: function() {
             this._renderables = {
+              background: new Background(),
               header: new Surface({classes: ['header']}),
               avatarlist: new FlexScrollView({
                 autoPipeEvents: true,
                 layout: CollectionLayout,
                 layoutOptions: {
-                  itemSize: [75, 75],
+                  cells: [3, 3],
                   margins: [20, 10, 20, 10],
                   spacing: [20, 20]
                 }
@@ -27691,13 +27733,17 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
             this.layout = new LayoutController({
               autoPipeEvents: true,
               layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
                 context.set('header', {
                   size: [context.size[0], this.options.headerHeight],
                   translate: [0, 0, 20]
                 });
                 context.set('avatarlist', {
                   size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, this.options.headerHeight, 1]
+                  translate: [0, this.options.headerHeight, 2]
                 });
               }.bind(this),
               dataSource: this._renderables
@@ -28871,7 +28917,7 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
@@ -28879,6 +28925,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
       ObjectHelper,
       LayoutController,
       DataboundFlexScrollView,
+      Background,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
@@ -28891,6 +28938,8 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
       LayoutController = $__m.default;
     }, function($__m) {
       DataboundFlexScrollView = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {headerHeight: 75};
@@ -28931,8 +28980,9 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
               dataStore: this._dataSource
             });
             this._renderables = {
+              background: new Background(),
               header: new Surface({
-                content: '<div>B K E E</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
+                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
                 classes: ['header']
               }),
               players: invitePlayers
@@ -28943,13 +28993,17 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
             this.layout = new LayoutController({
               autoPipeEvents: true,
               layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
                 context.set('header', {
                   size: [context.size[0], top],
                   translate: [0, 0, 20]
                 });
                 context.set('players', {
                   size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, top, 1]
+                  translate: [0, top, 2]
                 });
               }.bind(this),
               dataSource: this._renderables

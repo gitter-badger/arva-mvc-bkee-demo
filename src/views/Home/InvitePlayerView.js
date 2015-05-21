@@ -6,6 +6,7 @@ import View                         from 'famous/core/View';
 import ObjectHelper                 from 'arva-mvc/utils/objectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
 import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
+import Background                   from '../../components/Background';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75
@@ -74,8 +75,9 @@ export default class InvitePlayerView extends View {
 
 
         this._renderables = {
+            background: new Background(),
             header: new Surface({
-                content: '<div>B K E E</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
+                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
                 classes: ['header']
             }),
             players: invitePlayers
@@ -89,6 +91,11 @@ export default class InvitePlayerView extends View {
             autoPipeEvents: true,
             layout: function(context) {
 
+                context.set('background', {
+                    size: context.size,
+                    translate: [0,0,0]
+                });
+
                 context.set('header', {
                     size: [context.size[0], top],
                     translate: [0,0,20]
@@ -96,7 +103,7 @@ export default class InvitePlayerView extends View {
 
                 context.set('players', {
                     size: [context.size[0], context.size[1]/1.3],
-                    translate: [0, top, 1]
+                    translate: [0, top, 2]
                 });
 
             }.bind(this),

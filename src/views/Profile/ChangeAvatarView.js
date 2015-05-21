@@ -10,6 +10,7 @@ import BkImageSurface               from 'famous-bkimagesurface/BkImageSurface';
 import FlexScrollView               from 'famous-flex/src/FlexScrollView';
 import CollectionLayout             from 'famous-flex/src/layouts/CollectionLayout';
 import ViewSequence                 from 'famous/core/ViewSequence';
+import Background                   from '../../components/Background';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75,
@@ -59,6 +60,8 @@ export default class ChangeAvatarView extends View {
     _createRenderables() {
 
         this._renderables = {
+            background: new Background(),
+
             header: new Surface({
                 classes: ['header']
             }),
@@ -66,7 +69,7 @@ export default class ChangeAvatarView extends View {
                 autoPipeEvents: true,
                 layout: CollectionLayout,
                 layoutOptions: {
-                    itemSize: [75, 75],
+                    cells: [3,3],
                     margins: [20, 10, 20, 10],
                     spacing: [20, 20]
                 }
@@ -80,6 +83,10 @@ export default class ChangeAvatarView extends View {
             autoPipeEvents: true,
             layout: function(context) {
 
+                context.set('background', {
+                    size: context.size,
+                    translate: [0,0,0]
+                });
 
                 context.set('header', {
                     size: [context.size[0], this.options.headerHeight],
@@ -88,7 +95,7 @@ export default class ChangeAvatarView extends View {
 
                 context.set('avatarlist', {
                     size: [context.size[0], context.size[1]/1.3],
-                    translate: [0,this.options.headerHeight, 1]
+                    translate: [0,this.options.headerHeight, 2]
                 });
 
 
