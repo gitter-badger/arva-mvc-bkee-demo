@@ -33,10 +33,22 @@ export default class GameContext {
         this.avatars = new Avatars();
 
         // my invites
-        this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
+        if (!this.isNewPlayer()) {
+            this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
 
+            this.invites.on('child_added', (invite) => {
 
+                if (window.confirm(`You are challenged by ${invite.player1}. Accept?`)) {
+                    this.acceptGame(invite);
+                }
+                else {
+                    this.rejectInvite(invite);
+                }
+            });
+        }
     }
+
+
 
     ready(what) {
 
@@ -86,31 +98,26 @@ export default class GameContext {
             dataSource: this.ds.child('Invites').child(playerId)
         });
 
-
     }
 
-    async rejectInvite(inviteId) {
-
-        let invitation = new Invite(inviteId);
-        //delete invitation;
+    rejectInvite(invitation) {
+        invitation.remove();
     }
 
-    async acceptGame(inviteId) {
 
-        let invitation = new Invite(inviteId);
-        await FireOnceAndWait(invitation);
+    acceptGame(invitation) {
 
         let dice = (Math.random()*10)+1;
-        let newGame = new Game(inviteId);
-        await FireOnceAndWait(newGame);
-        newGame.status = 'active';
-        newGame.activeSince = Date.now();
-        newGame.nextPlayer = dice>5?invitation.player1:invitation.player2;
+        let newGame = new Game(null, {
+            status: 'active',
+            activeSince: Date.now(),
+            startingPlayer: dice>5?invitation.player1:invitation.player2
+        });
 
         let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        games[invitation.from] = newGame.id;
+        games[invitation.player1] = newGame.id;
 
-        //delete invitation;
+        invitation.remove();
     }
 
     async endGame(gameId, winner) {

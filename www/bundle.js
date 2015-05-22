@@ -27302,7 +27302,11 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           },
           _onChildAdded: function(snapshot) {
             var id = snapshot.key();
-            var model = this.add(new this._dataType(id, null, {dataSnapshot: snapshot}));
+            var rootPath = snapshot.ref().root().toString();
+            var model = this.add(new this._dataType(id, null, {
+              dataSnapshot: snapshot,
+              path: snapshot.ref().toString().replace(rootPath, '/')
+            }));
             this._eventEmitter.emit('child_added', model);
             this._eventEmitter.emit('value', this);
           },
@@ -27338,7 +27342,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             var position = this._findIndexById(id);
             var model = this[position];
             if (position !== -1) {
-              this.remove(position, false);
+              this.remove(position);
               this._eventEmitter.emit('child_removed', model);
               this._eventEmitter.emit('value', this);
             }
@@ -29863,12 +29867,22 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       BKEE_ACTIVEGAMES = 'bkee.activegames';
       $__export('default', (function() {
         function GameContext() {
+          var $__0 = this;
           if (!localStorage[BKEE_ACTIVEGAMES])
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
           this.ds = GetDefaultContext().get(DataSource);
           this.players = new Players();
           this.avatars = new Avatars();
-          this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
+          if (!this.isNewPlayer()) {
+            this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
+            this.invites.on('child_added', (function(invite) {
+              if (window.confirm(("You are challenged by " + invite.player1 + ". Accept?"))) {
+                $__0.acceptGame(invite);
+              } else {
+                $__0.rejectInvite(invite);
+              }
+            }));
+          }
         }
         return ($traceurRuntime.createClass)(GameContext, {
           ready: function(what) {
@@ -29909,55 +29923,19 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
               player2: playerId
             }, {dataSource: this.ds.child('Invites').child(playerId)});
           },
-          rejectInvite: function(inviteId) {
-            var invitation;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    invitation = new Invite(inviteId);
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+          rejectInvite: function(invitation) {
+            invitation.remove();
           },
-          acceptGame: function(inviteId) {
-            var invitation,
-                dice,
-                newGame,
-                games;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    invitation = new Invite(inviteId);
-                    $ctx.state = 6;
-                    break;
-                  case 6:
-                    Promise.resolve(FireOnceAndWait(invitation)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    dice = (Math.random() * 10) + 1;
-                    newGame = new Game(inviteId);
-                    $ctx.state = 8;
-                    break;
-                  case 8:
-                    Promise.resolve(FireOnceAndWait(newGame)).then($ctx.createCallback(4), $ctx.errback);
-                    return ;
-                  case 4:
-                    newGame.status = 'active';
-                    newGame.activeSince = Date.now();
-                    newGame.nextPlayer = dice > 5 ? invitation.player1 : invitation.player2;
-                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-                    games[invitation.from] = newGame.id;
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+          acceptGame: function(invitation) {
+            var dice = (Math.random() * 10) + 1;
+            var newGame = new Game(null, {
+              status: 'active',
+              activeSince: Date.now(),
+              startingPlayer: dice > 5 ? invitation.player1 : invitation.player2
+            });
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+            games[invitation.player1] = newGame.id;
+            invitation.remove();
           },
           endGame: function(gameId, winner) {
             var game,
