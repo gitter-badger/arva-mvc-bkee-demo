@@ -27417,8 +27417,8 @@ System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"],
           $traceurRuntime.superConstructor(Invite).apply(this, arguments);
         }
         return ($traceurRuntime.createClass)(Invite, {
-          get from() {},
-          get gameId() {}
+          get player1() {},
+          get player2() {}
         }, {}, $__super);
       }(Model)));
     }
@@ -28308,10 +28308,20 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
                 switch ($ctx.state) {
                   case 0:
                     gameView = new PlayView();
-                    gameState = new Game(gameId);
-                    $ctx.state = 7;
+                    $ctx.state = 14;
+                    break;
+                  case 14:
+                    $ctx.state = (!gameId) ? 7 : 3;
                     break;
                   case 7:
+                    gameView.set();
+                    $ctx.state = 8;
+                    break;
+                  case 3:
+                    gameState = new Game(gameId);
+                    $ctx.state = 4;
+                    break;
+                  case 4:
                     Promise.resolve(FireOnceAndWait(gameState)).then($ctx.createCallback(2), $ctx.errback);
                     return ;
                   case 2:
@@ -28324,13 +28334,13 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
                       gameEngine = new BKEEEngine(gameState);
                       gameView.set(gameState);
                     });
-                    $ctx.state = 9;
+                    $ctx.state = 8;
                     break;
-                  case 9:
-                    $ctx.returnValue = gameView();
-                    $ctx.state = 4;
+                  case 8:
+                    $ctx.returnValue = gameView;
+                    $ctx.state = 11;
                     break;
-                  case 4:
+                  case 11:
                     $ctx.state = -2;
                     break;
                   default:
@@ -29855,10 +29865,10 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
         function GameContext() {
           if (!localStorage[BKEE_ACTIVEGAMES])
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
-          var ds = GetDefaultContext().get(DataSource);
+          this.ds = GetDefaultContext().get(DataSource);
           this.players = new Players();
           this.avatars = new Avatars();
-          this.invites = new Invites(ds.child('Invites').child(this.getPlayerId()));
+          this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
         }
         return ($traceurRuntime.createClass)(GameContext, {
           ready: function(what) {
@@ -29885,7 +29895,10 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
             return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
           },
           getLastActiveGame: function() {
-            return localStorage[BKEE_LASTGAMEID];
+            var gameId = localStorage[BKEE_LASTGAMEID];
+            if (!gameId)
+              return '';
+            return gameId;
           },
           setLastActiveGame: function(gameid) {
             localStorage[BKEE_LASTGAMEID] = gameid;
@@ -29893,10 +29906,8 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           invitePlayer: function(playerId) {
             var invitation = new Invite(null, {
               player1: this.getPlayerId(),
-              player2: playerId,
-              progressState: 'invited',
-              gameState: []
-            });
+              player2: playerId
+            }, {dataSource: this.ds.child('Invites').child(playerId)});
           },
           rejectInvite: function(inviteId) {
             var invitation;
@@ -29981,6 +29992,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           trackOnline: function() {
             var $__0 = this;
             setInterval((function() {
+              return ;
               if ($__0.isNewPlayer())
                 return ;
               var playerName = $__0.getPlayerId();
@@ -30054,6 +30066,7 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
           },
           SendChallenge: function(playerId) {
             this.gameContext.invitePlayer(playerId);
+            this.router.go(this, 'Main');
           },
           AcceptChallenge: function(gameId) {
             this.gameContext.acceptGame(gameId);
@@ -30508,7 +30521,7 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
                   curve: Easing.outBack
                 },
                 animation: AnimationController.Animation.Slide.Left,
-                activeFrom: ['PlayController', 'ProfileController']
+                activeFrom: ['PlayController', 'HomeController']
               }],
               methods: {
                 next: {

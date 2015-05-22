@@ -22,28 +22,32 @@ export class PlayController extends Controller {
     }
 
 
-
     async Play(gameId) {
 
         let gameView = new PlayView();
-        let gameState = new Game(gameId);
-        await FireOnceAndWait(gameState);
-        gameView.set(gameState);
 
-        let gameEngine = new BKEEEngine(gameState);
-
-        // when this player made a move. have the GameEngine evaluate
-        gameView.on('move', function(by, position) {
-            gameEngine.move(by, position);
-        });
-
-        // when data is updated by the game engine. reflect the view
-        gameState.on('value', function() {
-            gameEngine = new BKEEEngine(gameState);
+        if (!gameId) {
+            gameView.set();
+        } else {
+            let gameState = new Game(gameId);
+            await FireOnceAndWait(gameState);
             gameView.set(gameState);
-        });
 
-        return gameView();
+            let gameEngine = new BKEEEngine(gameState);
+
+            // when this player made a move. have the GameEngine evaluate
+            gameView.on('move', function(by, position) {
+                gameEngine.move(by, position);
+            });
+
+            // when data is updated by the game engine. reflect the view
+            gameState.on('value', function() {
+                gameEngine = new BKEEEngine(gameState);
+                gameView.set(gameState);
+            });
+        }
+
+        return gameView;
     }
 
 

@@ -64,6 +64,7 @@ export class HomeController extends Controller {
      */
     SendChallenge(playerId) {
         this.gameContext.invitePlayer(playerId);
+        this.router.go(this, 'Main');
     }
 
     /**

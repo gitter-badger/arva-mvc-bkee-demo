@@ -27,13 +27,13 @@ export default class GameContext {
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
 
 
-        let ds = GetDefaultContext().get(DataSource);
+        this.ds = GetDefaultContext().get(DataSource);
 
         this.players = new Players();
         this.avatars = new Avatars();
 
         // my invites
-        this.invites = new Invites(ds.child('Invites').child(this.getPlayerId()));
+        this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
 
 
     }
@@ -67,7 +67,9 @@ export default class GameContext {
     }
 
     getLastActiveGame() {
-        return localStorage[BKEE_LASTGAMEID];
+        let gameId = localStorage[BKEE_LASTGAMEID];
+        if (!gameId)return '';
+        return gameId;
     }
 
     setLastActiveGame(gameid) {
@@ -76,12 +78,15 @@ export default class GameContext {
 
 
     invitePlayer(playerId) {
+
         let invitation = new Invite(null, {
             player1: this.getPlayerId(),
-            player2: playerId,
-            progressState: 'invited',
-            gameState: []
+            player2: playerId
+        }, {
+            dataSource: this.ds.child('Invites').child(playerId)
         });
+
+
     }
 
     async rejectInvite(inviteId) {
@@ -135,6 +140,7 @@ export default class GameContext {
 
     trackOnline() {
         setInterval(()=> {
+            return;
             if (this.isNewPlayer()) return; // Wait until we are actually a new user
             let playerName = this.getPlayerId();
 

@@ -6,11 +6,12 @@ export default class Invite extends Model {
     /**
      * received from
      */
-    get from() { }
+    get player1() { }
 
     /**
-     * indicates when the game started.
+     * received from
      */
-    get gameId() {}
+    get player2() { }
+
 
 }
