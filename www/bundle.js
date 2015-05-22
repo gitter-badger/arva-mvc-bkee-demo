@@ -26756,47 +26756,6 @@ System.register("github:Bizboard/di.js@master/providers", ["github:Bizboard/di.j
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-ds@develop/core/DataSource";
-  var DataSource;
-  return {
-    setters: [],
-    execute: function() {
-      'use strict';
-      DataSource = (function() {
-        function DataSource(path) {
-          this._dataReference = null;
-        }
-        return ($traceurRuntime.createClass)(DataSource, {
-          get inheritable() {
-            return false;
-          },
-          child: function(childName) {},
-          path: function() {},
-          key: function() {},
-          set: function(newData) {},
-          remove: function() {},
-          push: function(newData) {},
-          setWithPriority: function(newData, priority) {},
-          setPriority: function(newPriority) {},
-          setValueChangedCallback: function(callback) {},
-          removeValueChangedCallback: function() {},
-          setChildAddedCallback: function(callback) {},
-          removeChildAddedCallback: function() {},
-          setChildChangedCallback: function(callback) {},
-          removeChildChangedCallback: function() {},
-          setChildMovedCallback: function(callback) {},
-          removeChildMovedCallback: function() {},
-          setChildRemovedCallback: function(callback) {},
-          removeChildRemovedCallback: function() {}
-        }, {});
-      }());
-      $__export("DataSource", DataSource);
-    }
-  };
-});
-
 System.register("github:Bizboard/arva-context@master/Context", [], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-context@master/Context";
@@ -26858,6 +26817,68 @@ System.register("svg/profile.svg", [], function($__export) {
     execute: function() {
       profile = "\n<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"\n\t width=\"28.874px\" height=\"28.873px\" viewBox=\"0 0 28.874 28.873\" style=\"enable-background:new 0 0 28.874 28.873;\"\n\t xml:space=\"preserve\">\n<g>\n\t<g>\n\t\t<circle cx=\"11.053\" cy=\"8.619\" r=\"2.35\"/>\n\t\t<circle cx=\"16.161\" cy=\"17.37\" r=\"1.507\"/>\n\t\t<path d=\"M24.423,12.417c1.894-9.269-5.637-13.511-13.995-12.176C2.069,1.574,2.383,6.63,1.891,9.043\n\t\t\tC0.912,15.09,7.137,21.848,7.137,21.848l-0.355,7.025h10.136l0.776-3.23c0,0,0.44,0.738,3.059,0.96\n\t\t\tc2.62,0.222,2.301-2.976,2.301-2.976s1.744-0.77,1.744-1.346c0-0.578-1.032-1.322-1.032-1.322s1.109,0.199,1.511-0.268\n\t\t\tc0.399-0.467-0.49-2.154-0.49-2.154s1.368-0.035,2.174-0.922C27.767,16.729,24.423,14.106,24.423,12.417z M9.946,13.684\n\t\t\tc0,0-0.057-0.626-0.085-0.939c-0.252-0.067-0.495-0.156-0.728-0.26c-0.276,0.234-0.828,0.701-0.828,0.701\n\t\t\ts-0.094,0.052-0.141,0.078c-0.047,0.025-0.925-0.078-0.925-0.078l-1.51-1.783v-1.065c0,0,0.581-0.492,0.871-0.738\n\t\t\tC6.537,9.361,6.499,9.118,6.482,8.867C6.101,8.692,5.341,8.345,5.341,8.345L5.036,7.458l0.035-0.145l0.975-2.124l1.031-0.271\n\t\t\tc0,0,0.656,0.3,0.983,0.449c0.2-0.162,0.416-0.309,0.644-0.438C8.671,4.534,8.607,3.743,8.607,3.743L9.361,2.99l2.328-0.188\n\t\t\tl0.754,0.754c0,0,0.048,0.601,0.073,0.901c0.303,0.082,0.592,0.191,0.867,0.324c0.252-0.217,0.757-0.649,0.757-0.649h1.067\n\t\t\tl1.521,1.774V6.97c0,0-0.617,0.528-0.926,0.793c0.046,0.215,0.07,0.437,0.081,0.661c0.39,0.225,1.168,0.675,1.168,0.675\n\t\t\tl0.271,1.031l-1.169,2.022l-1.031,0.271c0,0-0.605-0.35-0.908-0.524c-0.171,0.133-0.354,0.251-0.544,0.36\n\t\t\tc0.036,0.404,0.109,1.211,0.109,1.211l-0.753,0.754l-2.325,0.212L9.946,13.684z M19.431,19.637l-0.661,0.174\n\t\t\tc0,0-0.388-0.225-0.583-0.336c-0.11,0.085-0.228,0.16-0.35,0.23c0.023,0.26,0.07,0.776,0.07,0.776l-0.482,0.483l-1.491,0.136\n\t\t\tl-0.483-0.483c0,0-0.037-0.4-0.055-0.603c-0.162-0.043-0.317-0.101-0.466-0.167c-0.177,0.15-0.531,0.449-0.531,0.449\n\t\t\ts-0.061,0.033-0.09,0.051c-0.03,0.018-0.594-0.051-0.594-0.051l-0.968-1.145v-0.684c0,0,0.372-0.315,0.558-0.473\n\t\t\tc-0.04-0.152-0.064-0.31-0.075-0.471c-0.245-0.111-0.732-0.335-0.732-0.335l-0.196-0.567l0.022-0.094l0.625-1.361l0.662-0.174\n\t\t\tc0,0,0.42,0.191,0.63,0.288c0.128-0.104,0.267-0.197,0.413-0.281c-0.02-0.253-0.061-0.762-0.061-0.762l0.483-0.483l1.493-0.12\n\t\t\tl0.484,0.483c0,0,0.03,0.385,0.046,0.578c0.194,0.053,0.38,0.123,0.556,0.208c0.162-0.139,0.486-0.417,0.486-0.417h0.685\n\t\t\tl0.977,1.14v0.684c0,0-0.396,0.339-0.595,0.509c0.03,0.138,0.045,0.28,0.052,0.425c0.25,0.145,0.75,0.432,0.75,0.432l0.173,0.662\n\t\t\tL19.431,19.637z\"/>\n\t</g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n<g>\n</g>\n</svg>\n";
       $__export('default', profile);
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-ds@develop/core/DataSource";
+  var DataSource;
+  return {
+    setters: [],
+    execute: function() {
+      'use strict';
+      DataSource = (function() {
+        function DataSource(path) {
+          this._dataReference = null;
+        }
+        return ($traceurRuntime.createClass)(DataSource, {
+          get inheritable() {
+            return false;
+          },
+          child: function(childName) {},
+          path: function() {},
+          key: function() {},
+          set: function(newData) {},
+          remove: function() {},
+          push: function(newData) {},
+          setWithPriority: function(newData, priority) {},
+          setPriority: function(newPriority) {},
+          setValueChangedCallback: function(callback) {},
+          removeValueChangedCallback: function() {},
+          setChildAddedCallback: function(callback) {},
+          removeChildAddedCallback: function() {},
+          setChildChangedCallback: function(callback) {},
+          removeChildChangedCallback: function() {},
+          setChildMovedCallback: function(callback) {},
+          removeChildMovedCallback: function() {},
+          setChildRemovedCallback: function(callback) {},
+          removeChildRemovedCallback: function() {}
+        }, {});
+      }());
+      $__export("DataSource", DataSource);
+    }
+  };
+});
+
+System.register("utils/helpers", [], function($__export) {
+  "use strict";
+  var __moduleName = "utils/helpers";
+  function FireOnceAndWait(object) {
+    if (object.once) {
+      return new Promise(function(resolve) {
+        object.once('ready', function() {
+          resolve();
+        });
+      });
+    } else
+      return Promise.resolve();
+  }
+  $__export("FireOnceAndWait", FireOnceAndWait);
+  return {
+    setters: [],
+    execute: function() {
     }
   };
 });
@@ -27336,31 +27357,6 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
   };
 });
 
-System.register("models/Game", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
-  "use strict";
-  var __moduleName = "models/Game";
-  var Model;
-  return {
-    setters: [function($__m) {
-      Model = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Game() {
-          $traceurRuntime.superConstructor(Game).apply(this, arguments);
-        }
-        return ($traceurRuntime.createClass)(Game, {
-          get progressState() {},
-          get activeSince() {},
-          get winner() {},
-          get startingPlayer() {},
-          get gameState() {}
-        }, {}, $__super);
-      }(Model)));
-    }
-  };
-});
-
 System.register("models/Avatar", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
   "use strict";
   var __moduleName = "models/Avatar";
@@ -27375,6 +27371,33 @@ System.register("models/Avatar", ["github:Bizboard/arva-ds@develop/core/Model"],
           $traceurRuntime.superConstructor(Avatar).apply(this, arguments);
         }
         return ($traceurRuntime.createClass)(Avatar, {get url() {}}, {}, $__super);
+      }(Model)));
+    }
+  };
+});
+
+System.register("models/Game", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
+  "use strict";
+  var __moduleName = "models/Game";
+  var Model;
+  return {
+    setters: [function($__m) {
+      Model = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Game() {
+          $traceurRuntime.superConstructor(Game).apply(this, arguments);
+        }
+        return ($traceurRuntime.createClass)(Game, {
+          get player1() {},
+          get player2() {},
+          get activeSince() {},
+          get winner() {},
+          get nextPlayer() {},
+          get state() {},
+          get status() {}
+        }, {}, $__super);
       }(Model)));
     }
   };
@@ -27398,30 +27421,6 @@ System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"],
           get gameId() {}
         }, {}, $__super);
       }(Model)));
-    }
-  };
-});
-
-System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Invite"], function($__export) {
-  "use strict";
-  var __moduleName = "collections/Invites";
-  var PrioritisedArray,
-      Invite;
-  return {
-    setters: [function($__m) {
-      PrioritisedArray = $__m.default;
-    }, function($__m) {
-      Invite = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Invites() {
-          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
-          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
-          $traceurRuntime.superConstructor(Invites).call(this, Invite, datasource, datasnapshot);
-        }
-        return ($traceurRuntime.createClass)(Invites, {}, {}, $__super);
-      }(PrioritisedArray)));
     }
   };
 });
@@ -27504,27 +27503,6 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
   };
 });
 
-System.register("utils/helpers", [], function($__export) {
-  "use strict";
-  var __moduleName = "utils/helpers";
-  function FireOnceAndWait(object) {
-    if (object.once) {
-      return new Promise(function(resolve) {
-        object.once('ready', function() {
-          resolve();
-        });
-      });
-    } else
-      return Promise.resolve();
-  }
-  $__export("FireOnceAndWait", FireOnceAndWait);
-  return {
-    setters: [],
-    execute: function() {
-    }
-  };
-});
-
 System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Play/PlayView";
@@ -27559,6 +27537,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
           this._createLayout();
         }
         return ($traceurRuntime.createClass)(PlayView, {
+          set: function() {},
           _createRenderables: function() {
             this._renderables = {
               background: new Background(),
@@ -27688,6 +27667,62 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
         }, {}, $__super);
       }(View));
       $__export("PlayView", PlayView);
+    }
+  };
+});
+
+System.register("utils/BKEEEngine", ["models/Game", "npm:lodash@3.9.1"], function($__export) {
+  "use strict";
+  var __moduleName = "utils/BKEEEngine";
+  var Game,
+      _,
+      winningCombinations;
+  return {
+    setters: [function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
+    }],
+    execute: function() {
+      winningCombinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+      $__export('default', (function() {
+        function BKEEEngine(game) {
+          this._game = game;
+          if (!this._game.state) {
+            this._state = {};
+            this._state[this._game.player1] = [];
+            this._state[this._game.player2] = [];
+          } else {
+            this._state = JSON.parse(this._game.state);
+          }
+        }
+        return ($traceurRuntime.createClass)(BKEEEngine, {
+          move: function(by, position) {
+            this._state[by].push({
+              by: by,
+              position: position
+            });
+            this._game.state = JSON.stringify(this._state);
+            var didIWin = _evaluateGameResult(this._state[by]);
+            if (didIWin) {
+              this._game.winner = by;
+              this._game.status = 'finished';
+            } else if (this._state[this._game.player1].length == 9) {
+              this._game.status = 'finished';
+            } else {
+              this._game.nextPlayer = this._game.nextPlayer == this._game.player1 ? this._game.player2 : this._game.player1;
+            }
+          },
+          _evaluateGameResult: function(moves) {
+            var won = false;
+            winningCombinations.forEach(function(combination) {
+              if (_.isEqual(moves, combination))
+                won = true;
+            });
+            return true;
+          }
+        }, {});
+      }()));
     }
   };
 });
@@ -27932,30 +27967,6 @@ System.register("collections/Players", ["github:Bizboard/arva-ds@develop/core/Mo
   };
 });
 
-System.register("collections/Games", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Game"], function($__export) {
-  "use strict";
-  var __moduleName = "collections/Games";
-  var PrioritisedArray,
-      Game;
-  return {
-    setters: [function($__m) {
-      PrioritisedArray = $__m.default;
-    }, function($__m) {
-      Game = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Games() {
-          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
-          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
-          $traceurRuntime.superConstructor(Games).call(this, Game, datasource, datasnapshot);
-        }
-        return ($traceurRuntime.createClass)(Games, {}, {}, $__super);
-      }(PrioritisedArray)));
-    }
-  };
-});
-
 System.register("collections/Avatars", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Avatar"], function($__export) {
   "use strict";
   var __moduleName = "collections/Avatars";
@@ -27975,6 +27986,30 @@ System.register("collections/Avatars", ["github:Bizboard/arva-ds@develop/core/Mo
           $traceurRuntime.superConstructor(Avatars).call(this, Avatar, datasource, datasnapshot);
         }
         return ($traceurRuntime.createClass)(Avatars, {}, {}, $__super);
+      }(PrioritisedArray)));
+    }
+  };
+});
+
+System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Invite"], function($__export) {
+  "use strict";
+  var __moduleName = "collections/Invites";
+  var PrioritisedArray,
+      Invite;
+  return {
+    setters: [function($__m) {
+      PrioritisedArray = $__m.default;
+    }, function($__m) {
+      Invite = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Invites() {
+          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
+          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
+          $traceurRuntime.superConstructor(Invites).call(this, Invite, datasource, datasnapshot);
+        }
+        return ($traceurRuntime.createClass)(Invites, {}, {}, $__super);
       }(PrioritisedArray)));
     }
   };
@@ -28227,34 +28262,84 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
   };
 });
 
-System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop/core/Controller", "views/Play/PlayView", "views/Home/InvitePlayerView"], function($__export) {
+System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Game", "views/Play/PlayView", "views/Home/InvitePlayerView", "utils/helpers", "utils/BKEEEngine", "utils/GameContext"], function($__export) {
   "use strict";
   var __moduleName = "controllers/PlayController";
   var Controller,
+      GetDefaultContext,
+      Game,
       PlayView,
       InvitePlayerView,
+      FireOnceAndWait,
+      BKEEEngine,
+      GameContext,
       PlayController;
   return {
     setters: [function($__m) {
       Controller = $__m.Controller;
     }, function($__m) {
+      GetDefaultContext = $__m.GetDefaultContext;
+    }, function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
       PlayView = $__m.PlayView;
     }, function($__m) {
       InvitePlayerView = $__m.default;
+    }, function($__m) {
+      FireOnceAndWait = $__m.FireOnceAndWait;
+    }, function($__m) {
+      BKEEEngine = $__m.default;
+    }, function($__m) {
+      GameContext = $__m.default;
     }],
     execute: function() {
       PlayController = (function($__super) {
         function PlayController(router, context) {
           $traceurRuntime.superConstructor(PlayController).call(this, router, context);
-          this.playView = new PlayView();
+          this.gameContext = GetDefaultContext().get(GameContext);
         }
         return ($traceurRuntime.createClass)(PlayController, {
-          SetupGame: function(playerId) {},
-          SetupAvatar: function() {},
-          StartGame: function() {},
-          EndGame: function() {},
+          Play: function(gameId) {
+            var gameView,
+                gameState,
+                gameEngine;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    gameView = new PlayView();
+                    gameState = new Game(gameId);
+                    $ctx.state = 7;
+                    break;
+                  case 7:
+                    Promise.resolve(FireOnceAndWait(gameState)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    gameView.set(gameState);
+                    gameEngine = new BKEEEngine(gameState);
+                    gameView.on('move', function(by, position) {
+                      gameEngine.move(by, position);
+                    });
+                    gameState.on('value', function() {
+                      gameEngine = new BKEEEngine(gameState);
+                      gameView.set(gameState);
+                    });
+                    $ctx.state = 9;
+                    break;
+                  case 9:
+                    $ctx.returnValue = gameView();
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
           Main: function() {
-            return this.playView;
+            this.router.go(this, 'Play', {gameId: this.gameContext.getLastActiveGame()});
           }
         }, {}, $__super);
       }(Controller));
@@ -28611,7 +28696,7 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
                 background: true,
                 selectedItemOverlay: true
               }});
-            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Play', '<div>' + Profile + '</div>Settings']);
+            tabBar.setItems(['<div>' + Arena + '</div>Arena', '<div>' + Play + '</div>Speel', '<div>' + Profile + '</div>Profiel']);
             this._renderables = {tabBar: tabBar};
           },
           _createLayout: function() {
@@ -29727,31 +29812,53 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
   };
 });
 
-System.register("utils/GameContext", ["models/Player", "collections/Players", "collections/Games", "collections/Avatars"], function($__export) {
+System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
   "use strict";
   var __moduleName = "utils/GameContext";
-  var Player,
+  var GetDefaultContext,
+      DataSource,
+      FireOnceAndWait,
+      Player,
       Players,
-      Games,
       Avatars,
-      BKEE_PLAYERID;
+      Game,
+      Invites,
+      Invite,
+      BKEE_PLAYERID,
+      BKEE_LASTGAMEID,
+      BKEE_ACTIVEGAMES;
   return {
     setters: [function($__m) {
+      GetDefaultContext = $__m.GetDefaultContext;
+    }, function($__m) {
+      DataSource = $__m.DataSource;
+    }, function($__m) {
+      FireOnceAndWait = $__m.default;
+    }, function($__m) {
       Player = $__m.default;
     }, function($__m) {
       Players = $__m.default;
     }, function($__m) {
-      Games = $__m.default;
-    }, function($__m) {
       Avatars = $__m.default;
+    }, function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
+      Invites = $__m.default;
+    }, function($__m) {
+      Invite = $__m.default;
     }],
     execute: function() {
       BKEE_PLAYERID = 'bkee.playerid';
+      BKEE_LASTGAMEID = 'bkee.lastgameid';
+      BKEE_ACTIVEGAMES = 'bkee.activegames';
       $__export('default', (function() {
         function GameContext() {
+          if (!localStorage[BKEE_ACTIVEGAMES])
+            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
+          var ds = GetDefaultContext().get(DataSource);
           this.players = new Players();
           this.avatars = new Avatars();
-          this.games = new Games();
+          this.invites = new Invites(ds.child('Invites').child(this.getPlayerId()));
         }
         return ($traceurRuntime.createClass)(GameContext, {
           ready: function(what) {
@@ -29776,6 +29883,100 @@ System.register("utils/GameContext", ["models/Player", "collections/Players", "c
           },
           getDefaultPlayerName: function() {
             return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
+          },
+          getLastActiveGame: function() {
+            return localStorage[BKEE_LASTGAMEID];
+          },
+          setLastActiveGame: function(gameid) {
+            localStorage[BKEE_LASTGAMEID] = gameid;
+          },
+          invitePlayer: function(playerId) {
+            var invitation = new Invite(null, {
+              player1: this.getPlayerId(),
+              player2: playerId,
+              progressState: 'invited',
+              gameState: []
+            });
+          },
+          rejectInvite: function(inviteId) {
+            var invitation;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    invitation = new Invite(inviteId);
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
+          acceptGame: function(inviteId) {
+            var invitation,
+                dice,
+                newGame,
+                games;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    invitation = new Invite(inviteId);
+                    $ctx.state = 6;
+                    break;
+                  case 6:
+                    Promise.resolve(FireOnceAndWait(invitation)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    dice = (Math.random() * 10) + 1;
+                    newGame = new Game(inviteId);
+                    $ctx.state = 8;
+                    break;
+                  case 8:
+                    Promise.resolve(FireOnceAndWait(newGame)).then($ctx.createCallback(4), $ctx.errback);
+                    return ;
+                  case 4:
+                    newGame.status = 'active';
+                    newGame.activeSince = Date.now();
+                    newGame.nextPlayer = dice > 5 ? invitation.player1 : invitation.player2;
+                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+                    games[invitation.from] = newGame.id;
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
+          endGame: function(gameId, winner) {
+            var game,
+                games;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    game = new Game(gameId);
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    Promise.resolve(FireOnceAndWait(game)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    game.winner = winner;
+                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
+          hasGame: function(playerId) {
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+            return games[playerId] != null;
+          },
+          getGameId: function(playerId) {
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
           },
           trackOnline: function() {
             var $__0 = this;
@@ -29836,7 +30037,9 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
           this.gameContext = GetDefaultContext().get(GameContext);
           this.invitePlayerView = new InvitePlayerView({dataSource: this.gameContext.players});
           this.invitePlayerView.on('invite', ($__0 = this, function(player) {
-            if (window.confirm(("Challenge " + player.name + "?"))) {
+            if ($__0.gameContext.hasGame(player.id)) {
+              $__0.router.go(PlayController, 'Play', {gameId: $__0.gameContext.getGameId(player.id)});
+            } else if (window.confirm(("Challenge " + player.name + "?"))) {
               $__0.router.go($__0, 'SendChallenge', {playerId: player.id});
             }
           }));
@@ -29850,17 +30053,10 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
             }
           },
           SendChallenge: function(playerId) {
-            var sendInvite = new Invite(playerId);
-            sendInvite.on('ready', function() {
-              sendInvite.from = this.gameContext.getPlayerId();
-            });
+            this.gameContext.invitePlayer(playerId);
           },
           AcceptChallenge: function(gameId) {
-            var newGame = new Game(gameId);
-            newGame.progressState = 'active';
-            newGame.activeSince = Date.now();
-            GameContext.startGame(gameId);
-            this.router.go(PlayController, 'Main', {gameId: gameId});
+            this.gameContext.acceptGame(gameId);
           }
         }, {}, $__super);
       }(Controller));
@@ -30228,14 +30424,13 @@ System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/d
   };
 });
 
-System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-mvc@develop/DefaultContext", "github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", "npm:famous@0.3.5/transitions/Easing", "views/Shared/Navigation", "utils/GameContext", "models/Invite", "collections/Invites", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController"], function($__export) {
+System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/App", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context", "github:Bizboard/arva-mvc@develop/DefaultContext", "github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", "npm:famous@0.3.5/transitions/Easing", "views/Shared/Navigation", "utils/GameContext", "models/Invite", "collections/Invites", "controllers/HomeController", "controllers/PlayController", "controllers/ProfileController"], function($__export) {
   "use strict";
   var __moduleName = "BkeeApp";
   var Inject,
       App,
       Router,
       Context,
-      DataSource,
       GetDefaultContext,
       AnimationController,
       Easing,
@@ -30256,8 +30451,6 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
       Router = $__m.default;
     }, function($__m) {
       Context = $__m.default;
-    }, function($__m) {
-      DataSource = $__m.DataSource;
     }, function($__m) {
       GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
@@ -30360,12 +30553,6 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
         }
         return ($traceurRuntime.createClass)(BkeeApp, {setup: function() {
             this.gameContext.trackOnline();
-            var ds = GetDefaultContext().get(DataSource);
-            var inviteScope = ds.child('Invites').child(this.gameContext.getPlayerId());
-            this.invites = new Invites(inviteScope);
-            this.invites.on('child_added', function(child) {
-              console.log('Invite received');
-            });
           }}, {}, $__super);
       }(App));
       $__export("BkeeApp", BkeeApp);

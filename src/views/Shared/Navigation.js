@@ -50,8 +50,8 @@ export default class Navigation extends View {
 
         tabBar.setItems([
             '<div>'+Arena+'</div>Arena',
-            '<div>'+Play+'</div>Play',
-            '<div>'+Profile+'</div>Settings'
+            '<div>'+Play+'</div>Speel',
+            '<div>'+Profile+'</div>Profiel'
         ]);
 
         this._renderables = {

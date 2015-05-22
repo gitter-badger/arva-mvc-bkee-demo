@@ -17,8 +17,9 @@ export default class BKEEEngine {
             this._state[this._game.player1] = [];
             this._state[this._game.player2] = [];
         }
-
-        this._state = JSON.parse(this._game.state);
+        else {
+            this._state = JSON.parse(this._game.state);
+        }
     }
 
     move(by, position) {

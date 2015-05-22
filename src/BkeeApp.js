@@ -111,17 +111,7 @@ export class BkeeApp extends App {
         this.gameContext.trackOnline();
 
         // set myself as active user
-        this.gameContext.onInvite();
-
-        // watch my invites scope
-        var ds = GetDefaultContext().get(DataSource);
-        var inviteScope = ds.child('Invites')
-            .child(this.gameContext.getPlayerId());
-        this.invites = new Invites(inviteScope);
-
-        this.invites.on('child_added', function(child) {
-            console.log('Invite received');
-        });
+        //this.gameContext.onInvite();
 
     }
 }

@@ -32,6 +32,10 @@ export class PlayView extends View {
         this._createLayout();
     }
 
+    set() {
+
+    }
+
     _createRenderables() {
 
         this._renderables = {

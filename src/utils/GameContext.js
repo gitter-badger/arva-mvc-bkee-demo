@@ -20,7 +20,8 @@ const BKEE_ACTIVEGAMES = 'bkee.activegames';
 export default class GameContext {
 
     constructor() {
-        super();
+
+        //super();
 
         if (!localStorage[BKEE_ACTIVEGAMES])
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
@@ -86,7 +87,7 @@ export default class GameContext {
     async rejectInvite(inviteId) {
 
         let invitation = new Invite(inviteId);
-        delete invitation;
+        //delete invitation;
     }
 
     async acceptGame(inviteId) {
@@ -104,7 +105,7 @@ export default class GameContext {
         let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
         games[invitation.from] = newGame.id;
 
-        delete invitation;
+        //delete invitation;
     }
 
     async endGame(gameId, winner) {
@@ -114,7 +115,7 @@ export default class GameContext {
         game.winner = winner;
 
         let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        delete games[invitation.from];
+        //delete games[invitation.from];
     }
 
 
