@@ -109,15 +109,22 @@ export default class GameContext {
 
         let dice = (Math.random()*10)+1;
         let newGame = new Game(null, {
+            player1: invitation.player1,
+            player2: invitation.player2,
             status: 'active',
             activeSince: Date.now(),
-            startingPlayer: dice>5?invitation.player1:invitation.player2
+            nextPlayer: dice>5?invitation.player1:invitation.player2
         });
 
         let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
         games[invitation.player1] = newGame.id;
+        localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
 
         invitation.remove();
+    }
+
+    getActiveGames() {
+        return localStorage[BKEE_ACTIVEGAMES];
     }
 
     async endGame(gameId, winner) {
@@ -141,6 +148,7 @@ export default class GameContext {
 
     getGameId(playerId) {
         let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+        return games[playerId];
     }
 
 

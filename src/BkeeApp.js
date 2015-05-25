@@ -27,6 +27,7 @@ export class BkeeApp extends App {
     constructor(router, context) {
         // make one of the controllers default
         router.setDefault(HomeController, 'Main');
+        super(router);
 
         router.setControllerSpecs({
             HomeController: {
@@ -74,7 +75,7 @@ export class BkeeApp extends App {
             }
         });
 
-        super(router);
+
 
         this.gameContext = GetDefaultContext().get(GameContext);
 
@@ -98,20 +99,24 @@ export class BkeeApp extends App {
                     break;
             }
         });
-
         context.add(navigation);
 
 
-        this.setup();
+        router.on('routechange', function(routerSpec) {
+            switch (routerSpec.controller) {
+                case 'Home':
+                    navigation._renderables.tabBar.setSelectedItemIndex(0);
+                    break;
+                case 'Play':
+                    navigation._renderables.tabBar.setSelectedItemIndex(1);
+                    break;
+                case 'Profile':
+                    navigation._renderables.tabBar.setSelectedItemIndex(2);
+                    break;
+            }
+        });
 
-    }
-
-    setup() {
-        // keep pulse to online
         this.gameContext.trackOnline();
-
-        // set myself as active user
-        //this.gameContext.onInvite();
 
     }
 }

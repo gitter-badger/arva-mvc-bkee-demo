@@ -12,36 +12,40 @@ export default class BKEEEngine {
 
     constructor(game) {
         this._game = game;
-        if (!this._game.state) {
+        if (!this._game.data) {
             this._state = {};
             this._state[this._game.player1] = [];
             this._state[this._game.player2] = [];
         }
         else {
-            this._state = JSON.parse(this._game.state);
+            this._state = this._game.data;
         }
     }
 
     move(by, position) {
 
         // add position
+        if (!this._state[by]) this._state[by]= [];
         this._state[by].push({ by: by, position: position});
-        this._game.state = JSON.stringify(this._state);
-
-        let didIWin = _evaluateGameResult(this._state[by]);
+        this._game.data = this._state;
+        let didIWin = this._evaluateGameResult(this._state[by]);
 
         if (didIWin) {
             this._game.winner = by;
             this._game.status = 'finished';
+            this._game.nextPlayer = '';
         }
-        else if (this._state[this._game.player1].length==9) {
+        else if ((this._state[this._game.player1].length+this._state[this._game.player2].length)==9) {
             this._game.status = 'finished';
+            this._game.nextPlayer = '';
         }
         else {
             this._game.nextPlayer = this._game.nextPlayer==this._game.player1?
                 this._game.player2:
                 this._game.player1;
         }
+
+
 
 
     }
@@ -53,7 +57,7 @@ export default class BKEEEngine {
             if (_.isEqual(moves, combination)) won = true;
         });
 
-        return true;
+        return won;
     }
 }
 

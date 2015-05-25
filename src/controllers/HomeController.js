@@ -41,7 +41,7 @@ export class HomeController extends Controller {
     }
 
     /**
-     * 1. Show a list of active players
+     * 1. Show a list of players
      * @returns {InvitePlayerView|*}
      * @constructor
      */

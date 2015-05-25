@@ -37,6 +37,14 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
     color:#3399cc;
 }
 
+.footer {
+    background-color: #ECECEC;
+    border-top: 1px solid #D6D6D6;
+    text-align: center;
+    font-size:11px;
+    color:#9F9F9F;
+}
+
 .ff-tabbar.background {
     background-color: #ECECEC;
     border-top: 1px solid #D6D6D6; !important;

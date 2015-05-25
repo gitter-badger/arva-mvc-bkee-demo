@@ -31,7 +31,7 @@ export default class Game extends Model {
     /**
      * moves in string
      */
-    get state() {}
+    get data() {}
 
     /**
      * active, finished

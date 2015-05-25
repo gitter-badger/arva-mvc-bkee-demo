@@ -9,7 +9,8 @@ import LayoutController             from 'famous-flex/src/LayoutController';
 import Background                   from '../../components/Background';
 
 const DEFAULT_OPTIONS = {
-    headerHeight: 75
+    headerHeight: 75,
+    navigationHeight: 40
 };
 
 export class PlayView extends View {
@@ -30,11 +31,24 @@ export class PlayView extends View {
 
         this._createRenderables();
         this._createLayout();
+        this._handleMoves();
     }
 
-    set() {
+    set(activePlayer, gameState) {
 
+        this.nextPlayer = gameState.nextPlayer;
 
+        if (gameState.data && gameState.data[gameState.player1]) {
+            gameState.data[gameState.player1].forEach((move) => {
+                this._renderables[`surface${move.position}`].setContent('X');
+            });
+        }
+
+        if (gameState.data && gameState.data[gameState.player2]) {
+            gameState.data[gameState.player2].forEach((move) => {
+                this._renderables[`surface${move.position}`].setContent('O');
+            });
+        }
     }
 
     _createRenderables() {
@@ -42,21 +56,67 @@ export class PlayView extends View {
         this._renderables = {
             background: new Background(),
             header: new Surface({content: 'BKEE!', classes: ['header'] }),
-            surface1: new Surface({content: '', properties: { backgroundColor: '#efefef'} }),
-            surface2: new Surface({content: '', properties: { backgroundColor: '#e8e8e8'} }),
-            surface3: new Surface({content: '', properties: { backgroundColor: '#efefef'} }),
-            surface4: new Surface({content: '', properties: { backgroundColor: '#e8e8e8'} }),
-            surface5: new Surface({content: '', properties: { backgroundColor: '#efefef'} }),
-            surface6: new Surface({content: '', properties: { backgroundColor: '#e8e8e8'} }),
-            surface7: new Surface({content: '', properties: { backgroundColor: '#efefef'} }),
-            surface8: new Surface({content: '', properties: { backgroundColor: '#e8e8e8'} }),
-            surface9: new Surface({content: '', properties: { backgroundColor: '#efefef'} }),
-            footer: new Surface({content: 'footer', properties: { backgroundColor: '#3399cc'} })
+            surface1: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
+            surface2: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
+            surface3: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
+            surface4: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
+            surface5: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
+            surface6: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
+            surface7: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
+            surface8: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
+            surface9: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
+            footer: new Surface({content: 'footer', classes: ['footer'] })
         };
+    }
+
+    _handleMoves() {
+        let viewContext = this;
+
+        this._renderables.surface1.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 1 });
+        });
+
+        this._renderables.surface2.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 2 });
+        });
+
+        this._renderables.surface3.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 3 });
+        });
+
+        this._renderables.surface4.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 4 });
+        });
+
+        this._renderables.surface5.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 5 });
+        });
+
+        this._renderables.surface6.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 6 });
+        });
+
+        this._renderables.surface7.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 7 });
+        });
+
+        this._renderables.surface8.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 8 });
+        });
+
+        this._renderables.surface9.on('click', function() {
+            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 9 });
+        });
+    }
+
+    _setSurfaceProperties(surface, properties) {
+        surface.properties.lineHeight = `${properties.diameter}px`;
+        surface.properties.fontSize = `${properties.diameter/1.5}px`;
     }
 
     _createLayout() {
         //let top = this.options.headerHeight;
+        let viewContext = this;
 
         this.layout = new LayoutController({
             autoPipeEvents: true,
@@ -81,6 +141,17 @@ export class PlayView extends View {
                     BottomCenter: [diameter, bottom, 2],
                     BottomRight: [diameter*2, bottom, 2]
                 };
+
+                viewContext._setSurfaceProperties(context.get('surface1').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface2').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface3').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface4').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface5').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface6').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface7').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface8').renderNode, { diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface9').renderNode, { diameter: diameter});
+
 
                 context.set('background', {
                     size: context.size,
@@ -138,10 +209,10 @@ export class PlayView extends View {
                 });
 
                 context.set('footer', {
-                    size: [context.size[0], top-50],
+                    size: [context.size[0], top-this.options.navigationHeight],
                     align: [0,1],
                     origin: [0,1],
-                    translate: [0, -50, 1000]
+                    translate: [0, -this.options.navigationHeight, 1000]
                 });
 
             }.bind(this),

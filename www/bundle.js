@@ -3886,6 +3886,168 @@ System.register("npm:process@0.10.1/browser", [], true, function(require, export
   return module.exports;
 });
 
+System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var prefix = typeof Object.create !== 'function' ? '~' : false;
+  function EE(fn, context, once) {
+    this.fn = fn;
+    this.context = context;
+    this.once = once || false;
+  }
+  function EventEmitter() {}
+  EventEmitter.prototype._events = undefined;
+  EventEmitter.prototype.listeners = function listeners(event, exists) {
+    var evt = prefix ? prefix + event : event,
+        available = this._events && this._events[evt];
+    if (exists)
+      return !!available;
+    if (!available)
+      return [];
+    if (this._events[evt].fn)
+      return [this._events[evt].fn];
+    for (var i = 0,
+        l = this._events[evt].length,
+        ee = new Array(l); i < l; i++) {
+      ee[i] = this._events[evt][i].fn;
+    }
+    return ee;
+  };
+  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return false;
+    var listeners = this._events[evt],
+        len = arguments.length,
+        args,
+        i;
+    if ('function' === typeof listeners.fn) {
+      if (listeners.once)
+        this.removeListener(event, listeners.fn, undefined, true);
+      switch (len) {
+        case 1:
+          return listeners.fn.call(listeners.context), true;
+        case 2:
+          return listeners.fn.call(listeners.context, a1), true;
+        case 3:
+          return listeners.fn.call(listeners.context, a1, a2), true;
+        case 4:
+          return listeners.fn.call(listeners.context, a1, a2, a3), true;
+        case 5:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+        case 6:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+      }
+      for (i = 1, args = new Array(len - 1); i < len; i++) {
+        args[i - 1] = arguments[i];
+      }
+      listeners.fn.apply(listeners.context, args);
+    } else {
+      var length = listeners.length,
+          j;
+      for (i = 0; i < length; i++) {
+        if (listeners[i].once)
+          this.removeListener(event, listeners[i].fn, undefined, true);
+        switch (len) {
+          case 1:
+            listeners[i].fn.call(listeners[i].context);
+            break;
+          case 2:
+            listeners[i].fn.call(listeners[i].context, a1);
+            break;
+          case 3:
+            listeners[i].fn.call(listeners[i].context, a1, a2);
+            break;
+          default:
+            if (!args)
+              for (j = 1, args = new Array(len - 1); j < len; j++) {
+                args[j - 1] = arguments[j];
+              }
+            listeners[i].fn.apply(listeners[i].context, args);
+        }
+      }
+    }
+    return true;
+  };
+  EventEmitter.prototype.on = function on(event, fn, context) {
+    var listener = new EE(fn, context || this),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.once = function once(event, fn, context) {
+    var listener = new EE(fn, context || this, true),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return this;
+    var listeners = this._events[evt],
+        events = [];
+    if (fn) {
+      if (listeners.fn) {
+        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
+          events.push(listeners);
+        }
+      } else {
+        for (var i = 0,
+            length = listeners.length; i < length; i++) {
+          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
+            events.push(listeners[i]);
+          }
+        }
+      }
+    }
+    if (events.length) {
+      this._events[evt] = events.length === 1 ? events[0] : events;
+    } else {
+      delete this._events[evt];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+    if (!this._events)
+      return this;
+    if (event)
+      delete this._events[prefix ? prefix + event : event];
+    else
+      this._events = prefix ? {} : Object.create(null);
+    return this;
+  };
+  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+    return this;
+  };
+  EventEmitter.prefixed = prefix;
+  module.exports = EventEmitter;
+  global.define = __define;
+  return module.exports;
+});
+
 System.register("npm:famous@0.3.5/core/Entity", [], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -7537,168 +7699,6 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout",
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  'use strict';
-  var prefix = typeof Object.create !== 'function' ? '~' : false;
-  function EE(fn, context, once) {
-    this.fn = fn;
-    this.context = context;
-    this.once = once || false;
-  }
-  function EventEmitter() {}
-  EventEmitter.prototype._events = undefined;
-  EventEmitter.prototype.listeners = function listeners(event, exists) {
-    var evt = prefix ? prefix + event : event,
-        available = this._events && this._events[evt];
-    if (exists)
-      return !!available;
-    if (!available)
-      return [];
-    if (this._events[evt].fn)
-      return [this._events[evt].fn];
-    for (var i = 0,
-        l = this._events[evt].length,
-        ee = new Array(l); i < l; i++) {
-      ee[i] = this._events[evt][i].fn;
-    }
-    return ee;
-  };
-  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return false;
-    var listeners = this._events[evt],
-        len = arguments.length,
-        args,
-        i;
-    if ('function' === typeof listeners.fn) {
-      if (listeners.once)
-        this.removeListener(event, listeners.fn, undefined, true);
-      switch (len) {
-        case 1:
-          return listeners.fn.call(listeners.context), true;
-        case 2:
-          return listeners.fn.call(listeners.context, a1), true;
-        case 3:
-          return listeners.fn.call(listeners.context, a1, a2), true;
-        case 4:
-          return listeners.fn.call(listeners.context, a1, a2, a3), true;
-        case 5:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-        case 6:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-      }
-      for (i = 1, args = new Array(len - 1); i < len; i++) {
-        args[i - 1] = arguments[i];
-      }
-      listeners.fn.apply(listeners.context, args);
-    } else {
-      var length = listeners.length,
-          j;
-      for (i = 0; i < length; i++) {
-        if (listeners[i].once)
-          this.removeListener(event, listeners[i].fn, undefined, true);
-        switch (len) {
-          case 1:
-            listeners[i].fn.call(listeners[i].context);
-            break;
-          case 2:
-            listeners[i].fn.call(listeners[i].context, a1);
-            break;
-          case 3:
-            listeners[i].fn.call(listeners[i].context, a1, a2);
-            break;
-          default:
-            if (!args)
-              for (j = 1, args = new Array(len - 1); j < len; j++) {
-                args[j - 1] = arguments[j];
-              }
-            listeners[i].fn.apply(listeners[i].context, args);
-        }
-      }
-    }
-    return true;
-  };
-  EventEmitter.prototype.on = function on(event, fn, context) {
-    var listener = new EE(fn, context || this),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.once = function once(event, fn, context) {
-    var listener = new EE(fn, context || this, true),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return this;
-    var listeners = this._events[evt],
-        events = [];
-    if (fn) {
-      if (listeners.fn) {
-        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
-          events.push(listeners);
-        }
-      } else {
-        for (var i = 0,
-            length = listeners.length; i < length; i++) {
-          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
-            events.push(listeners[i]);
-          }
-        }
-      }
-    }
-    if (events.length) {
-      this._events[evt] = events.length === 1 ? events[0] : events;
-    } else {
-      delete this._events[evt];
-    }
-    return this;
-  };
-  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
-    if (!this._events)
-      return this;
-    if (event)
-      delete this._events[prefix ? prefix + event : event];
-    else
-      this._events = prefix ? {} : Object.create(null);
-    return this;
-  };
-  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
-    return this;
-  };
-  EventEmitter.prefixed = prefix;
-  module.exports = EventEmitter;
-  global.define = __define;
-  return module.exports;
-});
-
 System.register("npm:famous@0.3.5/surfaces/ContainerSurface", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/Context"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -15168,6 +15168,15 @@ System.register("npm:process@0.10.1", ["npm:process@0.10.1/browser"], true, func
   return module.exports;
 });
 
+System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("npm:eventemitter3@1.1.0/index");
+  global.define = __define;
+  return module.exports;
+});
+
 System.register("npm:famous@0.3.5/core/SpecParser", ["npm:famous@0.3.5/core/Transform"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -17532,15 +17541,6 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", ["npm
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  module.exports = require("npm:eventemitter3@1.1.0/index");
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/ScrollController", ["github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "npm:famous@0.3.5/surfaces/ContainerSurface", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Group", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/PhysicsEngine", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Drag", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/inputs/ScrollSync", "npm:famous@0.3.5/core/ViewSequence"], false, function(__require, __exports, __module) {
@@ -27399,7 +27399,7 @@ System.register("models/Game", ["github:Bizboard/arva-ds@develop/core/Model"], f
           get activeSince() {},
           get winner() {},
           get nextPlayer() {},
-          get state() {},
+          get data() {},
           get status() {}
         }, {}, $__super);
       }(Model)));
@@ -27530,7 +27530,10 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
       Background = $__m.default;
     }],
     execute: function() {
-      DEFAULT_OPTIONS = {headerHeight: 75};
+      DEFAULT_OPTIONS = {
+        headerHeight: 75,
+        navigationHeight: 40
+      };
       PlayView = (function($__super) {
         function PlayView() {
           $traceurRuntime.superConstructor(PlayView).call(this, DEFAULT_OPTIONS);
@@ -27539,9 +27542,23 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
           this._createRenderables();
           this._createLayout();
+          this._handleMoves();
         }
         return ($traceurRuntime.createClass)(PlayView, {
-          set: function() {},
+          set: function(activePlayer, gameState) {
+            var $__0 = this;
+            this.nextPlayer = gameState.nextPlayer;
+            if (gameState.data && gameState.data[gameState.player1]) {
+              gameState.data[gameState.player1].forEach((function(move) {
+                $__0._renderables[("surface" + move.position)].setContent('X');
+              }));
+            }
+            if (gameState.data && gameState.data[gameState.player2]) {
+              gameState.data[gameState.player2].forEach((function(move) {
+                $__0._renderables[("surface" + move.position)].setContent('O');
+              }));
+            }
+          },
           _createRenderables: function() {
             this._renderables = {
               background: new Background(),
@@ -27551,47 +27568,136 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
               }),
               surface1: new Surface({
                 content: '',
-                properties: {backgroundColor: '#efefef'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#efefef'
+                }
               }),
               surface2: new Surface({
                 content: '',
-                properties: {backgroundColor: '#e8e8e8'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#e8e8e8'
+                }
               }),
               surface3: new Surface({
                 content: '',
-                properties: {backgroundColor: '#efefef'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#efefef'
+                }
               }),
               surface4: new Surface({
                 content: '',
-                properties: {backgroundColor: '#e8e8e8'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#e8e8e8'
+                }
               }),
               surface5: new Surface({
                 content: '',
-                properties: {backgroundColor: '#efefef'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#efefef'
+                }
               }),
               surface6: new Surface({
                 content: '',
-                properties: {backgroundColor: '#e8e8e8'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#e8e8e8'
+                }
               }),
               surface7: new Surface({
                 content: '',
-                properties: {backgroundColor: '#efefef'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#efefef'
+                }
               }),
               surface8: new Surface({
                 content: '',
-                properties: {backgroundColor: '#e8e8e8'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#e8e8e8'
+                }
               }),
               surface9: new Surface({
                 content: '',
-                properties: {backgroundColor: '#efefef'}
+                properties: {
+                  textAlign: 'center',
+                  backgroundColor: '#efefef'
+                }
               }),
               footer: new Surface({
                 content: 'footer',
-                properties: {backgroundColor: '#3399cc'}
+                classes: ['footer']
               })
             };
           },
+          _handleMoves: function() {
+            var viewContext = this;
+            this._renderables.surface1.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 1
+              });
+            });
+            this._renderables.surface2.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 2
+              });
+            });
+            this._renderables.surface3.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 3
+              });
+            });
+            this._renderables.surface4.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 4
+              });
+            });
+            this._renderables.surface5.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 5
+              });
+            });
+            this._renderables.surface6.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 6
+              });
+            });
+            this._renderables.surface7.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 7
+              });
+            });
+            this._renderables.surface8.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 8
+              });
+            });
+            this._renderables.surface9.on('click', function() {
+              viewContext._eventOutput.emit('move', {
+                by: viewContext.nextPlayer,
+                position: 9
+              });
+            });
+          },
+          _setSurfaceProperties: function(surface, properties) {
+            surface.properties.lineHeight = (properties.diameter + "px");
+            surface.properties.fontSize = (properties.diameter / 1.5 + "px");
+          },
           _createLayout: function() {
+            var viewContext = this;
             this.layout = new LayoutController({
               autoPipeEvents: true,
               layout: function(context) {
@@ -27612,6 +27718,15 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
                   BottomCenter: [diameter, bottom, 2],
                   BottomRight: [diameter * 2, bottom, 2]
                 };
+                viewContext._setSurfaceProperties(context.get('surface1').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface2').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface3').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface4').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface5').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface6').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface7').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface8').renderNode, {diameter: diameter});
+                viewContext._setSurfaceProperties(context.get('surface9').renderNode, {diameter: diameter});
                 context.set('background', {
                   size: context.size,
                   translate: [0, 0, 0]
@@ -27657,10 +27772,10 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
                   translate: grid.BottomRight
                 });
                 context.set('footer', {
-                  size: [context.size[0], top - 50],
+                  size: [context.size[0], top - this.options.navigationHeight],
                   align: [0, 1],
                   origin: [0, 1],
-                  translate: [0, -50, 1000]
+                  translate: [0, -this.options.navigationHeight, 1000]
                 });
               }.bind(this),
               dataSource: this._renderables
@@ -27692,27 +27807,31 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:lodash@3.9.1"], functio
       $__export('default', (function() {
         function BKEEEngine(game) {
           this._game = game;
-          if (!this._game.state) {
+          if (!this._game.data) {
             this._state = {};
             this._state[this._game.player1] = [];
             this._state[this._game.player2] = [];
           } else {
-            this._state = JSON.parse(this._game.state);
+            this._state = this._game.data;
           }
         }
         return ($traceurRuntime.createClass)(BKEEEngine, {
           move: function(by, position) {
+            if (!this._state[by])
+              this._state[by] = [];
             this._state[by].push({
               by: by,
               position: position
             });
-            this._game.state = JSON.stringify(this._state);
-            var didIWin = _evaluateGameResult(this._state[by]);
+            this._game.data = this._state;
+            var didIWin = this._evaluateGameResult(this._state[by]);
             if (didIWin) {
               this._game.winner = by;
               this._game.status = 'finished';
-            } else if (this._state[this._game.player1].length == 9) {
+              this._game.nextPlayer = '';
+            } else if ((this._state[this._game.player1].length + this._state[this._game.player2].length) == 9) {
               this._game.status = 'finished';
+              this._game.nextPlayer = '';
             } else {
               this._game.nextPlayer = this._game.nextPlayer == this._game.player1 ? this._game.player2 : this._game.player1;
             }
@@ -27723,7 +27842,7 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:lodash@3.9.1"], functio
               if (_.isEqual(moves, combination))
                 won = true;
             });
-            return true;
+            return won;
           }
         }, {});
       }()));
@@ -27943,6 +28062,196 @@ System.register("github:Bizboard/di.js@master/annotations", ["github:Bizboard/di
         return ($traceurRuntime.createClass)(FactoryProvider, {}, {});
       }());
       $__export("annotate", annotate), $__export("hasAnnotation", hasAnnotation), $__export("readAnnotations", readAnnotations), $__export("SuperConstructor", SuperConstructor), $__export("TransientScope", TransientScope), $__export("Inject", Inject), $__export("InjectPromise", InjectPromise), $__export("InjectLazy", InjectLazy), $__export("Provide", Provide), $__export("ProvidePromise", ProvidePromise), $__export("ClassProvider", ClassProvider), $__export("FactoryProvider", FactoryProvider);
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.1", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
+  var _,
+      EventEmitter,
+      ObjectHelper,
+      Snapshot;
+  return {
+    setters: [function($__m) {
+      _ = $__m.default;
+    }, function($__m) {
+      EventEmitter = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.default;
+    }, function($__m) {
+      Snapshot = $__m.default;
+    }],
+    execute: function() {
+      'use strict';
+      $__export('default', (function($__super) {
+        function PrioritisedObject(dataSource) {
+          var dataSnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
+          $traceurRuntime.superConstructor(PrioritisedObject).call(this);
+          this._valueChangedCallback = null;
+          this._id = 0;
+          this._events = this._events || [];
+          this._dataSource = dataSource;
+          this._priority = 0;
+          this._isBeingWrittenByDatasource = false;
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(this, 'id');
+          ObjectHelper.hidePropertyFromObject(this, 'priority');
+          if (dataSnapshot) {
+            this._buildFromSnapshot(dataSnapshot);
+          } else {
+            this._buildFromDataSource(dataSource);
+          }
+        }
+        return ($traceurRuntime.createClass)(PrioritisedObject, {
+          get id() {
+            return this._id;
+          },
+          set id(value) {
+            this._id = value;
+          },
+          get priority() {
+            return this._priority;
+          },
+          set priority(value) {
+            if (this._priority !== value) {
+              this._priority = value;
+              this._dataSource.setPriority(value);
+            }
+          },
+          get _inheritable() {
+            if (!this._dataSource)
+              return false;
+            return this._dataSource.inheritable;
+          },
+          remove: function() {
+            this.off();
+            if (this._dataSource.inheritable)
+              this._dataSource.remove(this);
+            else
+              this._dataSource.remove();
+            delete this;
+          },
+          once: function(event, fn) {
+            var context = arguments[2] !== (void 0) ? arguments[2] : this;
+            return this.on(event, function() {
+              fn.call(context, arguments);
+              this.off(event, fn, context);
+            }, this);
+          },
+          on: function(event, fn, context) {
+            var objectContext = this;
+            switch (event) {
+              case 'ready':
+                if (this._dataSource && this._dataSource.ready) {
+                  fn.call(context, this);
+                }
+                break;
+              case 'value':
+                var wrapper = function(dataSnapshot) {
+                  objectContext._buildFromSnapshot(dataSnapshot);
+                  fn.call(context, dataSnapshot);
+                }.bind(context);
+                this._dataSource.setValueChangedCallback(wrapper);
+                break;
+              case 'added':
+                this._dataSource.setChildAddedCallback(fn.bind(context));
+                break;
+              case 'moved':
+                this._dataSource.setChildMovedCallback(fn.bind(context));
+                break;
+              case 'removed':
+                this._dataSource.setChildRemovedCallback(fn.bind(context));
+                break;
+            }
+            $traceurRuntime.superGet(this, PrioritisedObject.prototype, "on").call(this, event, fn, context);
+          },
+          off: function(event, fn, context) {
+            switch (event) {
+              case 'ready':
+                break;
+              case 'value':
+                this._dataSource.removeValueChangedCallback();
+                break;
+              case 'added':
+                this._dataSource.removeChildAddedCallback();
+                break;
+              case 'moved':
+                this._dataSource.removeChildMovedCallback();
+                break;
+              case 'removed':
+                this._dataSource.removeChildRemovedCallback();
+                break;
+            }
+            if (event && (fn || context)) {
+              $traceurRuntime.superGet(this, PrioritisedObject.prototype, "removeListener").call(this, event, fn, context);
+            } else {
+              $traceurRuntime.superGet(this, PrioritisedObject.prototype, "removeAllListeners").call(this, event);
+            }
+          },
+          _buildFromSnapshot: function(dataSnapshot) {
+            this._priority = dataSnapshot.getPriority();
+            var numChildren = dataSnapshot.numChildren(),
+                currentChild = 1;
+            if (!this._id) {
+              this._id = dataSnapshot.key();
+            }
+            if (numChildren === 0) {
+              this._dataSource.ready = true;
+              this.emit('ready');
+            }
+            dataSnapshot.forEach(function(child) {
+              var ref = child.ref();
+              var key = child.key();
+              var val = child.val();
+              if (typeof val === 'object' && val !== null) {
+                if (Object.getOwnPropertyDescriptor(this, key)) {
+                  ObjectHelper.addPropertyToObject(this, key, val, true, true, this._onSetterTriggered);
+                } else {
+                  val = new PrioritisedObject(ref, child);
+                  ObjectHelper.addPropertyToObject(this, key, val, true, true);
+                }
+              } else {
+                if (Object.getOwnPropertyDescriptor(this, key)) {
+                  ObjectHelper.addPropertyToObject(this, key, val, true, true, this._onSetterTriggered);
+                }
+              }
+              if (currentChild++ == numChildren) {
+                this._dataSource.ready = true;
+                this.emit('ready');
+              }
+            }.bind(this));
+          },
+          _buildFromDataSource: function(dataSource) {
+            var $__0 = this;
+            if (!dataSource)
+              return ;
+            var path = dataSource.path();
+            var DataSource = Object.getPrototypeOf(dataSource).constructor;
+            var newSource = new DataSource(path);
+            newSource.setValueChangedCallback((function(dataSnapshot) {
+              newSource.removeValueChangedCallback();
+              $__0._buildFromSnapshot(dataSnapshot);
+            }));
+          },
+          _onSetterTriggered: function() {
+            if (!this._isBeingWrittenByDatasource) {
+              this._dataSource.setWithPriority(ObjectHelper.getEnumerableProperties(this), this._priority);
+            }
+          },
+          _onDataSourceValue: function(dataSnapshot) {
+            if (_.isEqual(this, dataSnapshot)) {
+              return ;
+            }
+            this._isBeingWrittenByDatasource = true;
+            this._buildFromSnapshot(dataSnapshot);
+            this._isBeingWrittenByDatasource = false;
+            this.emit('value', this);
+          }
+        }, {}, $__super);
+      }(EventEmitter)));
     }
   };
 });
@@ -28304,53 +28613,25 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
         }
         return ($traceurRuntime.createClass)(PlayController, {
           Play: function(gameId) {
-            var gameView,
-                gameState,
-                gameEngine;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    gameView = new PlayView();
-                    $ctx.state = 14;
-                    break;
-                  case 14:
-                    $ctx.state = (!gameId) ? 7 : 3;
-                    break;
-                  case 7:
-                    gameView.set();
-                    $ctx.state = 8;
-                    break;
-                  case 3:
-                    gameState = new Game(gameId);
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    Promise.resolve(FireOnceAndWait(gameState)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    gameView.set(gameState);
-                    gameEngine = new BKEEEngine(gameState);
-                    gameView.on('move', function(by, position) {
-                      gameEngine.move(by, position);
-                    });
-                    gameState.on('value', function() {
-                      gameEngine = new BKEEEngine(gameState);
-                      gameView.set(gameState);
-                    });
-                    $ctx.state = 8;
-                    break;
-                  case 8:
-                    $ctx.returnValue = gameView;
-                    $ctx.state = 11;
-                    break;
-                  case 11:
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
+            var gameView = new PlayView();
+            var activePlayer = this.gameContext.getPlayerId();
+            if (!gameId) {
+              gameView.set();
+            } else {
+              var gameState = new Game(gameId);
+              var gameEngine = null;
+              gameView.on('move', function(move) {
+                if (gameEngine && gameState.nextPlayer == activePlayer) {
+                  gameEngine.move(move.by, move.position);
                 }
-            }, this);
+              });
+              gameState.on('value', function() {
+                gameEngine = new BKEEEngine(gameState);
+                gameView.set(activePlayer, gameState);
+              });
+              this.gameContext.setLastActiveGame(gameId);
+            }
+            return gameView;
           },
           Main: function() {
             this.router.go(this, 'Play', {gameId: this.gameContext.getLastActiveGame()});
@@ -28735,183 +29016,126 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.1", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.1", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
   "use strict";
-  var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
+  var __moduleName = "github:Bizboard/arva-ds@develop/core/Model";
   var _,
-      EventEmitter,
+      PrioritisedObject,
+      DataSource,
       ObjectHelper,
-      Snapshot;
+      Context;
   return {
     setters: [function($__m) {
       _ = $__m.default;
     }, function($__m) {
-      EventEmitter = $__m.default;
+      PrioritisedObject = $__m.default;
+    }, function($__m) {
+      DataSource = $__m.DataSource;
     }, function($__m) {
       ObjectHelper = $__m.default;
     }, function($__m) {
-      Snapshot = $__m.default;
+      Context = $__m.Context;
     }],
     execute: function() {
-      'use strict';
       $__export('default', (function($__super) {
-        function PrioritisedObject(dataSource) {
-          var dataSnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
-          $traceurRuntime.superConstructor(PrioritisedObject).call(this);
-          this._valueChangedCallback = null;
-          this._id = 0;
-          this._events = this._events || [];
-          this._dataSource = dataSource;
-          this._priority = 0;
-          this._isBeingWrittenByDatasource = false;
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(this, 'id');
-          ObjectHelper.hidePropertyFromObject(this, 'priority');
-          if (dataSnapshot) {
-            this._buildFromSnapshot(dataSnapshot);
+        function Model(id) {
+          var data = arguments[1] !== (void 0) ? arguments[1] : null;
+          var options = arguments[2] !== (void 0) ? arguments[2] : {};
+          var dataSource = Context.getContext().get(DataSource);
+          if (options.path) {
+            $traceurRuntime.superConstructor(Model).call(this, dataSource.child(options.path), options.dataSnapshot);
+          } else if (options.dataSource) {
+            $traceurRuntime.superConstructor(Model).call(this, options.dataSource, options.dataSnapshot);
+          } else if (options.dataSnapshot) {
+            $traceurRuntime.superConstructor(Model).call(this, dataSource.child(options.dataSnapshot.ref().path.toString()), options.dataSnapshot);
           } else {
-            this._buildFromDataSource(dataSource);
+            $traceurRuntime.superConstructor(Model).call(this);
+          }
+          this._replaceModelAccessorsWithDatabinding();
+          var modelName = Object.getPrototypeOf(this).constructor.name;
+          var pathRoot = modelName + 's';
+          if (id) {
+            this.id = id;
+            if (options.dataSource) {
+              this._dataSource = options.dataSource;
+            } else if (options.path) {
+              this._dataSource = dataSource.child(options.path);
+            } else {
+              this._dataSource = dataSource.child(pathRoot).child(id);
+            }
+          } else {
+            if (options.dataSnapshot) {
+              id = options.dataSnapshot.key();
+              this._dataSource = dataSource.child(pathRoot).child(id);
+            } else {
+              if (options.dataSource)
+                this._dataSource = options.dataSource.push(data);
+              else if (options.path)
+                this._dataSource = dataSource.child(options.path).push(data);
+              else {
+                this._dataSource = dataSource.child(pathRoot).push(data);
+              }
+              this.id = this._dataSource.key();
+            }
+          }
+          if (options.dataSnapshot)
+            this._buildFromSnapshot(options.dataSnapshot);
+          else
+            this._buildFromDataSource(this._dataSource);
+          if (data) {
+            this._isBeingWrittenByDatasource = true;
+            for (var name in data) {
+              if (Object.getOwnPropertyDescriptor(this, name)) {
+                var value = data[name];
+                this[name] = value;
+              }
+            }
+            this._isBeingWrittenByDatasource = false;
+            if (!id)
+              this._onSetterTriggered();
           }
         }
-        return ($traceurRuntime.createClass)(PrioritisedObject, {
-          get id() {
-            return this._id;
-          },
-          set id(value) {
-            this._id = value;
-          },
-          get priority() {
-            return this._priority;
-          },
-          set priority(value) {
-            if (this._priority !== value) {
-              this._priority = value;
-              this._dataSource.setPriority(value);
-            }
-          },
-          get _inheritable() {
-            if (!this._dataSource)
-              return false;
-            return this._dataSource.inheritable;
-          },
-          remove: function() {
-            this.off();
-            if (this._dataSource.inheritable)
-              this._dataSource.remove(this);
-            else
-              this._dataSource.remove();
-            delete this;
-          },
-          once: function(event, fn) {
-            var context = arguments[2] !== (void 0) ? arguments[2] : this;
-            return this.on(event, function() {
-              fn.call(context, arguments);
-              this.off(event, fn, context);
-            }, this);
-          },
-          on: function(event, fn, context) {
-            switch (event) {
-              case 'ready':
-                if (this._dataSource && this._dataSource.ready) {
-                  fn.call(context, this);
-                }
-                break;
-              case 'value':
-                this._dataSource.setValueChangedCallback(fn.bind(context));
-                break;
-              case 'added':
-                this._dataSource.setChildAddedCallback(fn.bind(context));
-                break;
-              case 'moved':
-                this._dataSource.setChildMovedCallback(fn.bind(context));
-                break;
-              case 'removed':
-                this._dataSource.setChildRemovedCallback(fn.bind(context));
-                break;
-            }
-            $traceurRuntime.superGet(this, PrioritisedObject.prototype, "on").call(this, event, fn, context);
-          },
-          off: function(event, fn, context) {
-            switch (event) {
-              case 'ready':
-                break;
-              case 'value':
-                this._dataSource.removeValueChangedCallback();
-                break;
-              case 'added':
-                this._dataSource.removeChildAddedCallback();
-                break;
-              case 'moved':
-                this._dataSource.removeChildMovedCallback();
-                break;
-              case 'removed':
-                this._dataSource.removeChildRemovedCallback();
-                break;
-            }
-            if (event && (fn || context)) {
-              $traceurRuntime.superGet(this, PrioritisedObject.prototype, "removeListener").call(this, event, fn, context);
-            } else {
-              $traceurRuntime.superGet(this, PrioritisedObject.prototype, "removeAllListeners").call(this, event);
-            }
-          },
-          _buildFromSnapshot: function(dataSnapshot) {
-            this._priority = dataSnapshot.getPriority();
-            var numChildren = dataSnapshot.numChildren(),
-                currentChild = 1;
-            if (!this._id) {
-              this._id = dataSnapshot.key();
-            }
-            if (numChildren === 0) {
-              this._dataSource.ready = true;
-              this.emit('ready');
-            }
-            dataSnapshot.forEach(function(child) {
-              var ref = child.ref();
-              var key = child.key();
-              var val = child.val();
-              if (typeof val === 'object' && val !== null) {
-                val = new PrioritisedObject(ref, child);
-                ObjectHelper.addPropertyToObject(this, key, val, true, true);
-              } else {
-                if (Object.getOwnPropertyDescriptor(this, key)) {
-                  ObjectHelper.addPropertyToObject(this, key, val, true, true, this._onSetterTriggered);
-                }
-              }
-              if (currentChild++ == numChildren) {
-                this._dataSource.ready = true;
-                this.emit('ready');
-              }
-            }.bind(this));
-          },
-          _buildFromDataSource: function(dataSource) {
+        return ($traceurRuntime.createClass)(Model, {_replaceModelAccessorsWithDatabinding: function() {
             var $__0 = this;
-            if (!dataSource)
-              return ;
-            var path = dataSource.path();
-            var DataSource = Object.getPrototypeOf(dataSource).constructor;
-            var newSource = new DataSource(path);
-            newSource.setValueChangedCallback((function(dataSnapshot) {
-              newSource.removeValueChangedCallback();
-              $__0._buildFromSnapshot(dataSnapshot);
-            }));
-          },
-          _onSetterTriggered: function() {
-            if (!this._isBeingWrittenByDatasource) {
-              this._dataSource.setWithPriority(ObjectHelper.getEnumerableProperties(this), this._priority);
+            var prototype = Object.getPrototypeOf(this);
+            while (prototype.constructor.name !== 'Model') {
+              var propNames = _.difference(Object.getOwnPropertyNames(prototype), ['constructor', 'id']);
+              var $__5 = true;
+              var $__6 = false;
+              var $__7 = undefined;
+              try {
+                for (var $__3 = void 0,
+                    $__2 = (propNames)[$traceurRuntime.toProperty(Symbol.iterator)](); !($__5 = ($__3 = $__2.next()).done); $__5 = true) {
+                  var name = $__3.value;
+                  {
+                    var descriptor = Object.getOwnPropertyDescriptor(prototype, name);
+                    if (descriptor && descriptor.get) {
+                      var value = this[name];
+                      delete this[name];
+                      ObjectHelper.addPropertyToObject(this, name, value, true, true, (function() {
+                        $__0._onSetterTriggered();
+                      }));
+                    }
+                  }
+                }
+              } catch ($__8) {
+                $__6 = true;
+                $__7 = $__8;
+              } finally {
+                try {
+                  if (!$__5 && $__2.return != null) {
+                    $__2.return();
+                  }
+                } finally {
+                  if ($__6) {
+                    throw $__7;
+                  }
+                }
+              }
+              prototype = Object.getPrototypeOf(prototype);
             }
-          },
-          _onDataSourceValue: function(dataSnapshot) {
-            if (_.isEqual(this, dataSnapshot)) {
-              return ;
-            }
-            this._isBeingWrittenByDatasource = true;
-            this._buildFromSnapshot(dataSnapshot);
-            this._isBeingWrittenByDatasource = false;
-            this.emit('value', this);
-          }
-        }, {}, $__super);
-      }(EventEmitter)));
+          }}, {}, $__super);
+      }(PrioritisedObject)));
     }
   };
 });
@@ -29238,126 +29462,29 @@ System.register("github:Bizboard/di.js@master/index", ["github:Bizboard/di.js@ma
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.1", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
+System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
   "use strict";
-  var __moduleName = "github:Bizboard/arva-ds@develop/core/Model";
-  var _,
-      PrioritisedObject,
-      DataSource,
-      ObjectHelper,
-      Context;
+  var __moduleName = "models/Player";
+  var Model;
   return {
     setters: [function($__m) {
-      _ = $__m.default;
-    }, function($__m) {
-      PrioritisedObject = $__m.default;
-    }, function($__m) {
-      DataSource = $__m.DataSource;
-    }, function($__m) {
-      ObjectHelper = $__m.default;
-    }, function($__m) {
-      Context = $__m.Context;
+      Model = $__m.default;
     }],
     execute: function() {
       $__export('default', (function($__super) {
-        function Model(id) {
-          var data = arguments[1] !== (void 0) ? arguments[1] : null;
-          var options = arguments[2] !== (void 0) ? arguments[2] : {};
-          var dataSource = Context.getContext().get(DataSource);
-          if (options.path) {
-            $traceurRuntime.superConstructor(Model).call(this, dataSource.child(options.path), options.dataSnapshot);
-          } else if (options.dataSource) {
-            $traceurRuntime.superConstructor(Model).call(this, options.dataSource, options.dataSnapshot);
-          } else if (options.dataSnapshot) {
-            $traceurRuntime.superConstructor(Model).call(this, dataSource.child(options.dataSnapshot.ref().path.toString()), options.dataSnapshot);
-          } else {
-            $traceurRuntime.superConstructor(Model).call(this);
-          }
-          this._replaceModelAccessorsWithDatabinding();
-          var modelName = Object.getPrototypeOf(this).constructor.name;
-          var pathRoot = modelName + 's';
-          if (id) {
-            this.id = id;
-            if (options.dataSource) {
-              this._dataSource = options.dataSource;
-            } else if (options.path) {
-              this._dataSource = dataSource.child(options.path);
-            } else {
-              this._dataSource = dataSource.child(pathRoot).child(id);
-            }
-          } else {
-            if (options.dataSnapshot) {
-              id = options.dataSnapshot.key();
-              this._dataSource = dataSource.child(pathRoot).child(id);
-            } else {
-              if (options.dataSource)
-                this._dataSource = options.dataSource.push(data);
-              else if (options.path)
-                this._dataSource = dataSource.child(options.path).push(data);
-              else {
-                this._dataSource = dataSource.child(pathRoot).push(data);
-              }
-              this.id = this._dataSource.key();
-            }
-          }
-          if (options.dataSnapshot)
-            this._buildFromSnapshot(options.dataSnapshot);
-          else
-            this._buildFromDataSource(this._dataSource);
-          if (data) {
-            this._isBeingWrittenByDatasource = true;
-            for (var name in data) {
-              if (Object.getOwnPropertyDescriptor(this, name)) {
-                var value = data[name];
-                this[name] = value;
-              }
-            }
-            this._isBeingWrittenByDatasource = false;
-            if (!id)
-              this._onSetterTriggered();
-          }
+        function Player() {
+          $traceurRuntime.superConstructor(Player).apply(this, arguments);
         }
-        return ($traceurRuntime.createClass)(Model, {_replaceModelAccessorsWithDatabinding: function() {
-            var $__0 = this;
-            var prototype = Object.getPrototypeOf(this);
-            while (prototype.constructor.name !== 'Model') {
-              var propNames = _.difference(Object.getOwnPropertyNames(prototype), ['constructor', 'id']);
-              var $__5 = true;
-              var $__6 = false;
-              var $__7 = undefined;
-              try {
-                for (var $__3 = void 0,
-                    $__2 = (propNames)[$traceurRuntime.toProperty(Symbol.iterator)](); !($__5 = ($__3 = $__2.next()).done); $__5 = true) {
-                  var name = $__3.value;
-                  {
-                    var descriptor = Object.getOwnPropertyDescriptor(prototype, name);
-                    if (descriptor && descriptor.get) {
-                      var value = this[name];
-                      delete this[name];
-                      ObjectHelper.addPropertyToObject(this, name, value, true, true, (function() {
-                        $__0._onSetterTriggered();
-                      }));
-                    }
-                  }
-                }
-              } catch ($__8) {
-                $__6 = true;
-                $__7 = $__8;
-              } finally {
-                try {
-                  if (!$__5 && $__2.return != null) {
-                    $__2.return();
-                  }
-                } finally {
-                  if ($__6) {
-                    throw $__7;
-                  }
-                }
-              }
-              prototype = Object.getPrototypeOf(prototype);
-            }
-          }}, {}, $__super);
-      }(PrioritisedObject)));
+        return ($traceurRuntime.createClass)(Player, {
+          get name() {},
+          get avatar() {},
+          get won() {},
+          get lost() {},
+          get draw() {},
+          get score() {},
+          get lastTimeAccessed() {}
+        }, {}, $__super);
+      }(Model)));
     }
   };
 });
@@ -29472,29 +29599,169 @@ System.register("github:Bizboard/di.js@master", ["github:Bizboard/di.js@master/i
   };
 });
 
-System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
+System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
   "use strict";
-  var __moduleName = "models/Player";
-  var Model;
+  var __moduleName = "utils/GameContext";
+  var GetDefaultContext,
+      DataSource,
+      FireOnceAndWait,
+      Player,
+      Players,
+      Avatars,
+      Game,
+      Invites,
+      Invite,
+      BKEE_PLAYERID,
+      BKEE_LASTGAMEID,
+      BKEE_ACTIVEGAMES;
   return {
     setters: [function($__m) {
-      Model = $__m.default;
+      GetDefaultContext = $__m.GetDefaultContext;
+    }, function($__m) {
+      DataSource = $__m.DataSource;
+    }, function($__m) {
+      FireOnceAndWait = $__m.default;
+    }, function($__m) {
+      Player = $__m.default;
+    }, function($__m) {
+      Players = $__m.default;
+    }, function($__m) {
+      Avatars = $__m.default;
+    }, function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
+      Invites = $__m.default;
+    }, function($__m) {
+      Invite = $__m.default;
     }],
     execute: function() {
-      $__export('default', (function($__super) {
-        function Player() {
-          $traceurRuntime.superConstructor(Player).apply(this, arguments);
+      BKEE_PLAYERID = 'bkee.playerid';
+      BKEE_LASTGAMEID = 'bkee.lastgameid';
+      BKEE_ACTIVEGAMES = 'bkee.activegames';
+      $__export('default', (function() {
+        function GameContext() {
+          var $__0 = this;
+          if (!localStorage[BKEE_ACTIVEGAMES])
+            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
+          this.ds = GetDefaultContext().get(DataSource);
+          this.players = new Players();
+          this.avatars = new Avatars();
+          if (!this.isNewPlayer()) {
+            this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
+            this.invites.on('child_added', (function(invite) {
+              if (window.confirm(("You are challenged by " + invite.player1 + ". Accept?"))) {
+                $__0.acceptGame(invite);
+              } else {
+                $__0.rejectInvite(invite);
+              }
+            }));
+          }
         }
-        return ($traceurRuntime.createClass)(Player, {
-          get name() {},
-          get avatar() {},
-          get won() {},
-          get lost() {},
-          get draw() {},
-          get score() {},
-          get lastTimeAccessed() {}
-        }, {}, $__super);
-      }(Model)));
+        return ($traceurRuntime.createClass)(GameContext, {
+          ready: function(what) {
+            return new Promise(function(resolve) {
+              this[what].once('ready', function() {
+                resolve();
+              });
+            }.bind(this));
+          },
+          isNewPlayer: function() {
+            if (localStorage[BKEE_PLAYERID])
+              return false;
+            return true;
+          },
+          getPlayerId: function() {
+            if (localStorage[BKEE_PLAYERID])
+              return localStorage[BKEE_PLAYERID];
+            return undefined;
+          },
+          setPlayerId: function(playerId) {
+            localStorage[BKEE_PLAYERID] = playerId;
+          },
+          getDefaultPlayerName: function() {
+            return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
+          },
+          getLastActiveGame: function() {
+            var gameId = localStorage[BKEE_LASTGAMEID];
+            if (!gameId)
+              return '';
+            return gameId;
+          },
+          setLastActiveGame: function(gameid) {
+            localStorage[BKEE_LASTGAMEID] = gameid;
+          },
+          invitePlayer: function(playerId) {
+            var invitation = new Invite(null, {
+              player1: this.getPlayerId(),
+              player2: playerId
+            }, {dataSource: this.ds.child('Invites').child(playerId)});
+          },
+          rejectInvite: function(invitation) {
+            invitation.remove();
+          },
+          acceptGame: function(invitation) {
+            var dice = (Math.random() * 10) + 1;
+            var newGame = new Game(null, {
+              player1: invitation.player1,
+              player2: invitation.player2,
+              status: 'active',
+              activeSince: Date.now(),
+              nextPlayer: dice > 5 ? invitation.player1 : invitation.player2
+            });
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+            games[invitation.player1] = newGame.id;
+            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
+            invitation.remove();
+          },
+          getActiveGames: function() {
+            return localStorage[BKEE_ACTIVEGAMES];
+          },
+          endGame: function(gameId, winner) {
+            var game,
+                games;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    game = new Game(gameId);
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    Promise.resolve(FireOnceAndWait(game)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    game.winner = winner;
+                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
+          hasGame: function(playerId) {
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+            return games[playerId] != null;
+          },
+          getGameId: function(playerId) {
+            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+            return games[playerId];
+          },
+          trackOnline: function() {
+            var $__0 = this;
+            setInterval((function() {
+              return ;
+              if ($__0.isNewPlayer())
+                return ;
+              var playerName = $__0.getPlayerId();
+              var online = new Player(playerName);
+              online.once('ready', function() {
+                online.lastTimeAccessed = Date.now();
+              }, $__0);
+            }), 5000);
+          }
+        }, {});
+      }()));
     }
   };
 });
@@ -29745,6 +30012,7 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
               currentRoute.spec = previousRoute ? this._getAnimationSpec(previousRoute, currentRoute) : {};
               this._setHistory(currentRoute);
               rule['@'](currentRoute);
+              this.emit('routechange', currentRoute);
               return true;
             } else {
               console.log('Controller doesn\'t exist!');
@@ -29822,166 +30090,6 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
       Object.defineProperty(ArvaRouter, "annotations", {get: function() {
           return [new Provide(Router)];
         }});
-    }
-  };
-});
-
-System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
-  "use strict";
-  var __moduleName = "utils/GameContext";
-  var GetDefaultContext,
-      DataSource,
-      FireOnceAndWait,
-      Player,
-      Players,
-      Avatars,
-      Game,
-      Invites,
-      Invite,
-      BKEE_PLAYERID,
-      BKEE_LASTGAMEID,
-      BKEE_ACTIVEGAMES;
-  return {
-    setters: [function($__m) {
-      GetDefaultContext = $__m.GetDefaultContext;
-    }, function($__m) {
-      DataSource = $__m.DataSource;
-    }, function($__m) {
-      FireOnceAndWait = $__m.default;
-    }, function($__m) {
-      Player = $__m.default;
-    }, function($__m) {
-      Players = $__m.default;
-    }, function($__m) {
-      Avatars = $__m.default;
-    }, function($__m) {
-      Game = $__m.default;
-    }, function($__m) {
-      Invites = $__m.default;
-    }, function($__m) {
-      Invite = $__m.default;
-    }],
-    execute: function() {
-      BKEE_PLAYERID = 'bkee.playerid';
-      BKEE_LASTGAMEID = 'bkee.lastgameid';
-      BKEE_ACTIVEGAMES = 'bkee.activegames';
-      $__export('default', (function() {
-        function GameContext() {
-          var $__0 = this;
-          if (!localStorage[BKEE_ACTIVEGAMES])
-            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
-          this.ds = GetDefaultContext().get(DataSource);
-          this.players = new Players();
-          this.avatars = new Avatars();
-          if (!this.isNewPlayer()) {
-            this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
-            this.invites.on('child_added', (function(invite) {
-              if (window.confirm(("You are challenged by " + invite.player1 + ". Accept?"))) {
-                $__0.acceptGame(invite);
-              } else {
-                $__0.rejectInvite(invite);
-              }
-            }));
-          }
-        }
-        return ($traceurRuntime.createClass)(GameContext, {
-          ready: function(what) {
-            return new Promise(function(resolve) {
-              this[what].once('ready', function() {
-                resolve();
-              });
-            }.bind(this));
-          },
-          isNewPlayer: function() {
-            if (localStorage[BKEE_PLAYERID])
-              return false;
-            return true;
-          },
-          getPlayerId: function() {
-            if (localStorage[BKEE_PLAYERID])
-              return localStorage[BKEE_PLAYERID];
-            return undefined;
-          },
-          setPlayerId: function(playerId) {
-            localStorage[BKEE_PLAYERID] = playerId;
-          },
-          getDefaultPlayerName: function() {
-            return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
-          },
-          getLastActiveGame: function() {
-            var gameId = localStorage[BKEE_LASTGAMEID];
-            if (!gameId)
-              return '';
-            return gameId;
-          },
-          setLastActiveGame: function(gameid) {
-            localStorage[BKEE_LASTGAMEID] = gameid;
-          },
-          invitePlayer: function(playerId) {
-            var invitation = new Invite(null, {
-              player1: this.getPlayerId(),
-              player2: playerId
-            }, {dataSource: this.ds.child('Invites').child(playerId)});
-          },
-          rejectInvite: function(invitation) {
-            invitation.remove();
-          },
-          acceptGame: function(invitation) {
-            var dice = (Math.random() * 10) + 1;
-            var newGame = new Game(null, {
-              status: 'active',
-              activeSince: Date.now(),
-              startingPlayer: dice > 5 ? invitation.player1 : invitation.player2
-            });
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-            games[invitation.player1] = newGame.id;
-            invitation.remove();
-          },
-          endGame: function(gameId, winner) {
-            var game,
-                games;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    game = new Game(gameId);
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    Promise.resolve(FireOnceAndWait(game)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    game.winner = winner;
-                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
-          },
-          hasGame: function(playerId) {
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-            return games[playerId] != null;
-          },
-          getGameId: function(playerId) {
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-          },
-          trackOnline: function() {
-            var $__0 = this;
-            setInterval((function() {
-              return ;
-              if ($__0.isNewPlayer())
-                return ;
-              var playerName = $__0.getPlayerId();
-              var online = new Player(playerName);
-              online.once('ready', function() {
-                online.lastTimeAccessed = Date.now();
-              }, $__0);
-            }), 5000);
-          }
-        }, {});
-      }()));
     }
   };
 });
@@ -30354,17 +30462,21 @@ System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizb
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboard/arva-mvc@develop/utils/objectHelper"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:eventemitter3@1.1.0"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Router";
-  var ObjectHelper;
+  var ObjectHelper,
+      EventEmitter;
   return {
     setters: [function($__m) {
       ObjectHelper = $__m.default;
+    }, function($__m) {
+      EventEmitter = $__m.default;
     }],
     execute: function() {
-      $__export('default', (function() {
+      $__export('default', (function($__super) {
         function Router() {
+          $traceurRuntime.superConstructor(Router).call(this);
           ObjectHelper.bindAllMethods(this, this);
           this.controllers = [];
           this.defaultController = 'Home';
@@ -30375,8 +30487,8 @@ System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboar
           setDefault: function(controller, method) {},
           add: function(route, handler) {},
           go: function(controller, method, params) {}
-        }, {});
-      }()));
+        }, {}, $__super);
+      }(EventEmitter)));
     }
   };
 });
@@ -30468,6 +30580,7 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
         function BkeeApp(router, context) {
           var $__0;
           router.setDefault(HomeController, 'Main');
+          $traceurRuntime.superConstructor(BkeeApp).call(this, router);
           router.setControllerSpecs({
             HomeController: {controllers: [{
                 transition: {
@@ -30519,7 +30632,6 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
               }
             }
           });
-          $traceurRuntime.superConstructor(BkeeApp).call(this, router);
           this.gameContext = GetDefaultContext().get(GameContext);
           var navigation = new Navigation();
           navigation._renderables.tabBar.on('tabchange', ($__0 = this, function(event) {
@@ -30540,11 +30652,22 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
             }
           }));
           context.add(navigation);
-          this.setup();
+          router.on('routechange', function(routerSpec) {
+            switch (routerSpec.controller) {
+              case 'Home':
+                navigation._renderables.tabBar.setSelectedItemIndex(0);
+                break;
+              case 'Play':
+                navigation._renderables.tabBar.setSelectedItemIndex(1);
+                break;
+              case 'Profile':
+                navigation._renderables.tabBar.setSelectedItemIndex(2);
+                break;
+            }
+          });
+          this.gameContext.trackOnline();
         }
-        return ($traceurRuntime.createClass)(BkeeApp, {setup: function() {
-            this.gameContext.trackOnline();
-          }}, {}, $__super);
+        return ($traceurRuntime.createClass)(BkeeApp, {}, {}, $__super);
       }(App));
       $__export("BkeeApp", BkeeApp);
       Object.defineProperty(BkeeApp, "annotations", {get: function() {
