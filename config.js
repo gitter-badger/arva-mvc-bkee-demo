@@ -17,6 +17,7 @@ System.config({
     "arva-ds": "github:Bizboard/arva-ds@develop",
     "arva-mvc": "github:Bizboard/arva-mvc@develop",
     "di.js": "github:Bizboard/di.js@master",
+    "eventemitter3": "npm:eventemitter3@1.1.0",
     "famous": "npm:famous@0.3.5",
     "famous-bkimagesurface": "github:ijzerenhein/famous-bkimagesurface@1.0.3",
     "famous-flex": "github:Ijzerenhein/famous-flex@0.3.2",

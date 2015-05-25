@@ -27548,13 +27548,16 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
           set: function(activePlayer, gameState) {
             var $__0 = this;
             this.nextPlayer = gameState.nextPlayer;
-            if (gameState.data && gameState.data[gameState.player1]) {
-              gameState.data[gameState.player1].forEach((function(move) {
+            this.nextPlayerName = gameState.player1.id == gameState.nextPlayer ? gameState.player1.name : gameState.player2.name;
+            this._renderables.header.setContent(("<div class=\"player1\">" + gameState.player1.name + "<span>X</span></div>\n        <div class=\"player2\">" + gameState.player2.name + "<span>O</span></div>"));
+            this._renderables.footer.setContent(("Turn: " + this.nextPlayerName));
+            if (gameState.data && gameState.data[gameState.player1.id]) {
+              gameState.data[gameState.player1.id].forEach((function(move) {
                 $__0._renderables[("surface" + move.position)].setContent('X');
               }));
             }
-            if (gameState.data && gameState.data[gameState.player2]) {
-              gameState.data[gameState.player2].forEach((function(move) {
+            if (gameState.data && gameState.data[gameState.player2.id]) {
+              gameState.data[gameState.player2.id].forEach((function(move) {
                 $__0._renderables[("surface" + move.position)].setContent('O');
               }));
             }
@@ -27562,10 +27565,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
           _createRenderables: function() {
             this._renderables = {
               background: new Background(),
-              header: new Surface({
-                content: 'BKEE!',
-                classes: ['header']
-              }),
+              header: new Surface({classes: ['header', 'players']}),
               surface1: new Surface({
                 content: '',
                 properties: {
@@ -27629,10 +27629,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
                   backgroundColor: '#efefef'
                 }
               }),
-              footer: new Surface({
-                content: 'footer',
-                classes: ['footer']
-              })
+              footer: new Surface({classes: ['footer', 'players']})
             };
           },
           _handleMoves: function() {
@@ -27790,27 +27787,29 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
   };
 });
 
-System.register("utils/BKEEEngine", ["models/Game", "npm:lodash@3.9.1"], function($__export) {
+System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0"], function($__export) {
   "use strict";
   var __moduleName = "utils/BKEEEngine";
   var Game,
-      _,
+      EventEmitter,
       winningCombinations;
   return {
     setters: [function($__m) {
       Game = $__m.default;
     }, function($__m) {
-      _ = $__m.default;
+      EventEmitter = $__m.default;
     }],
     execute: function() {
       winningCombinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-      $__export('default', (function() {
-        function BKEEEngine(game) {
+      $__export('default', (function($__super) {
+        function BKEEEngine(activePlayer, game) {
+          $traceurRuntime.superConstructor(BKEEEngine).call(this);
+          this._activePlayer = activePlayer;
           this._game = game;
           if (!this._game.data) {
             this._state = {};
-            this._state[this._game.player1] = [];
-            this._state[this._game.player2] = [];
+            this._state[this._game.player1.id] = [];
+            this._state[this._game.player2.id] = [];
           } else {
             this._state = this._game.data;
           }
@@ -27827,25 +27826,41 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:lodash@3.9.1"], functio
             var didIWin = this._evaluateGameResult(this._state[by]);
             if (didIWin) {
               this._game.winner = by;
+              this._game.status = 'won';
+              this._game.nextPlayer = '';
+              this.emit('won');
+            } else if ((this._state[this._game.player1.id].length + this._state[this._game.player2.id].length) == 9) {
               this._game.status = 'finished';
               this._game.nextPlayer = '';
-            } else if ((this._state[this._game.player1].length + this._state[this._game.player2].length) == 9) {
-              this._game.status = 'finished';
-              this._game.nextPlayer = '';
+              this.emit('draw');
             } else {
-              this._game.nextPlayer = this._game.nextPlayer == this._game.player1 ? this._game.player2 : this._game.player1;
+              this._game.nextPlayer = this._game.nextPlayer == this._game.player1.id ? this._game.player2.id : this._game.player1.id;
+            }
+          },
+          evaluate: function() {
+            if (this._game.status == 'won' && this._game.winner != this._activePlayer) {
+              this._game.status = 'finished';
+              this.emit('loss');
             }
           },
           _evaluateGameResult: function(moves) {
             var won = false;
             winningCombinations.forEach(function(combination) {
-              if (_.isEqual(moves, combination))
-                won = true;
+              if (!won) {
+                var foundMoves = 0;
+                moves.forEach(function(move) {
+                  if (combination.indexOf(move.position)) {
+                    foundMoves++;
+                  }
+                });
+                if (foundMoves == 3)
+                  won = true;
+              }
             });
             return won;
           }
-        }, {});
-      }()));
+        }, {}, $__super);
+      }(EventEmitter)));
     }
   };
 });
@@ -28613,6 +28628,7 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
         }
         return ($traceurRuntime.createClass)(PlayController, {
           Play: function(gameId) {
+            var $__0 = this;
             var gameView = new PlayView();
             var activePlayer = this.gameContext.getPlayerId();
             if (!gameId) {
@@ -28620,18 +28636,34 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
             } else {
               var gameState = new Game(gameId);
               var gameEngine = null;
-              gameView.on('move', function(move) {
+              gameView.on('move', (function(move) {
                 if (gameEngine && gameState.nextPlayer == activePlayer) {
                   gameEngine.move(move.by, move.position);
                 }
-              });
-              gameState.on('value', function() {
-                gameEngine = new BKEEEngine(gameState);
+              }));
+              gameState.on('value', (function() {
+                gameEngine = $__0._CreateGameEngine(gameState);
                 gameView.set(activePlayer, gameState);
-              });
+              }));
               this.gameContext.setLastActiveGame(gameId);
             }
             return gameView;
+          },
+          _CreateGameEngine: function(gameState) {
+            var $__0 = this;
+            var activePlayer = this.gameContext.getPlayerId();
+            var gameEngine = new BKEEEngine(activePlayer, gameState);
+            gameEngine.on('won', (function() {
+              $__0.gameContext.setWinnerScore();
+            }));
+            gameEngine.on('draw', (function() {
+              $__0.gameContext.setDrawScore();
+            }));
+            gameEngine.on('loss', (function() {
+              $__0.gameContext.setLossScore();
+            }));
+            gameEngine.evaluate();
+            return gameEngine;
           },
           Main: function() {
             this.router.go(this, 'Play', {gameId: this.gameContext.getLastActiveGame()});
@@ -29700,44 +29732,67 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
             invitation.remove();
           },
           acceptGame: function(invitation) {
-            var dice = (Math.random() * 10) + 1;
-            var newGame = new Game(null, {
-              player1: invitation.player1,
-              player2: invitation.player2,
-              status: 'active',
-              activeSince: Date.now(),
-              nextPlayer: dice > 5 ? invitation.player1 : invitation.player2
-            });
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-            games[invitation.player1] = newGame.id;
-            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
-            invitation.remove();
-          },
-          getActiveGames: function() {
-            return localStorage[BKEE_ACTIVEGAMES];
-          },
-          endGame: function(gameId, winner) {
-            var game,
+            var player1,
+                player2,
+                dice,
+                newGame,
                 games;
             return $traceurRuntime.asyncWrap(function($ctx) {
               while (true)
                 switch ($ctx.state) {
                   case 0:
-                    game = new Game(gameId);
-                    $ctx.state = 4;
+                    player1 = new Player(invitation.player1);
+                    player2 = new Player(invitation.player2);
+                    $ctx.state = 6;
                     break;
-                  case 4:
-                    Promise.resolve(FireOnceAndWait(game)).then($ctx.createCallback(2), $ctx.errback);
+                  case 6:
+                    Promise.resolve(FireOnceAndWait(player1)).then($ctx.createCallback(2), $ctx.errback);
                     return ;
                   case 2:
-                    game.winner = winner;
+                    Promise.resolve(FireOnceAndWait(player2)).then($ctx.createCallback(4), $ctx.errback);
+                    return ;
+                  case 4:
+                    dice = (Math.random() * 10) + 1;
+                    newGame = new Game(null, {
+                      player1: player1,
+                      player2: player2,
+                      status: 'active',
+                      activeSince: Date.now(),
+                      nextPlayer: dice > 5 ? invitation.player1 : invitation.player2
+                    });
                     games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
+                    games[invitation.player1] = newGame.id;
+                    localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
+                    invitation.remove();
                     $ctx.state = -2;
                     break;
                   default:
                     return $ctx.end();
                 }
             }, this);
+          },
+          getActiveGames: function() {
+            return localStorage[BKEE_ACTIVEGAMES];
+          },
+          setWinnerScore: function() {
+            var winner = new Player(this.getPlayerId());
+            winner.once('ready', function() {
+              winner.won = winner.won + 1;
+              winner.score = winner.score + 3;
+            });
+          },
+          setDrawScore: function() {
+            var winner = new Player(this.getPlayerId());
+            winner.once('ready', function() {
+              winner.draw = winner.draw + 1;
+              winner.score = winner.score + 2;
+            });
+          },
+          setLossScore: function() {
+            var winner = new Player(this.getPlayerId());
+            winner.once('ready', function() {
+              winner.lost = winner.lost + 1;
+            });
           },
           hasGame: function(playerId) {
             var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);

@@ -18,7 +18,6 @@ export class PlayController extends Controller {
         super(router, context);
 
         this.gameContext = GetDefaultContext().get(GameContext);
-
     }
 
 
@@ -34,15 +33,15 @@ export class PlayController extends Controller {
             let gameEngine = null;
 
             // when this player made a move. have the GameEngine evaluate
-            gameView.on('move', function(move) {
+            gameView.on('move', (move) => {
                 if (gameEngine && gameState.nextPlayer==activePlayer) {
                     gameEngine.move(move.by, move.position);
                 }
             });
 
             // when data is updated by the game engine. reflect the view
-            gameState.on('value', function() {
-                gameEngine = new BKEEEngine(gameState);
+            gameState.on('value', () => {
+                gameEngine = this._CreateGameEngine(gameState);
                 gameView.set(activePlayer, gameState);
             });
 
@@ -51,6 +50,29 @@ export class PlayController extends Controller {
 
         return gameView;
     }
+
+
+    _CreateGameEngine(gameState) {
+        let activePlayer = this.gameContext.getPlayerId();
+
+        let gameEngine = new BKEEEngine(activePlayer, gameState);
+
+        gameEngine.on('won', () => {
+            this.gameContext.setWinnerScore();
+        });
+
+        gameEngine.on('draw', () => {
+            this.gameContext.setDrawScore();
+        });
+
+        gameEngine.on('loss', () => {
+            this.gameContext.setLossScore();
+        });
+
+        gameEngine.evaluate();
+        return gameEngine;
+    }
+
 
 
     Main() {

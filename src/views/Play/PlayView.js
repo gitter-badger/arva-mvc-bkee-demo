@@ -37,15 +37,24 @@ export class PlayView extends View {
     set(activePlayer, gameState) {
 
         this.nextPlayer = gameState.nextPlayer;
+        this.nextPlayerName = gameState.player1.id==gameState.nextPlayer?
+            gameState.player1.name:
+            gameState.player2.name;
 
-        if (gameState.data && gameState.data[gameState.player1]) {
-            gameState.data[gameState.player1].forEach((move) => {
+        this._renderables.header.setContent(`<div class="player1">${gameState.player1.name}<span>X</span></div>
+        <div class="player2">${gameState.player2.name}<span>O</span></div>`);
+
+
+        this._renderables.footer.setContent(`Turn: ${this.nextPlayerName}`);
+
+        if (gameState.data && gameState.data[gameState.player1.id]) {
+            gameState.data[gameState.player1.id].forEach((move) => {
                 this._renderables[`surface${move.position}`].setContent('X');
             });
         }
 
-        if (gameState.data && gameState.data[gameState.player2]) {
-            gameState.data[gameState.player2].forEach((move) => {
+        if (gameState.data && gameState.data[gameState.player2.id]) {
+            gameState.data[gameState.player2.id].forEach((move) => {
                 this._renderables[`surface${move.position}`].setContent('O');
             });
         }
@@ -55,7 +64,7 @@ export class PlayView extends View {
 
         this._renderables = {
             background: new Background(),
-            header: new Surface({content: 'BKEE!', classes: ['header'] }),
+            header: new Surface({classes: ['header', 'players'] }),
             surface1: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
             surface2: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
             surface3: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
@@ -65,7 +74,7 @@ export class PlayView extends View {
             surface7: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
             surface8: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#e8e8e8'} }),
             surface9: new Surface({content: '', properties: { textAlign:'center', backgroundColor: '#efefef'} }),
-            footer: new Surface({content: 'footer', classes: ['footer'] })
+            footer: new Surface({classes: ['footer', 'players'] })
         };
     }
 

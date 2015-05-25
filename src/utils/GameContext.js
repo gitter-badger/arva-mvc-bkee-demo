@@ -105,12 +105,17 @@ export default class GameContext {
     }
 
 
-    acceptGame(invitation) {
+    async acceptGame(invitation) {
+
+        let player1 = new Player(invitation.player1);
+        let player2 = new Player(invitation.player2);
+        await FireOnceAndWait(player1);
+        await FireOnceAndWait(player2);
 
         let dice = (Math.random()*10)+1;
         let newGame = new Game(null, {
-            player1: invitation.player1,
-            player2: invitation.player2,
+            player1: player1,
+            player2: player2,
             status: 'active',
             activeSince: Date.now(),
             nextPlayer: dice>5?invitation.player1:invitation.player2
@@ -127,16 +132,30 @@ export default class GameContext {
         return localStorage[BKEE_ACTIVEGAMES];
     }
 
-    async endGame(gameId, winner) {
+    setWinnerScore() {
 
-        let game = new Game(gameId);
-        await FireOnceAndWait(game);
-        game.winner = winner;
-
-        let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        //delete games[invitation.from];
+        let winner = new Player(this.getPlayerId());
+        winner.once('ready', function() {
+            winner.won = winner.won + 1;
+            winner.score = winner.score + 3;
+        });
     }
 
+    setDrawScore() {
+        let winner = new Player(this.getPlayerId());
+        winner.once('ready', function() {
+            winner.draw = winner.draw + 1;
+            winner.score = winner.score + 2;
+        });
+    }
+
+
+    setLossScore() {
+        let winner = new Player(this.getPlayerId());
+        winner.once('ready', function() {
+            winner.lost = winner.lost + 1;
+        });
+    }
 
 
     hasGame(playerId) {
