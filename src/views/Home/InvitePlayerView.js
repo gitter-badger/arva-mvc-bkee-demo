@@ -7,6 +7,7 @@ import {ObjectHelper}               from 'arva-mvc/utils/objectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
 import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
 import Background                   from '../../components/Background';
+import AutoFontsizeSurface          from 'famous-autofontsizesurface/AutoFontSizeSurface';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75
@@ -34,6 +35,7 @@ export default class InvitePlayerView extends View {
 
         this._createRenderables();
         this._createLayout();
+        this._createListeners();
 
     }
 
@@ -95,8 +97,15 @@ export default class InvitePlayerView extends View {
         this._renderables = {
             background: new Background(),
             header: new Surface({
-                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
+                content: '<div>Spelers</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
                 classes: ['header']
+            }),
+            close: new AutoFontsizeSurface({
+                classes:['icon', 'icon-circle-arrow-left'],
+                fontSizeRange: [16, 52],
+                properties: {
+                    color: '#FF8000'
+                }
             }),
             players: invitePlayers
         };
@@ -119,6 +128,13 @@ export default class InvitePlayerView extends View {
                     translate: [0,0,20]
                 });
 
+                context.set('close', {
+                    size: [56, 56],
+                    translate: [0,0,25],
+                    align: [0.90,0.85],
+                    origin: [0.5,0.5]
+                });
+
                 context.set('players', {
                     size: [context.size[0], context.size[1]/1.3],
                     translate: [0, top, 2]
@@ -129,5 +145,11 @@ export default class InvitePlayerView extends View {
         });
         this.add(this.layout);
         this.layout.pipe(this._eventOutput);
+    }
+
+    _createListeners() {
+        this._renderables.close.on('click', () => {
+            this._eventOutput.emit('close');
+        });
     }
 }

@@ -37,7 +37,17 @@ export class BkeeApp extends App {
                         animation: AnimationController.Animation.Slide.Right,
                         activeFrom: ['PlayController', 'ProfileController']
                     }
-                ]
+                ],
+                methods: {
+                    next: {
+                        transition: {duration: 750, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Down
+                    },
+                    previous: {
+                        transition: {duration: 750, curve: Easing.outBack},
+                        animation: AnimationController.Animation.Slide.Up
+                    }
+                }
             },
             PlayController: {
                 controllers: [

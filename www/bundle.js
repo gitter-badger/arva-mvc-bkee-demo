@@ -7557,6 +7557,182 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/TabBarLayout",
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/surfaces/InputSurface", ["npm:famous@0.3.5/core/Surface"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Surface = require("npm:famous@0.3.5/core/Surface");
+  function InputSurface(options) {
+    this._placeholder = options.placeholder || '';
+    this._value = options.value || '';
+    this._type = options.type || 'text';
+    this._name = options.name || '';
+    Surface.apply(this, arguments);
+    this.on('click', this.focus.bind(this));
+    window.addEventListener('click', function(event) {
+      if (event.target !== this._currentTarget)
+        this.blur();
+    }.bind(this));
+  }
+  InputSurface.prototype = Object.create(Surface.prototype);
+  InputSurface.prototype.constructor = InputSurface;
+  InputSurface.prototype.elementType = 'input';
+  InputSurface.prototype.elementClass = 'famous-surface';
+  InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
+    this._placeholder = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.focus = function focus() {
+    if (this._currentTarget)
+      this._currentTarget.focus();
+    return this;
+  };
+  InputSurface.prototype.blur = function blur() {
+    if (this._currentTarget)
+      this._currentTarget.blur();
+    return this;
+  };
+  InputSurface.prototype.setValue = function setValue(str) {
+    this._value = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.setType = function setType(str) {
+    this._type = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.getValue = function getValue() {
+    if (this._currentTarget) {
+      return this._currentTarget.value;
+    } else {
+      return this._value;
+    }
+  };
+  InputSurface.prototype.setName = function setName(str) {
+    this._name = str;
+    this._contentDirty = true;
+    return this;
+  };
+  InputSurface.prototype.getName = function getName() {
+    return this._name;
+  };
+  InputSurface.prototype.deploy = function deploy(target) {
+    if (this._placeholder !== '')
+      target.placeholder = this._placeholder;
+    target.value = this._value;
+    target.type = this._type;
+    target.name = this._name;
+  };
+  module.exports = InputSurface;
+  global.define = __define;
+  return module.exports;
+});
+
+(function() {
+function define(){};  define.amd = {};
+System.register("github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", ["npm:famous@0.3.5/core/Surface"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    'use strict';
+    var Surface = require("npm:famous@0.3.5/core/Surface");
+    var SizeMode = {
+      AUTO: 'auto',
+      FILL: '100% 100%',
+      ASPECTFILL: 'cover',
+      ASPECTFIT: 'contain'
+    };
+    var PositionMode = {
+      CENTER: 'center center',
+      LEFT: 'left center',
+      RIGHT: 'right center',
+      TOP: 'center top',
+      BOTTOM: 'center bottom',
+      TOPLEFT: 'left top',
+      TOPRIGHT: 'right top',
+      BOTTOMLEFT: 'left bottom',
+      BOTTOMRIGHT: 'right bottom'
+    };
+    var RepeatMode = {
+      NONE: 'no-repeat',
+      VERTICAL: 'repeat-x',
+      HORIZONTAL: 'repeat-y',
+      BOTH: 'repeat'
+    };
+    function BkImageSurface(options) {
+      Surface.apply(this, arguments);
+      this.content = undefined;
+      this._imageUrl = options ? options.content : undefined;
+      this._sizeMode = (options && options.sizeMode) ? options.sizeMode : SizeMode.FILL;
+      this._positionMode = (options && options.positionMode) ? options.positionMode : PositionMode.CENTER;
+      this._repeatMode = (options && options.repeatMode) ? options.repeatMode : RepeatMode.NONE;
+      this._updateProperties();
+    }
+    BkImageSurface.prototype = Object.create(Surface.prototype);
+    BkImageSurface.prototype.constructor = BkImageSurface;
+    BkImageSurface.prototype.elementType = 'div';
+    BkImageSurface.prototype.elementClass = 'famous-surface';
+    BkImageSurface.SizeMode = SizeMode;
+    BkImageSurface.PositionMode = PositionMode;
+    BkImageSurface.RepeatMode = RepeatMode;
+    BkImageSurface.prototype._updateProperties = function() {
+      var props = this.getProperties();
+      if (this._imageUrl) {
+        var imageUrl = this._imageUrl;
+        if ((imageUrl.indexOf('(') >= 0) || (imageUrl.indexOf(')') >= 0)) {
+          imageUrl = imageUrl.split('(').join('%28');
+          imageUrl = imageUrl.split(')').join('%29');
+        }
+        props.backgroundImage = 'url(' + imageUrl + ')';
+      } else {
+        props.backgroundImage = '';
+      }
+      props.backgroundSize = this._sizeMode;
+      props.backgroundPosition = this._positionMode;
+      props.backgroundRepeat = this._repeatMode;
+      this.setProperties(props);
+    };
+    BkImageSurface.prototype.setContent = function(imageUrl) {
+      this._imageUrl = imageUrl;
+      this._updateProperties();
+    };
+    BkImageSurface.prototype.getContent = function() {
+      return this._imageUrl;
+    };
+    BkImageSurface.prototype.setSizeMode = function(sizeMode) {
+      this._sizeMode = sizeMode;
+      this._updateProperties();
+    };
+    BkImageSurface.prototype.getSizeMode = function() {
+      return this._sizeMode;
+    };
+    BkImageSurface.prototype.setPositionMode = function(positionMode) {
+      this._positionMode = positionMode;
+      this._updateProperties();
+    };
+    BkImageSurface.prototype.getPositionMode = function() {
+      return this._positionMode;
+    };
+    BkImageSurface.prototype.setRepeatMode = function(repeatMode) {
+      this._repeatMode = repeatMode;
+      this._updateProperties();
+    };
+    BkImageSurface.prototype.getRepeatMode = function() {
+      return this._repeatMode;
+    };
+    BkImageSurface.prototype.deploy = function deploy(target) {
+      target.innerHTML = '';
+      if (this._imageUrl) {
+        target.style.backgroundImage = 'url(' + this._imageUrl + ')';
+      }
+    };
+    BkImageSurface.prototype.recall = function recall(target) {
+      target.style.backgroundImage = '';
+    };
+    module.exports = BkImageSurface;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
 System.register("npm:famous@0.3.5/surfaces/ContainerSurface", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/Context"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -8010,182 +8186,6 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/ListLayout", [
 })();
 (function() {
 function define(){};  define.amd = {};
-System.register("github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", ["npm:famous@0.3.5/core/Surface"], false, function(__require, __exports, __module) {
-  return (function(require, exports, module) {
-    'use strict';
-    var Surface = require("npm:famous@0.3.5/core/Surface");
-    var SizeMode = {
-      AUTO: 'auto',
-      FILL: '100% 100%',
-      ASPECTFILL: 'cover',
-      ASPECTFIT: 'contain'
-    };
-    var PositionMode = {
-      CENTER: 'center center',
-      LEFT: 'left center',
-      RIGHT: 'right center',
-      TOP: 'center top',
-      BOTTOM: 'center bottom',
-      TOPLEFT: 'left top',
-      TOPRIGHT: 'right top',
-      BOTTOMLEFT: 'left bottom',
-      BOTTOMRIGHT: 'right bottom'
-    };
-    var RepeatMode = {
-      NONE: 'no-repeat',
-      VERTICAL: 'repeat-x',
-      HORIZONTAL: 'repeat-y',
-      BOTH: 'repeat'
-    };
-    function BkImageSurface(options) {
-      Surface.apply(this, arguments);
-      this.content = undefined;
-      this._imageUrl = options ? options.content : undefined;
-      this._sizeMode = (options && options.sizeMode) ? options.sizeMode : SizeMode.FILL;
-      this._positionMode = (options && options.positionMode) ? options.positionMode : PositionMode.CENTER;
-      this._repeatMode = (options && options.repeatMode) ? options.repeatMode : RepeatMode.NONE;
-      this._updateProperties();
-    }
-    BkImageSurface.prototype = Object.create(Surface.prototype);
-    BkImageSurface.prototype.constructor = BkImageSurface;
-    BkImageSurface.prototype.elementType = 'div';
-    BkImageSurface.prototype.elementClass = 'famous-surface';
-    BkImageSurface.SizeMode = SizeMode;
-    BkImageSurface.PositionMode = PositionMode;
-    BkImageSurface.RepeatMode = RepeatMode;
-    BkImageSurface.prototype._updateProperties = function() {
-      var props = this.getProperties();
-      if (this._imageUrl) {
-        var imageUrl = this._imageUrl;
-        if ((imageUrl.indexOf('(') >= 0) || (imageUrl.indexOf(')') >= 0)) {
-          imageUrl = imageUrl.split('(').join('%28');
-          imageUrl = imageUrl.split(')').join('%29');
-        }
-        props.backgroundImage = 'url(' + imageUrl + ')';
-      } else {
-        props.backgroundImage = '';
-      }
-      props.backgroundSize = this._sizeMode;
-      props.backgroundPosition = this._positionMode;
-      props.backgroundRepeat = this._repeatMode;
-      this.setProperties(props);
-    };
-    BkImageSurface.prototype.setContent = function(imageUrl) {
-      this._imageUrl = imageUrl;
-      this._updateProperties();
-    };
-    BkImageSurface.prototype.getContent = function() {
-      return this._imageUrl;
-    };
-    BkImageSurface.prototype.setSizeMode = function(sizeMode) {
-      this._sizeMode = sizeMode;
-      this._updateProperties();
-    };
-    BkImageSurface.prototype.getSizeMode = function() {
-      return this._sizeMode;
-    };
-    BkImageSurface.prototype.setPositionMode = function(positionMode) {
-      this._positionMode = positionMode;
-      this._updateProperties();
-    };
-    BkImageSurface.prototype.getPositionMode = function() {
-      return this._positionMode;
-    };
-    BkImageSurface.prototype.setRepeatMode = function(repeatMode) {
-      this._repeatMode = repeatMode;
-      this._updateProperties();
-    };
-    BkImageSurface.prototype.getRepeatMode = function() {
-      return this._repeatMode;
-    };
-    BkImageSurface.prototype.deploy = function deploy(target) {
-      target.innerHTML = '';
-      if (this._imageUrl) {
-        target.style.backgroundImage = 'url(' + this._imageUrl + ')';
-      }
-    };
-    BkImageSurface.prototype.recall = function recall(target) {
-      target.style.backgroundImage = '';
-    };
-    module.exports = BkImageSurface;
-  }).call(__exports, __require, __exports, __module);
-});
-})();
-System.register("npm:famous@0.3.5/surfaces/InputSurface", ["npm:famous@0.3.5/core/Surface"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Surface = require("npm:famous@0.3.5/core/Surface");
-  function InputSurface(options) {
-    this._placeholder = options.placeholder || '';
-    this._value = options.value || '';
-    this._type = options.type || 'text';
-    this._name = options.name || '';
-    Surface.apply(this, arguments);
-    this.on('click', this.focus.bind(this));
-    window.addEventListener('click', function(event) {
-      if (event.target !== this._currentTarget)
-        this.blur();
-    }.bind(this));
-  }
-  InputSurface.prototype = Object.create(Surface.prototype);
-  InputSurface.prototype.constructor = InputSurface;
-  InputSurface.prototype.elementType = 'input';
-  InputSurface.prototype.elementClass = 'famous-surface';
-  InputSurface.prototype.setPlaceholder = function setPlaceholder(str) {
-    this._placeholder = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.focus = function focus() {
-    if (this._currentTarget)
-      this._currentTarget.focus();
-    return this;
-  };
-  InputSurface.prototype.blur = function blur() {
-    if (this._currentTarget)
-      this._currentTarget.blur();
-    return this;
-  };
-  InputSurface.prototype.setValue = function setValue(str) {
-    this._value = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.setType = function setType(str) {
-    this._type = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.getValue = function getValue() {
-    if (this._currentTarget) {
-      return this._currentTarget.value;
-    } else {
-      return this._value;
-    }
-  };
-  InputSurface.prototype.setName = function setName(str) {
-    this._name = str;
-    this._contentDirty = true;
-    return this;
-  };
-  InputSurface.prototype.getName = function getName() {
-    return this._name;
-  };
-  InputSurface.prototype.deploy = function deploy(target) {
-    if (this._placeholder !== '')
-      target.placeholder = this._placeholder;
-    target.value = this._value;
-    target.type = this._type;
-    target.name = this._name;
-  };
-  module.exports = InputSurface;
-  global.define = __define;
-  return module.exports;
-});
-
-(function() {
-function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", ["npm:famous@0.3.5/utilities/Utility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Utility = require("npm:famous@0.3.5/utilities/Utility");
@@ -8358,6 +8358,150 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayo
     CollectionLayout.Name = 'CollectionLayout';
     CollectionLayout.Description = 'Multi-cell collection-layout with margins & spacing';
     module.exports = CollectionLayout;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/utilities/Timer"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Surface = require("npm:famous@0.3.5/core/Surface");
+    var Timer = require("npm:famous@0.3.5/utilities/Timer");
+    function AutoFontSizeSurface(options) {
+      if (!options.fontSizeRange) {
+        throw 'No fontSizeRange specified';
+      }
+      this._fontSizeUnit = 'px';
+      this._invalidated = true;
+      this._oldCachedSize = [0, 0];
+      _createHiddenSurface.call(this);
+      Surface.apply(this, arguments);
+      this._fontSize = this._fontSizeRange[1];
+      this._recalcTrigger = AutoFontSizeSurface.recalcTrigger;
+    }
+    AutoFontSizeSurface.prototype = Object.create(Surface.prototype);
+    AutoFontSizeSurface.prototype.constructor = AutoFontSizeSurface;
+    AutoFontSizeSurface.refreshAll = function() {
+      AutoFontSizeSurface.recalcTrigger++;
+    };
+    AutoFontSizeSurface.recalcTrigger = 0;
+    function _createHiddenSurface() {
+      this._hiddenSurface = new Surface({size: [undefined, true]});
+      this._hiddenSurface.recall = AutoFontSizeSurface.prototype.recall;
+      this.setProperties({});
+    }
+    AutoFontSizeSurface.prototype.render = function() {
+      return [this._hiddenSurface.id, this.id];
+    };
+    AutoFontSizeSurface.prototype.commit = function(context) {
+      Surface.prototype.commit.apply(this, arguments);
+      if ((this._oldCachedSize[0] !== context.size[0]) || (this._oldCachedSize[1] !== context.size[1])) {
+        this._oldCachedSize[0] = context.size[0];
+        this._oldCachedSize[1] = context.size[1];
+        this._invalidated = true;
+      }
+      if (this._recalcTrigger !== AutoFontSizeSurface.recalcTrigger) {
+        this._recalcTrigger = AutoFontSizeSurface.recalcTrigger;
+        this._invalidated = true;
+      }
+      if (this._currentTarget && this._hiddenSurface._currentTarget && this._invalidated) {
+        this._hiddenSurface._currentTarget.innerHTML = this._currentTarget.innerHTML;
+        this._invalidated = false;
+        var fontSize = this._fontSize;
+        var fontSizeStr = fontSize + this._fontSizeUnit;
+        if (this._hiddenSurface._currentTarget.style.fontSize !== fontSizeStr) {
+          this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
+        }
+        if (this._hiddenSurface._currentTarget.clientHeight < context.size[1]) {
+          while (fontSize < this._fontSizeRange[1]) {
+            this._hiddenSurface._currentTarget.style.fontSize = (fontSize + 1) + this._fontSizeUnit;
+            if (this._hiddenSurface._currentTarget.clientHeight > context.size[1]) {
+              this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
+              break;
+            }
+            fontSize++;
+            fontSizeStr = fontSize + this._fontSizeUnit;
+          }
+        } else if (this._hiddenSurface._currentTarget.clientHeight > context.size[1]) {
+          while (fontSize > this._fontSizeRange[0]) {
+            fontSize--;
+            fontSizeStr = fontSize + this._fontSizeUnit;
+            this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
+            if (this._hiddenSurface._currentTarget.clientHeight < context.size[1]) {
+              break;
+            }
+          }
+        }
+        this._fontSize = fontSize;
+        if (this._currentTarget.style.fontSize !== fontSizeStr) {
+          this._currentTarget.style.fontSize = fontSizeStr;
+        }
+        if (!this._firstCommit) {
+          this._firstCommit = true;
+          Timer.setTimeout(function() {
+            this._invalidated = true;
+          }.bind(this), 100);
+        }
+      }
+    };
+    AutoFontSizeSurface.prototype.recall = function(target) {
+      target.style.fontSize = '';
+      this._invalidated = true;
+      return Surface.prototype.recall.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.setProperties = function setProperties(properties) {
+      properties = properties || {};
+      var hiddenProperties = {};
+      for (var key in properties) {
+        hiddenProperties[key] = properties[key];
+      }
+      hiddenProperties.visibility = 'hidden';
+      this._hiddenSurface.setProperties(hiddenProperties);
+      this._invalidated = true;
+      return Surface.prototype.setProperties.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.setAttributes = function setAttributes(attributes) {
+      this._invalidated = true;
+      this._hiddenSurface.setAttributes(attributes);
+      return Surface.prototype.setAttributes.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.addClass = function addClass(className) {
+      this._invalidated = true;
+      this._hiddenSurface.addClass(className);
+      return Surface.prototype.addClass.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.removeClass = function removeClass(className) {
+      this._invalidated = true;
+      this._hiddenSurface.removeClass(className);
+      return Surface.prototype.removeClass.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.toggleClass = function toggleClass(className) {
+      this._invalidated = true;
+      this._hiddenSurface.toggleClass(className);
+      return Surface.prototype.toggleClass.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.setClasses = function setClasses(classList) {
+      this._invalidated = true;
+      var hiddenClassList = classList.concat(['hiddenAutoFontSizeSurface']);
+      this._hiddenSurface.setClasses(hiddenClassList);
+      return Surface.prototype.setClasses.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.setContent = function setContent(content) {
+      this._invalidated = true;
+      return Surface.prototype.setContent.apply(this, arguments);
+    };
+    AutoFontSizeSurface.prototype.setOptions = function setOptions(options) {
+      this._invalidated = true;
+      this._hiddenSurface.setOptions(options);
+      if (options.fontSizeRange) {
+        this._fontSizeRange = options.fontSizeRange;
+      }
+      if (options.fontSizeUnit) {
+        this._fontSizeUnit = options.fontSizeUnit;
+      }
+      return Surface.prototype.setOptions.apply(this, arguments);
+    };
+    module.exports = AutoFontSizeSurface;
   }).call(__exports, __require, __exports, __module);
 });
 })();
@@ -27694,6 +27838,30 @@ System.register("models/Game", ["github:Bizboard/arva-ds@develop/core/Model"], f
   };
 });
 
+System.register("collections/Games", ["github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", "models/Game"], function($__export) {
+  "use strict";
+  var __moduleName = "collections/Games";
+  var PrioritisedArray,
+      Game;
+  return {
+    setters: [function($__m) {
+      PrioritisedArray = $__m.PrioritisedArray;
+    }, function($__m) {
+      Game = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Games() {
+          var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
+          var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
+          $traceurRuntime.superConstructor(Games).call(this, Game, datasource, datasnapshot);
+        }
+        return ($traceurRuntime.createClass)(Games, {}, {}, $__super);
+      }(PrioritisedArray)));
+    }
+  };
+});
+
 System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"], function($__export) {
   "use strict";
   var __moduleName = "models/Invite";
@@ -27790,6 +27958,28 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
       Object.defineProperty(Controller, "annotations", {get: function() {
           return [new Inject(Router, AnimationController)];
         }});
+    }
+  };
+});
+
+System.register("components/Background", ["github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface"], function($__export) {
+  "use strict";
+  var __moduleName = "components/Background";
+  var BkImageSurface;
+  return {
+    setters: [function($__m) {
+      BkImageSurface = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function Background() {
+          $traceurRuntime.superConstructor(Background).call(this, {
+            content: 'img/back.png',
+            sizeMode: BkImageSurface.SizeMode.ASPECTFIT
+          });
+        }
+        return ($traceurRuntime.createClass)(Background, {}, {}, $__super);
+      }(BkImageSurface)));
     }
   };
 });
@@ -28081,6 +28271,75 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
   };
 });
 
+System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView"], function($__export) {
+  "use strict";
+  var __moduleName = "components/DataBoundFlexScrollView";
+  var Surface,
+      FlexScrollView;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      FlexScrollView = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function DataBoundFlexScrollView() {
+          var OPTIONS = arguments[0] !== (void 0) ? arguments[0] : {};
+          if (!OPTIONS.autoPipeEvents)
+            OPTIONS.autoPipeEvents = true;
+          $traceurRuntime.superConstructor(DataBoundFlexScrollView).call(this, OPTIONS);
+          if (this.options.dataStore)
+            this._bindDataSource(this.options.dataStore);
+          else {
+            console.log('No DataSource was set.');
+          }
+        }
+        return ($traceurRuntime.createClass)(DataBoundFlexScrollView, {
+          _reTouchList: function() {
+            if (this._dataSource) {
+              var i = 0;
+              for (i; i < this._dataSource.length; i++) {
+                var bg = i % 2 ? '#e8e8e8' : '#efefef';
+                this._dataSource[i].properties.backgroundColor = bg;
+              }
+            }
+          },
+          _bindDataSource: function() {
+            if (!this.options.dataStore || !this.options.template) {
+              console.log('Datasource and template should both be set.');
+              return ;
+            }
+            if (!this.options.template instanceof Function) {
+              console.log('Template needs to be a function.');
+              return ;
+            }
+            this.options.dataStore.on('child_added', function(child) {
+              this.insert(child.priority, this.options.template(child));
+              this._reTouchList();
+            }, this);
+            this.options.dataStore.on('child_changed', function(child) {
+              this.replace(child.priority, this.options.template(child));
+              this._reTouchList();
+            }, this);
+            this.options.dataStore.on('child_moved', function(child, oldposition) {
+              this.swap(oldposition, child.priority);
+              this._reTouchList();
+            }, this);
+            this.options.dataStore.on('child_removed', function(child) {
+              for (var i = 0; i < this._dataSource.length; i++) {
+                if (this._dataSource[i].properties && this._dataSource[i].properties.id === child.id)
+                  this.remove(i);
+              }
+              this._reTouchList();
+            }, this);
+          }
+        }, {}, $__super);
+      }(FlexScrollView)));
+    }
+  };
+});
+
 System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "utils/BKEEEngine";
@@ -28160,6 +28419,140 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "
           }
         }, {}, $__super);
       }(EventEmitter)));
+    }
+  };
+});
+
+System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Home/MyGamesView";
+  var Surface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      DataboundFlexScrollView,
+      Background,
+      _,
+      AutoFontsizeSurface,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      DataboundFlexScrollView = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
+    }, function($__m) {
+      AutoFontsizeSurface = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {headerHeight: 75};
+      $__export('default', (function($__super) {
+        function MyGamesView() {
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          var newOptions = _.merge(options, DEFAULT_OPTIONS);
+          $traceurRuntime.superConstructor(MyGamesView).call(this, newOptions);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+          this._createListeners();
+        }
+        return ($traceurRuntime.createClass)(MyGamesView, {
+          _createRenderables: function() {
+            var $__0 = this;
+            var contextView = this;
+            var myGames = new DataboundFlexScrollView({
+              flowOptions: {
+                spring: {
+                  dampingRatio: 0.8,
+                  period: 1000
+                },
+                insertSpec: {opacity: 0}
+              },
+              layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+              },
+              template: (function(game) {
+                var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
+                var surface = new Surface({
+                  size: [undefined, 50],
+                  classes: ['arena-item'],
+                  properties: {
+                    lineHeight: '50px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    data: game
+                  },
+                  content: ("<div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
+                });
+                surface.on('click', function() {
+                  contextView._eventOutput.emit('play', this.properties.data);
+                });
+                return surface;
+              }),
+              dataStore: this.options.dataSource
+            });
+            this._renderables = {
+              background: new Background(),
+              header: new Surface({
+                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Actieve spelletjes',
+                classes: ['header']
+              }),
+              invite: new AutoFontsizeSurface({
+                classes: ['icon', 'icon-plus-sign'],
+                fontSizeRange: [16, 52],
+                properties: {color: '#3399cc'}
+              }),
+              games: myGames
+            };
+          },
+          _createLayout: function() {
+            var top = this.options.headerHeight;
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
+                context.set('header', {
+                  size: [context.size[0], top],
+                  translate: [0, 0, 20]
+                });
+                context.set('invite', {
+                  size: [56, 56],
+                  translate: [0, 0, 25],
+                  align: [0.90, 0.85],
+                  origin: [0.5, 0.5]
+                });
+                context.set('games', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, top, 2]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          },
+          _createListeners: function() {
+            this._renderables.invite.on('click', function() {
+              this._eventOutput.emit('invite');
+            });
+          }
+        }, {}, $__super);
+      }(View)));
     }
   };
 });
@@ -28709,28 +29102,6 @@ System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Mo
   };
 });
 
-System.register("components/Background", ["github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface"], function($__export) {
-  "use strict";
-  var __moduleName = "components/Background";
-  var BkImageSurface;
-  return {
-    setters: [function($__m) {
-      BkImageSurface = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Background() {
-          $traceurRuntime.superConstructor(Background).call(this, {
-            content: 'img/back.png',
-            sizeMode: BkImageSurface.SizeMode.ASPECTFIT
-          });
-        }
-        return ($traceurRuntime.createClass)(Background, {}, {}, $__super);
-      }(BkImageSurface)));
-    }
-  };
-});
-
 System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ProfileView";
@@ -28841,25 +29212,20 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface"], function($__export) {
   "use strict";
-  var __moduleName = "views/Profile/ChangeAvatarView";
+  var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
-      InputSurface,
       View,
       ObjectHelper,
       LayoutController,
-      BkImageSurface,
-      FlexScrollView,
-      CollectionLayout,
-      ViewSequence,
+      DataboundFlexScrollView,
       Background,
+      AutoFontsizeSurface,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
       Surface = $__m.default;
-    }, function($__m) {
-      InputSurface = $__m.default;
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
@@ -28867,68 +29233,78 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
-      BkImageSurface = $__m.default;
-    }, function($__m) {
-      FlexScrollView = $__m.default;
-    }, function($__m) {
-      CollectionLayout = $__m.default;
-    }, function($__m) {
-      ViewSequence = $__m.default;
+      DataboundFlexScrollView = $__m.default;
     }, function($__m) {
       Background = $__m.default;
+    }, function($__m) {
+      AutoFontsizeSurface = $__m.default;
     }],
     execute: function() {
-      DEFAULT_OPTIONS = {
-        headerHeight: 75,
-        rowSize: 50,
-        defaultModel: []
-      };
+      DEFAULT_OPTIONS = {headerHeight: 75};
       $__export('default', (function($__super) {
-        function ChangeAvatarView() {
-          $traceurRuntime.superConstructor(ChangeAvatarView).call(this, DEFAULT_OPTIONS);
+        function InvitePlayerView() {
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          $traceurRuntime.superConstructor(InvitePlayerView).call(this, DEFAULT_OPTIONS);
           ObjectHelper.bindAllMethods(this, this);
           ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          if (options.dataSource)
+            this._dataSource = options.dataSource;
           this._createRenderables();
           this._createLayout();
-          this.set(this.options.defaultModel);
+          this._createListeners();
         }
-        return ($traceurRuntime.createClass)(ChangeAvatarView, {
-          set: function(model) {
-            var viewContext = this;
-            this._renderables.header.setContent("<div>Avatars</div>Kies je eigen avatar.");
-            if (model.length == 0)
-              return ;
-            var sequence = new ViewSequence();
-            model.forEach(function(avatar) {
-              var avatarSurface = new BkImageSurface({
-                content: avatar.url,
-                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
-                properties: {data: avatar}
-              });
-              avatarSurface.on('click', function() {
-                viewContext._eventOutput.emit('select', this);
-              });
-              sequence.push(avatarSurface);
-            });
-            this._renderables.avatarlist.setDataSource(sequence);
-          },
+        return ($traceurRuntime.createClass)(InvitePlayerView, {
           _createRenderables: function() {
+            var contextView = this;
+            var invitePlayers = new DataboundFlexScrollView({
+              flowOptions: {
+                spring: {
+                  dampingRatio: 0.8,
+                  period: 1000
+                },
+                insertSpec: {opacity: 0}
+              },
+              layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+              },
+              template: function(player) {
+                var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
+                var surface = new Surface({
+                  size: [undefined, 50],
+                  classes: ['arena-item'],
+                  properties: {
+                    lineHeight: '50px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    data: player
+                  },
+                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + player.avatar + ");\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
+                });
+                surface.on('click', function() {
+                  contextView._eventOutput.emit('invite', this.properties.data);
+                });
+                return surface;
+              },
+              dataStore: this._dataSource
+            });
             this._renderables = {
               background: new Background(),
-              header: new Surface({classes: ['header']}),
-              avatarlist: new FlexScrollView({
-                autoPipeEvents: true,
-                layout: CollectionLayout,
-                layoutOptions: {
-                  cells: [3, 3],
-                  margins: [20, 10, 20, 10],
-                  spacing: [20, 20]
-                }
-              })
+              header: new Surface({
+                content: '<div>Spelers</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
+                classes: ['header']
+              }),
+              close: new AutoFontsizeSurface({
+                classes: ['icon', 'icon-circle-arrow-left'],
+                fontSizeRange: [16, 52],
+                properties: {color: '#FF8000'}
+              }),
+              players: invitePlayers
             };
           },
           _createLayout: function() {
+            var top = this.options.headerHeight;
             this.layout = new LayoutController({
               autoPipeEvents: true,
               layout: function(context) {
@@ -28937,104 +29313,33 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
                   translate: [0, 0, 0]
                 });
                 context.set('header', {
-                  size: [context.size[0], this.options.headerHeight],
+                  size: [context.size[0], top],
                   translate: [0, 0, 20]
                 });
-                context.set('avatarlist', {
+                context.set('close', {
+                  size: [56, 56],
+                  translate: [0, 0, 25],
+                  align: [0.90, 0.85],
+                  origin: [0.5, 0.5]
+                });
+                context.set('players', {
                   size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, this.options.headerHeight, 2]
+                  translate: [0, top, 2]
                 });
               }.bind(this),
               dataSource: this._renderables
             });
             this.add(this.layout);
             this.layout.pipe(this._eventOutput);
+          },
+          _createListeners: function() {
+            var $__0 = this;
+            this._renderables.close.on('click', (function() {
+              $__0._eventOutput.emit('close');
+            }));
           }
         }, {}, $__super);
       }(View)));
-    }
-  };
-});
-
-System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Game", "views/Play/PlayView", "views/Home/InvitePlayerView", "utils/helpers", "utils/BKEEEngine", "utils/GameContext"], function($__export) {
-  "use strict";
-  var __moduleName = "controllers/PlayController";
-  var Controller,
-      GetDefaultContext,
-      Game,
-      PlayView,
-      InvitePlayerView,
-      FireOnceAndWait,
-      BKEEEngine,
-      GameContext,
-      PlayController;
-  return {
-    setters: [function($__m) {
-      Controller = $__m.Controller;
-    }, function($__m) {
-      GetDefaultContext = $__m.GetDefaultContext;
-    }, function($__m) {
-      Game = $__m.default;
-    }, function($__m) {
-      PlayView = $__m.PlayView;
-    }, function($__m) {
-      InvitePlayerView = $__m.default;
-    }, function($__m) {
-      FireOnceAndWait = $__m.FireOnceAndWait;
-    }, function($__m) {
-      BKEEEngine = $__m.default;
-    }, function($__m) {
-      GameContext = $__m.default;
-    }],
-    execute: function() {
-      PlayController = (function($__super) {
-        function PlayController(router, context) {
-          $traceurRuntime.superConstructor(PlayController).call(this, router, context);
-          this.gameContext = GetDefaultContext().get(GameContext);
-        }
-        return ($traceurRuntime.createClass)(PlayController, {
-          Play: function(gameId) {
-            var $__0 = this;
-            var gameView = new PlayView();
-            var activePlayer = this.gameContext.getPlayerId();
-            if (!gameId) {
-              gameView.set();
-            } else {
-              var gameState = new Game(gameId);
-              var gameEngine = null;
-              gameView.on('move', (function(move) {
-                if (gameEngine && gameState.nextPlayer == activePlayer) {
-                  gameEngine.move(move.by, move.position);
-                }
-              }));
-              gameState.on('value', (function() {
-                gameEngine = $__0._CreateGameEngine(gameState);
-                gameView.set(activePlayer, gameState);
-              }));
-              this.gameContext.setLastActiveGame(gameId);
-            }
-            return gameView;
-          },
-          _CreateGameEngine: function(gameState) {
-            var $__0 = this;
-            var activePlayer = this.gameContext.getPlayerId();
-            var gameEngine = new BKEEEngine(activePlayer, gameState);
-            gameEngine.on('won', (function() {
-              var losingPlayer = gameState.player1.id == activePlayer ? gameState.player2.id : gameState.player1.id;
-              $__0.gameContext.setWinnerScore(activePlayer);
-              $__0.gameContext.setLossScore(losingPlayer);
-            }));
-            gameEngine.on('draw', (function() {
-              $__0.gameContext.setDrawScore();
-            }));
-            return gameEngine;
-          },
-          Main: function() {
-            this.router.go(this, 'Play', {gameId: this.gameContext.getLastActiveGame()});
-          }
-        }, {}, $__super);
-      }(Controller));
-      $__export("PlayController", PlayController);
     }
   };
 });
@@ -29572,172 +29877,85 @@ System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.3
   };
 });
 
-System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Player", "controllers/HomeController", "utils/GameContext", "utils/helpers", "views/Profile/ProfileView", "views/Profile/ChangeAvatarView"], function($__export) {
+System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Game", "views/Play/PlayView", "views/Home/InvitePlayerView", "utils/helpers", "utils/BKEEEngine", "utils/GameContext"], function($__export) {
   "use strict";
-  var __moduleName = "controllers/ProfileController";
+  var __moduleName = "controllers/PlayController";
   var Controller,
       GetDefaultContext,
-      Player,
-      HomeController,
-      GameContext,
+      Game,
+      PlayView,
+      InvitePlayerView,
       FireOnceAndWait,
-      ProfileView,
-      ChangeAvatarView,
-      ProfileController;
+      BKEEEngine,
+      GameContext,
+      PlayController;
   return {
     setters: [function($__m) {
       Controller = $__m.Controller;
     }, function($__m) {
       GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
-      Player = $__m.default;
+      Game = $__m.default;
     }, function($__m) {
-      HomeController = $__m.HomeController;
+      PlayView = $__m.PlayView;
     }, function($__m) {
-      GameContext = $__m.default;
+      InvitePlayerView = $__m.default;
     }, function($__m) {
       FireOnceAndWait = $__m.FireOnceAndWait;
     }, function($__m) {
-      ProfileView = $__m.default;
+      BKEEEngine = $__m.default;
     }, function($__m) {
-      ChangeAvatarView = $__m.default;
+      GameContext = $__m.default;
     }],
     execute: function() {
-      ProfileController = (function($__super) {
-        function ProfileController(router, context) {
-          $traceurRuntime.superConstructor(ProfileController).call(this, router, context);
+      PlayController = (function($__super) {
+        function PlayController(router, context) {
+          $traceurRuntime.superConstructor(PlayController).call(this, router, context);
           this.gameContext = GetDefaultContext().get(GameContext);
         }
-        return ($traceurRuntime.createClass)(ProfileController, {
-          Register: function() {
-            var newPlayer,
-                newPlayerName;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    newPlayer = {id: undefined};
-                    newPlayerName = this.gameContext.getDefaultPlayerName();
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    Promise.resolve(this.gameContext.ready('avatars')).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    if (this.gameContext.isNewPlayer()) {
-                      newPlayer = new Player(null, {
-                        name: newPlayerName,
-                        lost: 0,
-                        won: 0,
-                        draw: 0,
-                        score: 0,
-                        lastTimeAccessed: Date.now(),
-                        avatar: this.gameContext.avatars[0].url
-                      });
-                      this.gameContext.players.add(newPlayer);
-                      this.gameContext.setPlayerId(newPlayer.id);
-                    }
-                    this.router.go(this, 'Show', {playerId: newPlayer.id});
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
+        return ($traceurRuntime.createClass)(PlayController, {
+          Play: function(gameId) {
+            var $__0 = this;
+            var gameView = new PlayView();
+            var activePlayer = this.gameContext.getPlayerId();
+            if (!gameId) {
+              gameView.set();
+            } else {
+              var gameState = new Game(gameId);
+              var gameEngine = null;
+              gameView.on('move', (function(move) {
+                if (gameEngine && gameState.nextPlayer == activePlayer) {
+                  gameEngine.move(move.by, move.position);
                 }
-            }, this);
+              }));
+              gameState.on('value', (function() {
+                gameEngine = $__0._CreateGameEngine(gameState);
+                gameView.set(activePlayer, gameState);
+              }));
+              this.gameContext.setLastActiveGame(gameId);
+            }
+            return gameView;
           },
-          Show: function(playerId) {
-            var controllerContext,
-                playerToShow,
-                profileView;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    controllerContext = this;
-                    $ctx.state = 14;
-                    break;
-                  case 14:
-                    $ctx.state = (!playerId) ? 10 : 6;
-                    break;
-                  case 10:
-                    this.router.go(HomeController, 'Main');
-                    $ctx.state = -2;
-                    break;
-                  case 6:
-                    playerToShow = new Player(playerId);
-                    $ctx.state = 7;
-                    break;
-                  case 7:
-                    Promise.resolve(FireOnceAndWait(playerToShow)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    profileView = new ProfileView();
-                    profileView.set(playerToShow);
-                    playerToShow.on('value', (function() {
-                      profileView.set(playerToShow);
-                    }));
-                    profileView._renderables.name.on('change', function() {
-                      playerToShow.name = this.getValue();
-                      this.setValue('');
-                    });
-                    profileView._renderables.avatar.on('click', function() {
-                      controllerContext.router.go(controllerContext, 'ChangeAvatar');
-                    });
-                    $ctx.state = 9;
-                    break;
-                  case 9:
-                    $ctx.returnValue = profileView;
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+          _CreateGameEngine: function(gameState) {
+            var $__0 = this;
+            var activePlayer = this.gameContext.getPlayerId();
+            var gameEngine = new BKEEEngine(activePlayer, gameState);
+            gameEngine.on('won', (function() {
+              var losingPlayer = gameState.player1.id == activePlayer ? gameState.player2.id : gameState.player1.id;
+              $__0.gameContext.setWinnerScore(activePlayer);
+              $__0.gameContext.setLossScore(losingPlayer);
+            }));
+            gameEngine.on('draw', (function() {
+              $__0.gameContext.setDrawScore();
+            }));
+            return gameEngine;
           },
-          ChangeAvatar: function() {
-            var controllerContext,
-                avatarView;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    controllerContext = this;
-                    $ctx.state = 7;
-                    break;
-                  case 7:
-                    Promise.resolve(FireOnceAndWait(this.gameContext.avatars)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    avatarView = new ChangeAvatarView();
-                    avatarView.set(this.gameContext.avatars);
-                    avatarView.on('select', function(avatar) {
-                      var playerId = controllerContext.gameContext.getPlayerId();
-                      var playerToUpdate = new Player(playerId);
-                      playerToUpdate.once('ready', function() {
-                        playerToUpdate.avatar = avatar.properties.data.url;
-                      });
-                      controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
-                    });
-                    $ctx.state = 9;
-                    break;
-                  case 9:
-                    $ctx.returnValue = avatarView;
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+          Main: function() {
+            this.router.go(this, 'Play', {gameId: this.gameContext.getLastActiveGame()});
           }
         }, {}, $__super);
       }(Controller));
-      $__export("ProfileController", ProfileController);
+      $__export("PlayController", PlayController);
     }
   };
 });
@@ -29930,71 +30148,117 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView"], function($__export) {
+System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background"], function($__export) {
   "use strict";
-  var __moduleName = "components/DataBoundFlexScrollView";
+  var __moduleName = "views/Profile/ChangeAvatarView";
   var Surface,
-      FlexScrollView;
+      InputSurface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      BkImageSurface,
+      FlexScrollView,
+      CollectionLayout,
+      ViewSequence,
+      Background,
+      DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
       Surface = $__m.default;
     }, function($__m) {
+      InputSurface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      BkImageSurface = $__m.default;
+    }, function($__m) {
       FlexScrollView = $__m.default;
+    }, function($__m) {
+      CollectionLayout = $__m.default;
+    }, function($__m) {
+      ViewSequence = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }],
     execute: function() {
+      DEFAULT_OPTIONS = {
+        headerHeight: 75,
+        rowSize: 50,
+        defaultModel: []
+      };
       $__export('default', (function($__super) {
-        function DataBoundFlexScrollView() {
-          var OPTIONS = arguments[0] !== (void 0) ? arguments[0] : {};
-          if (!OPTIONS.autoPipeEvents)
-            OPTIONS.autoPipeEvents = true;
-          $traceurRuntime.superConstructor(DataBoundFlexScrollView).call(this, OPTIONS);
-          if (this.options.dataStore)
-            this._bindDataSource(this.options.dataStore);
-          else {
-            console.log('No DataSource was set.');
-          }
+        function ChangeAvatarView() {
+          $traceurRuntime.superConstructor(ChangeAvatarView).call(this, DEFAULT_OPTIONS);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+          this.set(this.options.defaultModel);
         }
-        return ($traceurRuntime.createClass)(DataBoundFlexScrollView, {
-          _reTouchList: function() {
-            if (this._dataSource) {
-              var i = 0;
-              for (i; i < this._dataSource.length; i++) {
-                var bg = i % 2 ? '#e8e8e8' : '#efefef';
-                this._dataSource[i].properties.backgroundColor = bg;
-              }
-            }
+        return ($traceurRuntime.createClass)(ChangeAvatarView, {
+          set: function(model) {
+            var viewContext = this;
+            this._renderables.header.setContent("<div>Avatars</div>Kies je eigen avatar.");
+            if (model.length == 0)
+              return ;
+            var sequence = new ViewSequence();
+            model.forEach(function(avatar) {
+              var avatarSurface = new BkImageSurface({
+                content: avatar.url,
+                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
+                properties: {data: avatar}
+              });
+              avatarSurface.on('click', function() {
+                viewContext._eventOutput.emit('select', this);
+              });
+              sequence.push(avatarSurface);
+            });
+            this._renderables.avatarlist.setDataSource(sequence);
           },
-          _bindDataSource: function() {
-            if (!this.options.dataStore || !this.options.template) {
-              console.log('Datasource and template should both be set.');
-              return ;
-            }
-            if (!this.options.template instanceof Function) {
-              console.log('Template needs to be a function.');
-              return ;
-            }
-            this.options.dataStore.on('child_added', function(child) {
-              this.insert(child.priority, this.options.template(child));
-              this._reTouchList();
-            }, this);
-            this.options.dataStore.on('child_changed', function(child) {
-              this.replace(child.priority, this.options.template(child));
-              this._reTouchList();
-            }, this);
-            this.options.dataStore.on('child_moved', function(child, oldposition) {
-              this.swap(oldposition, child.priority);
-              this._reTouchList();
-            }, this);
-            this.options.dataStore.on('child_removed', function(child) {
-              for (var i = 0; i < this._dataSource.length; i++) {
-                if (this._dataSource[i].properties && this._dataSource[i].properties.id === child.id)
-                  this.remove(i);
-              }
-              this._reTouchList();
-            }, this);
+          _createRenderables: function() {
+            this._renderables = {
+              background: new Background(),
+              header: new Surface({classes: ['header']}),
+              avatarlist: new FlexScrollView({
+                autoPipeEvents: true,
+                layout: CollectionLayout,
+                layoutOptions: {
+                  cells: [3, 3],
+                  margins: [20, 10, 20, 10],
+                  spacing: [20, 20]
+                }
+              })
+            };
+          },
+          _createLayout: function() {
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
+                context.set('header', {
+                  size: [context.size[0], this.options.headerHeight],
+                  translate: [0, 0, 20]
+                });
+                context.set('avatarlist', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, this.options.headerHeight, 2]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
           }
         }, {}, $__super);
-      }(FlexScrollView)));
+      }(View)));
     }
   };
 });
@@ -30040,7 +30304,7 @@ System.register("github:Bizboard/di.js@master", ["github:Bizboard/di.js@master/i
   };
 });
 
-System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:lodash@3.9.3", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
+System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:lodash@3.9.3", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Games", "collections/Invites", "models/Invite"], function($__export) {
   "use strict";
   var __moduleName = "utils/GameContext";
   var GetDefaultContext,
@@ -30052,6 +30316,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       Players,
       Avatars,
       Game,
+      Games,
       Invites,
       Invite,
       BKEE_PLAYERID,
@@ -30077,6 +30342,8 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
     }, function($__m) {
       Game = $__m.default;
     }, function($__m) {
+      Games = $__m.default;
+    }, function($__m) {
       Invites = $__m.default;
     }, function($__m) {
       Invite = $__m.default;
@@ -30093,6 +30360,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           this.ds = GetDefaultContext().get(DataSource);
           this.players = new Players();
           this.avatars = new Avatars();
+          this.games = new Games();
           if (!this.isNewPlayer()) {
             this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
             this.invites.on('child_added', (function(invite) {
@@ -30236,122 +30504,180 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background"], function($__export) {
+System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Player", "controllers/HomeController", "utils/GameContext", "utils/helpers", "views/Profile/ProfileView", "views/Profile/ChangeAvatarView"], function($__export) {
   "use strict";
-  var __moduleName = "views/Home/InvitePlayerView";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      DataboundFlexScrollView,
-      Background,
-      DEFAULT_OPTIONS;
+  var __moduleName = "controllers/ProfileController";
+  var Controller,
+      GetDefaultContext,
+      Player,
+      HomeController,
+      GameContext,
+      FireOnceAndWait,
+      ProfileView,
+      ChangeAvatarView,
+      ProfileController;
   return {
     setters: [function($__m) {
-      Surface = $__m.default;
+      Controller = $__m.Controller;
     }, function($__m) {
-      View = $__m.default;
+      GetDefaultContext = $__m.GetDefaultContext;
     }, function($__m) {
-      ObjectHelper = $__m.ObjectHelper;
+      Player = $__m.default;
     }, function($__m) {
-      LayoutController = $__m.default;
+      HomeController = $__m.HomeController;
     }, function($__m) {
-      DataboundFlexScrollView = $__m.default;
+      GameContext = $__m.default;
     }, function($__m) {
-      Background = $__m.default;
+      FireOnceAndWait = $__m.FireOnceAndWait;
+    }, function($__m) {
+      ProfileView = $__m.default;
+    }, function($__m) {
+      ChangeAvatarView = $__m.default;
     }],
     execute: function() {
-      DEFAULT_OPTIONS = {headerHeight: 75};
-      $__export('default', (function($__super) {
-        function InvitePlayerView() {
-          var options = arguments[0] !== (void 0) ? arguments[0] : {};
-          $traceurRuntime.superConstructor(InvitePlayerView).call(this, DEFAULT_OPTIONS);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          if (options.dataSource)
-            this._dataSource = options.dataSource;
-          this._createRenderables();
-          this._createLayout();
+      ProfileController = (function($__super) {
+        function ProfileController(router, context) {
+          $traceurRuntime.superConstructor(ProfileController).call(this, router, context);
+          this.gameContext = GetDefaultContext().get(GameContext);
         }
-        return ($traceurRuntime.createClass)(InvitePlayerView, {
-          _createRenderables: function() {
-            var contextView = this;
-            var invitePlayers = new DataboundFlexScrollView({
-              flowOptions: {
-                spring: {
-                  dampingRatio: 0.8,
-                  period: 1000
-                },
-                insertSpec: {opacity: 0}
-              },
-              layoutOptions: {
-                margins: [5, 5, 5, 5],
-                spacing: 5
-              },
-              template: function(player) {
-                var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
-                var surface = new Surface({
-                  size: [undefined, 50],
-                  classes: ['arena-item'],
-                  properties: {
-                    lineHeight: '50px',
-                    paddingLeft: '10px',
-                    paddingRight: '10px',
-                    data: player
-                  },
-                  content: ("<div class=\"indicator " + isOnline + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + player.avatar + ");\"></div>\n                    <div class=\"playername\">" + player.name + "</div>\n                    <div class=\"score\">" + player.score + "</div>")
-                });
-                surface.on('click', function() {
-                  contextView._eventOutput.emit('invite', this.properties.data);
-                });
-                return surface;
-              },
-              dataStore: this._dataSource
-            });
-            this._renderables = {
-              background: new Background(),
-              header: new Surface({
-                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Daag iemand uit voor een potje Boter Kaas en Eieren',
-                classes: ['header']
-              }),
-              players: invitePlayers
-            };
+        return ($traceurRuntime.createClass)(ProfileController, {
+          Register: function() {
+            var newPlayer,
+                newPlayerName;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    newPlayer = {id: undefined};
+                    newPlayerName = this.gameContext.getDefaultPlayerName();
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    Promise.resolve(this.gameContext.ready('avatars')).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    if (this.gameContext.isNewPlayer()) {
+                      newPlayer = new Player(null, {
+                        name: newPlayerName,
+                        lost: 0,
+                        won: 0,
+                        draw: 0,
+                        score: 0,
+                        lastTimeAccessed: Date.now(),
+                        avatar: this.gameContext.avatars[0].url
+                      });
+                      this.gameContext.players.add(newPlayer);
+                      this.gameContext.setPlayerId(newPlayer.id);
+                    }
+                    this.router.go(this, 'Show', {playerId: newPlayer.id});
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
           },
-          _createLayout: function() {
-            var top = this.options.headerHeight;
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('background', {
-                  size: context.size,
-                  translate: [0, 0, 0]
-                });
-                context.set('header', {
-                  size: [context.size[0], top],
-                  translate: [0, 0, 20]
-                });
-                context.set('players', {
-                  size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, top, 2]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
+          Show: function(playerId) {
+            var controllerContext,
+                playerToShow,
+                profileView;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    controllerContext = this;
+                    $ctx.state = 14;
+                    break;
+                  case 14:
+                    $ctx.state = (!playerId) ? 10 : 6;
+                    break;
+                  case 10:
+                    this.router.go(HomeController, 'Main');
+                    $ctx.state = -2;
+                    break;
+                  case 6:
+                    playerToShow = new Player(playerId);
+                    $ctx.state = 7;
+                    break;
+                  case 7:
+                    Promise.resolve(FireOnceAndWait(playerToShow)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    profileView = new ProfileView();
+                    profileView.set(playerToShow);
+                    playerToShow.on('value', (function() {
+                      profileView.set(playerToShow);
+                    }));
+                    profileView._renderables.name.on('change', function() {
+                      playerToShow.name = this.getValue();
+                      this.setValue('');
+                    });
+                    profileView._renderables.avatar.on('click', function() {
+                      controllerContext.router.go(controllerContext, 'ChangeAvatar');
+                    });
+                    $ctx.state = 9;
+                    break;
+                  case 9:
+                    $ctx.returnValue = profileView;
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
+          },
+          ChangeAvatar: function() {
+            var controllerContext,
+                avatarView;
+            return $traceurRuntime.asyncWrap(function($ctx) {
+              while (true)
+                switch ($ctx.state) {
+                  case 0:
+                    controllerContext = this;
+                    $ctx.state = 7;
+                    break;
+                  case 7:
+                    Promise.resolve(FireOnceAndWait(this.gameContext.avatars)).then($ctx.createCallback(2), $ctx.errback);
+                    return ;
+                  case 2:
+                    avatarView = new ChangeAvatarView();
+                    avatarView.set(this.gameContext.avatars);
+                    avatarView.on('select', function(avatar) {
+                      var playerId = controllerContext.gameContext.getPlayerId();
+                      var playerToUpdate = new Player(playerId);
+                      playerToUpdate.once('ready', function() {
+                        playerToUpdate.avatar = avatar.properties.data.url;
+                      });
+                      controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+                    });
+                    $ctx.state = 9;
+                    break;
+                  case 9:
+                    $ctx.returnValue = avatarView;
+                    $ctx.state = 4;
+                    break;
+                  case 4:
+                    $ctx.state = -2;
+                    break;
+                  default:
+                    return $ctx.end();
+                }
+            }, this);
           }
         }, {}, $__super);
-      }(View)));
+      }(Controller));
+      $__export("ProfileController", ProfileController);
     }
   };
 });
 
-System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop/core/Controller", "views/Home/InvitePlayerView", "models/Game", "models/Invite", "collections/Players", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "controllers/ProfileController", "controllers/PlayController"], function($__export) {
+System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop/core/Controller", "models/Game", "models/Invite", "collections/Players", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "controllers/ProfileController", "controllers/PlayController", "views/Home/InvitePlayerView", "views/Home/MyGamesView"], function($__export) {
   "use strict";
   var __moduleName = "controllers/HomeController";
   var Controller,
-      InvitePlayerView,
       Game,
       Invite,
       Players,
@@ -30359,12 +30685,12 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
       GetDefaultContext,
       ProfileController,
       PlayController,
+      InvitePlayerView,
+      MyGamesView,
       HomeController;
   return {
     setters: [function($__m) {
       Controller = $__m.Controller;
-    }, function($__m) {
-      InvitePlayerView = $__m.default;
     }, function($__m) {
       Game = $__m.default;
     }, function($__m) {
@@ -30379,24 +30705,51 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
       ProfileController = $__m.ProfileController;
     }, function($__m) {
       PlayController = $__m.PlayController;
+    }, function($__m) {
+      InvitePlayerView = $__m.default;
+    }, function($__m) {
+      MyGamesView = $__m.default;
     }],
     execute: function() {
       HomeController = (function($__super) {
         function HomeController(router, context) {
-          var $__0;
+          var $__0,
+              $__1,
+              $__2,
+              $__3;
           $traceurRuntime.superConstructor(HomeController).call(this, router, context);
           this.gameContext = GetDefaultContext().get(GameContext);
           this.invitePlayerView = new InvitePlayerView({dataSource: this.gameContext.players});
-          this.invitePlayerView.on('invite', ($__0 = this, function(player) {
-            if ($__0.gameContext.hasGame(player.id)) {
-              $__0.router.go(PlayController, 'Play', {gameId: $__0.gameContext.getGameId(player.id)});
+          this.myGamesView = new MyGamesView({
+            dataSource: this.gameContext.games,
+            activePlayer: this.gameContext.getPlayerId()
+          });
+          this.myGamesView.on('play', ($__0 = this, function(game) {
+            $__0.router.go(PlayController, 'Play', {gameId: game.id});
+          }));
+          this.myGamesView.on('invite', ($__1 = this, function() {
+            $__1.router.go($__1, 'InvitePlayers');
+          }));
+          this.invitePlayerView.on('invite', ($__2 = this, function(player) {
+            if ($__2.gameContext.hasGame(player.id)) {
+              $__2.router.go(PlayController, 'Play', {gameId: $__2.gameContext.getGameId(player.id)});
             } else if (window.confirm(("Challenge " + player.name + "?"))) {
-              $__0.router.go($__0, 'SendChallenge', {playerId: player.id});
+              $__2.router.go($__2, 'SendChallenge', {playerId: player.id});
             }
+          }));
+          this.invitePlayerView.on('close', ($__3 = this, function() {
+            $__3.router.go($__3, 'Main');
           }));
         }
         return ($traceurRuntime.createClass)(HomeController, {
           Main: function() {
+            if (this.gameContext.isNewPlayer()) {
+              this.router.go(ProfileController, 'Register');
+            } else {
+              return this.myGamesView;
+            }
+          },
+          InvitePlayers: function() {
             if (this.gameContext.isNewPlayer()) {
               this.router.go(ProfileController, 'Register');
             } else {
@@ -30692,14 +31045,32 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
           router.setDefault(HomeController, 'Main');
           $traceurRuntime.superConstructor(BkeeApp).call(this, router);
           router.setControllerSpecs({
-            HomeController: {controllers: [{
+            HomeController: {
+              controllers: [{
                 transition: {
                   duration: 500,
                   curve: Easing.outBack
                 },
                 animation: AnimationController.Animation.Slide.Right,
                 activeFrom: ['PlayController', 'ProfileController']
-              }]},
+              }],
+              methods: {
+                next: {
+                  transition: {
+                    duration: 750,
+                    curve: Easing.outBack
+                  },
+                  animation: AnimationController.Animation.Slide.Down
+                },
+                previous: {
+                  transition: {
+                    duration: 750,
+                    curve: Easing.outBack
+                  },
+                  animation: AnimationController.Animation.Slide.Up
+                }
+              }
+            },
             PlayController: {controllers: [{
                 transition: {
                   duration: 500,

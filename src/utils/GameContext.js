@@ -12,6 +12,7 @@ import Player              from '../models/Player';
 import Players             from '../collections/Players';
 import Avatars             from '../collections/Avatars';
 import Game                from '../models/Game';
+import Games               from '../collections/Games';
 import Invites             from '../collections/Invites';
 import Invite              from '../models/Invite';
 
@@ -33,6 +34,7 @@ export default class GameContext {
 
         this.players = new Players();
         this.avatars = new Avatars();
+        this.games = new Games();
 
         // my invites
         if (!this.isNewPlayer()) {

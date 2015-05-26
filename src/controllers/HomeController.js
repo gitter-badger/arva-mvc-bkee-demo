@@ -4,7 +4,6 @@
 
 
 import {Controller}         from 'arva-mvc/core/Controller';
-import InvitePlayerView     from '../views/Home/InvitePlayerView';
 
 import Game                 from '../models/Game';
 import Invite               from '../models/Invite';
@@ -15,6 +14,8 @@ import {GetDefaultContext}  from 'arva-mvc/DefaultContext';
 import {ProfileController}  from './ProfileController';
 import {PlayController}     from './PlayController';
 
+import InvitePlayerView     from '../views/Home/InvitePlayerView';
+import MyGamesView          from '../views/Home/MyGamesView';
 
 export class HomeController extends Controller {
 
@@ -28,6 +29,22 @@ export class HomeController extends Controller {
             dataSource: this.gameContext.players
         });
 
+        this.myGamesView = new MyGamesView({
+            dataSource: this.gameContext.games,
+            activePlayer: this.gameContext.getPlayerId()
+        });
+
+
+        this.myGamesView.on('play', (game) => {
+            this.router.go(PlayController, 'Play', { gameId: game.id});
+        });
+
+
+        this.myGamesView.on('invite', () => {
+            this.router.go(this, 'InvitePlayers');
+        });
+
+
         this.invitePlayerView.on('invite',
             (player) => {
 
@@ -38,6 +55,12 @@ export class HomeController extends Controller {
                     this.router.go(this, 'SendChallenge', {playerId: player.id});
                 }
         });
+
+        this.invitePlayerView.on('close', () => {
+            this.router.go(this, 'Main');
+        });
+
+
     }
 
     /**
@@ -47,6 +70,15 @@ export class HomeController extends Controller {
      */
     Main() {
 
+        if (this.gameContext.isNewPlayer()) {
+            this.router.go(ProfileController, 'Register');
+        }
+        else {
+            return this.myGamesView;
+        }
+    }
+
+    InvitePlayers() {
         if (this.gameContext.isNewPlayer()) {
             this.router.go(ProfileController, 'Register');
         }
