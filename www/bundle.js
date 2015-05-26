@@ -3886,164 +3886,294 @@ System.register("npm:process@0.10.1/browser", [], true, function(require, export
   return module.exports;
 });
 
-System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/transitions/Easing", [], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  'use strict';
-  var prefix = typeof Object.create !== 'function' ? '~' : false;
-  function EE(fn, context, once) {
-    this.fn = fn;
-    this.context = context;
-    this.once = once || false;
-  }
-  function EventEmitter() {}
-  EventEmitter.prototype._events = undefined;
-  EventEmitter.prototype.listeners = function listeners(event, exists) {
-    var evt = prefix ? prefix + event : event,
-        available = this._events && this._events[evt];
-    if (exists)
-      return !!available;
-    if (!available)
-      return [];
-    if (this._events[evt].fn)
-      return [this._events[evt].fn];
-    for (var i = 0,
-        l = this._events[evt].length,
-        ee = new Array(l); i < l; i++) {
-      ee[i] = this._events[evt][i].fn;
-    }
-    return ee;
-  };
-  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return false;
-    var listeners = this._events[evt],
-        len = arguments.length,
-        args,
-        i;
-    if ('function' === typeof listeners.fn) {
-      if (listeners.once)
-        this.removeListener(event, listeners.fn, undefined, true);
-      switch (len) {
-        case 1:
-          return listeners.fn.call(listeners.context), true;
-        case 2:
-          return listeners.fn.call(listeners.context, a1), true;
-        case 3:
-          return listeners.fn.call(listeners.context, a1, a2), true;
-        case 4:
-          return listeners.fn.call(listeners.context, a1, a2, a3), true;
-        case 5:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-        case 6:
-          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-      }
-      for (i = 1, args = new Array(len - 1); i < len; i++) {
-        args[i - 1] = arguments[i];
-      }
-      listeners.fn.apply(listeners.context, args);
-    } else {
-      var length = listeners.length,
-          j;
-      for (i = 0; i < length; i++) {
-        if (listeners[i].once)
-          this.removeListener(event, listeners[i].fn, undefined, true);
-        switch (len) {
-          case 1:
-            listeners[i].fn.call(listeners[i].context);
-            break;
-          case 2:
-            listeners[i].fn.call(listeners[i].context, a1);
-            break;
-          case 3:
-            listeners[i].fn.call(listeners[i].context, a1, a2);
-            break;
-          default:
-            if (!args)
-              for (j = 1, args = new Array(len - 1); j < len; j++) {
-                args[j - 1] = arguments[j];
-              }
-            listeners[i].fn.apply(listeners[i].context, args);
-        }
-      }
-    }
-    return true;
-  };
-  EventEmitter.prototype.on = function on(event, fn, context) {
-    var listener = new EE(fn, context || this),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.once = function once(event, fn, context) {
-    var listener = new EE(fn, context || this, true),
-        evt = prefix ? prefix + event : event;
-    if (!this._events)
-      this._events = prefix ? {} : Object.create(null);
-    if (!this._events[evt])
-      this._events[evt] = listener;
-    else {
-      if (!this._events[evt].fn)
-        this._events[evt].push(listener);
-      else
-        this._events[evt] = [this._events[evt], listener];
-    }
-    return this;
-  };
-  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
-    var evt = prefix ? prefix + event : event;
-    if (!this._events || !this._events[evt])
-      return this;
-    var listeners = this._events[evt],
-        events = [];
-    if (fn) {
-      if (listeners.fn) {
-        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
-          events.push(listeners);
-        }
+  var Easing = {
+    inQuad: function(t) {
+      return t * t;
+    },
+    outQuad: function(t) {
+      return -(t -= 1) * t + 1;
+    },
+    inOutQuad: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t;
+      return -0.5 * (--t * (t - 2) - 1);
+    },
+    inCubic: function(t) {
+      return t * t * t;
+    },
+    outCubic: function(t) {
+      return --t * t * t + 1;
+    },
+    inOutCubic: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t;
+      return 0.5 * ((t -= 2) * t * t + 2);
+    },
+    inQuart: function(t) {
+      return t * t * t * t;
+    },
+    outQuart: function(t) {
+      return -(--t * t * t * t - 1);
+    },
+    inOutQuart: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t * t;
+      return -0.5 * ((t -= 2) * t * t * t - 2);
+    },
+    inQuint: function(t) {
+      return t * t * t * t * t;
+    },
+    outQuint: function(t) {
+      return --t * t * t * t * t + 1;
+    },
+    inOutQuint: function(t) {
+      if ((t /= 0.5) < 1)
+        return 0.5 * t * t * t * t * t;
+      return 0.5 * ((t -= 2) * t * t * t * t + 2);
+    },
+    inSine: function(t) {
+      return -1 * Math.cos(t * (Math.PI / 2)) + 1;
+    },
+    outSine: function(t) {
+      return Math.sin(t * (Math.PI / 2));
+    },
+    inOutSine: function(t) {
+      return -0.5 * (Math.cos(Math.PI * t) - 1);
+    },
+    inExpo: function(t) {
+      return t === 0 ? 0 : Math.pow(2, 10 * (t - 1));
+    },
+    outExpo: function(t) {
+      return t === 1 ? 1 : -Math.pow(2, -10 * t) + 1;
+    },
+    inOutExpo: function(t) {
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if ((t /= 0.5) < 1)
+        return 0.5 * Math.pow(2, 10 * (t - 1));
+      return 0.5 * (-Math.pow(2, -10 * --t) + 2);
+    },
+    inCirc: function(t) {
+      return -(Math.sqrt(1 - t * t) - 1);
+    },
+    outCirc: function(t) {
+      return Math.sqrt(1 - --t * t);
+    },
+    inOutCirc: function(t) {
+      if ((t /= 0.5) < 1)
+        return -0.5 * (Math.sqrt(1 - t * t) - 1);
+      return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
+    },
+    inElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if (!p)
+        p = 0.3;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
+    },
+    outElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if (t === 1)
+        return 1;
+      if (!p)
+        p = 0.3;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      return a * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) + 1;
+    },
+    inOutElastic: function(t) {
+      var s = 1.70158;
+      var p = 0;
+      var a = 1;
+      if (t === 0)
+        return 0;
+      if ((t /= 0.5) === 2)
+        return 1;
+      if (!p)
+        p = 0.3 * 1.5;
+      s = p / (2 * Math.PI) * Math.asin(1 / a);
+      if (t < 1)
+        return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
+      return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p) * 0.5 + 1;
+    },
+    inBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      return t * t * ((s + 1) * t - s);
+    },
+    outBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      return --t * t * ((s + 1) * t + s) + 1;
+    },
+    inOutBack: function(t, s) {
+      if (s === undefined)
+        s = 1.70158;
+      if ((t /= 0.5) < 1)
+        return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
+      return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
+    },
+    inBounce: function(t) {
+      return 1 - Easing.outBounce(1 - t);
+    },
+    outBounce: function(t) {
+      if (t < 1 / 2.75) {
+        return 7.5625 * t * t;
+      } else if (t < 2 / 2.75) {
+        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+      } else if (t < 2.5 / 2.75) {
+        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
       } else {
-        for (var i = 0,
-            length = listeners.length; i < length; i++) {
-          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
-            events.push(listeners[i]);
-          }
-        }
+        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+      }
+    },
+    inOutBounce: function(t) {
+      if (t < 0.5)
+        return Easing.inBounce(t * 2) * 0.5;
+      return Easing.outBounce(t * 2 - 1) * 0.5 + 0.5;
+    }
+  };
+  module.exports = Easing;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/core/EventEmitter", [], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  function EventEmitter() {
+    this.listeners = {};
+    this._owner = this;
+  }
+  EventEmitter.prototype.emit = function emit(type, event) {
+    var handlers = this.listeners[type];
+    if (handlers) {
+      for (var i = 0; i < handlers.length; i++) {
+        handlers[i].call(this._owner, event);
       }
     }
-    if (events.length) {
-      this._events[evt] = events.length === 1 ? events[0] : events;
-    } else {
-      delete this._events[evt];
+    return this;
+  };
+  EventEmitter.prototype.on = function on(type, handler) {
+    if (!(type in this.listeners))
+      this.listeners[type] = [];
+    var index = this.listeners[type].indexOf(handler);
+    if (index < 0)
+      this.listeners[type].push(handler);
+    return this;
+  };
+  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  EventEmitter.prototype.removeListener = function removeListener(type, handler) {
+    var listener = this.listeners[type];
+    if (listener !== undefined) {
+      var index = listener.indexOf(handler);
+      if (index >= 0)
+        listener.splice(index, 1);
     }
     return this;
   };
-  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
-    if (!this._events)
-      return this;
-    if (event)
-      delete this._events[prefix ? prefix + event : event];
-    else
-      this._events = prefix ? {} : Object.create(null);
-    return this;
+  EventEmitter.prototype.bindThis = function bindThis(owner) {
+    this._owner = owner;
   };
-  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
-    return this;
-  };
-  EventEmitter.prefixed = prefix;
   module.exports = EventEmitter;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/core/OptionsManager", ["npm:famous@0.3.5/core/EventHandler"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+  function OptionsManager(value) {
+    this._value = value;
+    this.eventOutput = null;
+  }
+  OptionsManager.patch = function patchObject(source, data) {
+    var manager = new OptionsManager(source);
+    for (var i = 1; i < arguments.length; i++)
+      manager.patch(arguments[i]);
+    return source;
+  };
+  function _createEventOutput() {
+    this.eventOutput = new EventHandler();
+    this.eventOutput.bindThis(this);
+    EventHandler.setOutputHandler(this, this.eventOutput);
+  }
+  OptionsManager.prototype.patch = function patch() {
+    var myState = this._value;
+    for (var i = 0; i < arguments.length; i++) {
+      var data = arguments[i];
+      for (var k in data) {
+        if (k in myState && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
+          if (!myState.hasOwnProperty(k))
+            myState[k] = Object.create(myState[k]);
+          this.key(k).patch(data[k]);
+          if (this.eventOutput)
+            this.eventOutput.emit('change', {
+              id: k,
+              value: this.key(k).value()
+            });
+        } else
+          this.set(k, data[k]);
+      }
+    }
+    return this;
+  };
+  OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
+  OptionsManager.prototype.key = function key(identifier) {
+    var result = new OptionsManager(this._value[identifier]);
+    if (!(result._value instanceof Object) || result._value instanceof Array)
+      result._value = {};
+    return result;
+  };
+  OptionsManager.prototype.get = function get(key) {
+    return key ? this._value[key] : this._value;
+  };
+  OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
+  OptionsManager.prototype.set = function set(key, value) {
+    var originalValue = this.get(key);
+    this._value[key] = value;
+    if (this.eventOutput && value !== originalValue)
+      this.eventOutput.emit('change', {
+        id: key,
+        value: value
+      });
+    return this;
+  };
+  OptionsManager.prototype.on = function on() {
+    _createEventOutput.call(this);
+    return this.on.apply(this, arguments);
+  };
+  OptionsManager.prototype.removeListener = function removeListener() {
+    _createEventOutput.call(this);
+    return this.removeListener.apply(this, arguments);
+  };
+  OptionsManager.prototype.pipe = function pipe() {
+    _createEventOutput.call(this);
+    return this.pipe.apply(this, arguments);
+  };
+  OptionsManager.prototype.unpipe = function unpipe() {
+    _createEventOutput.call(this);
+    return this.unpipe.apply(this, arguments);
+  };
+  module.exports = OptionsManager;
   global.define = __define;
   return module.exports;
 });
@@ -4342,102 +4472,6 @@ System.register("npm:famous@0.3.5/core/Transform", [], true, function(require, e
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/EventEmitter", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  function EventEmitter() {
-    this.listeners = {};
-    this._owner = this;
-  }
-  EventEmitter.prototype.emit = function emit(type, event) {
-    var handlers = this.listeners[type];
-    if (handlers) {
-      for (var i = 0; i < handlers.length; i++) {
-        handlers[i].call(this._owner, event);
-      }
-    }
-    return this;
-  };
-  EventEmitter.prototype.on = function on(type, handler) {
-    if (!(type in this.listeners))
-      this.listeners[type] = [];
-    var index = this.listeners[type].indexOf(handler);
-    if (index < 0)
-      this.listeners[type].push(handler);
-    return this;
-  };
-  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-  EventEmitter.prototype.removeListener = function removeListener(type, handler) {
-    var listener = this.listeners[type];
-    if (listener !== undefined) {
-      var index = listener.indexOf(handler);
-      if (index >= 0)
-        listener.splice(index, 1);
-    }
-    return this;
-  };
-  EventEmitter.prototype.bindThis = function bindThis(owner) {
-    this._owner = owner;
-  };
-  module.exports = EventEmitter;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/core/ElementAllocator", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  function ElementAllocator(container) {
-    if (!container)
-      container = document.createDocumentFragment();
-    this.container = container;
-    this.detachedNodes = {};
-    this.nodeCount = 0;
-  }
-  ElementAllocator.prototype.migrate = function migrate(container) {
-    var oldContainer = this.container;
-    if (container === oldContainer)
-      return ;
-    if (oldContainer instanceof DocumentFragment) {
-      container.appendChild(oldContainer);
-    } else {
-      while (oldContainer.hasChildNodes()) {
-        container.appendChild(oldContainer.firstChild);
-      }
-    }
-    this.container = container;
-  };
-  ElementAllocator.prototype.allocate = function allocate(type) {
-    type = type.toLowerCase();
-    if (!(type in this.detachedNodes))
-      this.detachedNodes[type] = [];
-    var nodeStore = this.detachedNodes[type];
-    var result;
-    if (nodeStore.length > 0) {
-      result = nodeStore.pop();
-    } else {
-      result = document.createElement(type);
-      this.container.appendChild(result);
-    }
-    this.nodeCount++;
-    return result;
-  };
-  ElementAllocator.prototype.deallocate = function deallocate(element) {
-    var nodeType = element.nodeName.toLowerCase();
-    var nodeStore = this.detachedNodes[nodeType];
-    nodeStore.push(element);
-    this.nodeCount--;
-  };
-  ElementAllocator.prototype.getNodeCount = function getNodeCount() {
-    return this.nodeCount;
-  };
-  module.exports = ElementAllocator;
-  global.define = __define;
-  return module.exports;
-});
-
 System.register("npm:famous@0.3.5/utilities/Utility", [], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -4499,501 +4533,6 @@ System.register("npm:famous@0.3.5/utilities/Utility", [], true, function(require
     return a;
   };
   module.exports = Utility;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/transitions/TweenTransition", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  function TweenTransition(options) {
-    this.options = Object.create(TweenTransition.DEFAULT_OPTIONS);
-    if (options)
-      this.setOptions(options);
-    this._startTime = 0;
-    this._startValue = 0;
-    this._updateTime = 0;
-    this._endValue = 0;
-    this._curve = undefined;
-    this._duration = 0;
-    this._active = false;
-    this._callback = undefined;
-    this.state = 0;
-    this.velocity = undefined;
-  }
-  TweenTransition.Curves = {
-    linear: function(t) {
-      return t;
-    },
-    easeIn: function(t) {
-      return t * t;
-    },
-    easeOut: function(t) {
-      return t * (2 - t);
-    },
-    easeInOut: function(t) {
-      if (t <= 0.5)
-        return 2 * t * t;
-      else
-        return -2 * t * t + 4 * t - 1;
-    },
-    easeOutBounce: function(t) {
-      return t * (3 - 2 * t);
-    },
-    spring: function(t) {
-      return (1 - t) * Math.sin(6 * Math.PI * t) + t;
-    }
-  };
-  TweenTransition.SUPPORTS_MULTIPLE = true;
-  TweenTransition.DEFAULT_OPTIONS = {
-    curve: TweenTransition.Curves.linear,
-    duration: 500,
-    speed: 0
-  };
-  var registeredCurves = {};
-  TweenTransition.registerCurve = function registerCurve(curveName, curve) {
-    if (!registeredCurves[curveName]) {
-      registeredCurves[curveName] = curve;
-      return true;
-    } else {
-      return false;
-    }
-  };
-  TweenTransition.unregisterCurve = function unregisterCurve(curveName) {
-    if (registeredCurves[curveName]) {
-      delete registeredCurves[curveName];
-      return true;
-    } else {
-      return false;
-    }
-  };
-  TweenTransition.getCurve = function getCurve(curveName) {
-    var curve = registeredCurves[curveName];
-    if (curve !== undefined)
-      return curve;
-    else
-      throw new Error('curve not registered');
-  };
-  TweenTransition.getCurves = function getCurves() {
-    return registeredCurves;
-  };
-  function _interpolate(a, b, t) {
-    return (1 - t) * a + t * b;
-  }
-  function _clone(obj) {
-    if (obj instanceof Object) {
-      if (obj instanceof Array)
-        return obj.slice(0);
-      else
-        return Object.create(obj);
-    } else
-      return obj;
-  }
-  function _normalize(transition, defaultTransition) {
-    var result = {curve: defaultTransition.curve};
-    if (defaultTransition.duration)
-      result.duration = defaultTransition.duration;
-    if (defaultTransition.speed)
-      result.speed = defaultTransition.speed;
-    if (transition instanceof Object) {
-      if (transition.duration !== undefined)
-        result.duration = transition.duration;
-      if (transition.curve)
-        result.curve = transition.curve;
-      if (transition.speed)
-        result.speed = transition.speed;
-    }
-    if (typeof result.curve === 'string')
-      result.curve = TweenTransition.getCurve(result.curve);
-    return result;
-  }
-  TweenTransition.prototype.setOptions = function setOptions(options) {
-    if (options.curve !== undefined)
-      this.options.curve = options.curve;
-    if (options.duration !== undefined)
-      this.options.duration = options.duration;
-    if (options.speed !== undefined)
-      this.options.speed = options.speed;
-  };
-  TweenTransition.prototype.set = function set(endValue, transition, callback) {
-    if (!transition) {
-      this.reset(endValue);
-      if (callback)
-        callback();
-      return ;
-    }
-    this._startValue = _clone(this.get());
-    transition = _normalize(transition, this.options);
-    if (transition.speed) {
-      var startValue = this._startValue;
-      if (startValue instanceof Object) {
-        var variance = 0;
-        for (var i in startValue)
-          variance += (endValue[i] - startValue[i]) * (endValue[i] - startValue[i]);
-        transition.duration = Math.sqrt(variance) / transition.speed;
-      } else {
-        transition.duration = Math.abs(endValue - startValue) / transition.speed;
-      }
-    }
-    this._startTime = Date.now();
-    this._endValue = _clone(endValue);
-    this._startVelocity = _clone(transition.velocity);
-    this._duration = transition.duration;
-    this._curve = transition.curve;
-    this._active = true;
-    this._callback = callback;
-  };
-  TweenTransition.prototype.reset = function reset(startValue, startVelocity) {
-    if (this._callback) {
-      var callback = this._callback;
-      this._callback = undefined;
-      callback();
-    }
-    this.state = _clone(startValue);
-    this.velocity = _clone(startVelocity);
-    this._startTime = 0;
-    this._duration = 0;
-    this._updateTime = 0;
-    this._startValue = this.state;
-    this._startVelocity = this.velocity;
-    this._endValue = this.state;
-    this._active = false;
-  };
-  TweenTransition.prototype.getVelocity = function getVelocity() {
-    return this.velocity;
-  };
-  TweenTransition.prototype.get = function get(timestamp) {
-    this.update(timestamp);
-    return this.state;
-  };
-  function _calculateVelocity(current, start, curve, duration, t) {
-    var velocity;
-    var eps = 1e-7;
-    var speed = (curve(t) - curve(t - eps)) / eps;
-    if (current instanceof Array) {
-      velocity = [];
-      for (var i = 0; i < current.length; i++) {
-        if (typeof current[i] === 'number')
-          velocity[i] = speed * (current[i] - start[i]) / duration;
-        else
-          velocity[i] = 0;
-      }
-    } else
-      velocity = speed * (current - start) / duration;
-    return velocity;
-  }
-  function _calculateState(start, end, t) {
-    var state;
-    if (start instanceof Array) {
-      state = [];
-      for (var i = 0; i < start.length; i++) {
-        if (typeof start[i] === 'number')
-          state[i] = _interpolate(start[i], end[i], t);
-        else
-          state[i] = start[i];
-      }
-    } else
-      state = _interpolate(start, end, t);
-    return state;
-  }
-  TweenTransition.prototype.update = function update(timestamp) {
-    if (!this._active) {
-      if (this._callback) {
-        var callback = this._callback;
-        this._callback = undefined;
-        callback();
-      }
-      return ;
-    }
-    if (!timestamp)
-      timestamp = Date.now();
-    if (this._updateTime >= timestamp)
-      return ;
-    this._updateTime = timestamp;
-    var timeSinceStart = timestamp - this._startTime;
-    if (timeSinceStart >= this._duration) {
-      this.state = this._endValue;
-      this.velocity = _calculateVelocity(this.state, this._startValue, this._curve, this._duration, 1);
-      this._active = false;
-    } else if (timeSinceStart < 0) {
-      this.state = this._startValue;
-      this.velocity = this._startVelocity;
-    } else {
-      var t = timeSinceStart / this._duration;
-      this.state = _calculateState(this._startValue, this._endValue, this._curve(t));
-      this.velocity = _calculateVelocity(this.state, this._startValue, this._curve, this._duration, t);
-    }
-  };
-  TweenTransition.prototype.isActive = function isActive() {
-    return this._active;
-  };
-  TweenTransition.prototype.halt = function halt() {
-    this.reset(this.get());
-  };
-  TweenTransition.registerCurve('linear', TweenTransition.Curves.linear);
-  TweenTransition.registerCurve('easeIn', TweenTransition.Curves.easeIn);
-  TweenTransition.registerCurve('easeOut', TweenTransition.Curves.easeOut);
-  TweenTransition.registerCurve('easeInOut', TweenTransition.Curves.easeInOut);
-  TweenTransition.registerCurve('easeOutBounce', TweenTransition.Curves.easeOutBounce);
-  TweenTransition.registerCurve('spring', TweenTransition.Curves.spring);
-  TweenTransition.customCurve = function customCurve(v1, v2) {
-    v1 = v1 || 0;
-    v2 = v2 || 0;
-    return function(t) {
-      return v1 * t + (-2 * v1 - v2 + 3) * t * t + (v1 + v2 - 2) * t * t * t;
-    };
-  };
-  module.exports = TweenTransition;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/transitions/Easing", [], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Easing = {
-    inQuad: function(t) {
-      return t * t;
-    },
-    outQuad: function(t) {
-      return -(t -= 1) * t + 1;
-    },
-    inOutQuad: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t;
-      return -0.5 * (--t * (t - 2) - 1);
-    },
-    inCubic: function(t) {
-      return t * t * t;
-    },
-    outCubic: function(t) {
-      return --t * t * t + 1;
-    },
-    inOutCubic: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t;
-      return 0.5 * ((t -= 2) * t * t + 2);
-    },
-    inQuart: function(t) {
-      return t * t * t * t;
-    },
-    outQuart: function(t) {
-      return -(--t * t * t * t - 1);
-    },
-    inOutQuart: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t * t;
-      return -0.5 * ((t -= 2) * t * t * t - 2);
-    },
-    inQuint: function(t) {
-      return t * t * t * t * t;
-    },
-    outQuint: function(t) {
-      return --t * t * t * t * t + 1;
-    },
-    inOutQuint: function(t) {
-      if ((t /= 0.5) < 1)
-        return 0.5 * t * t * t * t * t;
-      return 0.5 * ((t -= 2) * t * t * t * t + 2);
-    },
-    inSine: function(t) {
-      return -1 * Math.cos(t * (Math.PI / 2)) + 1;
-    },
-    outSine: function(t) {
-      return Math.sin(t * (Math.PI / 2));
-    },
-    inOutSine: function(t) {
-      return -0.5 * (Math.cos(Math.PI * t) - 1);
-    },
-    inExpo: function(t) {
-      return t === 0 ? 0 : Math.pow(2, 10 * (t - 1));
-    },
-    outExpo: function(t) {
-      return t === 1 ? 1 : -Math.pow(2, -10 * t) + 1;
-    },
-    inOutExpo: function(t) {
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if ((t /= 0.5) < 1)
-        return 0.5 * Math.pow(2, 10 * (t - 1));
-      return 0.5 * (-Math.pow(2, -10 * --t) + 2);
-    },
-    inCirc: function(t) {
-      return -(Math.sqrt(1 - t * t) - 1);
-    },
-    outCirc: function(t) {
-      return Math.sqrt(1 - --t * t);
-    },
-    inOutCirc: function(t) {
-      if ((t /= 0.5) < 1)
-        return -0.5 * (Math.sqrt(1 - t * t) - 1);
-      return 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1);
-    },
-    inElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if (!p)
-        p = 0.3;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      return -(a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
-    },
-    outElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if (t === 1)
-        return 1;
-      if (!p)
-        p = 0.3;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      return a * Math.pow(2, -10 * t) * Math.sin((t - s) * (2 * Math.PI) / p) + 1;
-    },
-    inOutElastic: function(t) {
-      var s = 1.70158;
-      var p = 0;
-      var a = 1;
-      if (t === 0)
-        return 0;
-      if ((t /= 0.5) === 2)
-        return 1;
-      if (!p)
-        p = 0.3 * 1.5;
-      s = p / (2 * Math.PI) * Math.asin(1 / a);
-      if (t < 1)
-        return -0.5 * (a * Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
-      return a * Math.pow(2, -10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p) * 0.5 + 1;
-    },
-    inBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      return t * t * ((s + 1) * t - s);
-    },
-    outBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      return --t * t * ((s + 1) * t + s) + 1;
-    },
-    inOutBack: function(t, s) {
-      if (s === undefined)
-        s = 1.70158;
-      if ((t /= 0.5) < 1)
-        return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
-      return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
-    },
-    inBounce: function(t) {
-      return 1 - Easing.outBounce(1 - t);
-    },
-    outBounce: function(t) {
-      if (t < 1 / 2.75) {
-        return 7.5625 * t * t;
-      } else if (t < 2 / 2.75) {
-        return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-      } else if (t < 2.5 / 2.75) {
-        return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-      } else {
-        return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-      }
-    },
-    inOutBounce: function(t) {
-      if (t < 0.5)
-        return Easing.inBounce(t * 2) * 0.5;
-      return Easing.outBounce(t * 2 - 1) * 0.5 + 0.5;
-    }
-  };
-  module.exports = Easing;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/core/OptionsManager", ["npm:famous@0.3.5/core/EventHandler"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  function OptionsManager(value) {
-    this._value = value;
-    this.eventOutput = null;
-  }
-  OptionsManager.patch = function patchObject(source, data) {
-    var manager = new OptionsManager(source);
-    for (var i = 1; i < arguments.length; i++)
-      manager.patch(arguments[i]);
-    return source;
-  };
-  function _createEventOutput() {
-    this.eventOutput = new EventHandler();
-    this.eventOutput.bindThis(this);
-    EventHandler.setOutputHandler(this, this.eventOutput);
-  }
-  OptionsManager.prototype.patch = function patch() {
-    var myState = this._value;
-    for (var i = 0; i < arguments.length; i++) {
-      var data = arguments[i];
-      for (var k in data) {
-        if (k in myState && (data[k] && data[k].constructor === Object) && (myState[k] && myState[k].constructor === Object)) {
-          if (!myState.hasOwnProperty(k))
-            myState[k] = Object.create(myState[k]);
-          this.key(k).patch(data[k]);
-          if (this.eventOutput)
-            this.eventOutput.emit('change', {
-              id: k,
-              value: this.key(k).value()
-            });
-        } else
-          this.set(k, data[k]);
-      }
-    }
-    return this;
-  };
-  OptionsManager.prototype.setOptions = OptionsManager.prototype.patch;
-  OptionsManager.prototype.key = function key(identifier) {
-    var result = new OptionsManager(this._value[identifier]);
-    if (!(result._value instanceof Object) || result._value instanceof Array)
-      result._value = {};
-    return result;
-  };
-  OptionsManager.prototype.get = function get(key) {
-    return key ? this._value[key] : this._value;
-  };
-  OptionsManager.prototype.getOptions = OptionsManager.prototype.get;
-  OptionsManager.prototype.set = function set(key, value) {
-    var originalValue = this.get(key);
-    this._value[key] = value;
-    if (this.eventOutput && value !== originalValue)
-      this.eventOutput.emit('change', {
-        id: key,
-        value: value
-      });
-    return this;
-  };
-  OptionsManager.prototype.on = function on() {
-    _createEventOutput.call(this);
-    return this.on.apply(this, arguments);
-  };
-  OptionsManager.prototype.removeListener = function removeListener() {
-    _createEventOutput.call(this);
-    return this.removeListener.apply(this, arguments);
-  };
-  OptionsManager.prototype.pipe = function pipe() {
-    _createEventOutput.call(this);
-    return this.pipe.apply(this, arguments);
-  };
-  OptionsManager.prototype.unpipe = function unpipe() {
-    _createEventOutput.call(this);
-    return this.unpipe.apply(this, arguments);
-  };
-  module.exports = OptionsManager;
   global.define = __define;
   return module.exports;
 });
@@ -6040,6 +5579,289 @@ System.register("npm:famous@0.3.5/physics/PhysicsEngine", ["npm:famous@0.3.5/cor
   return module.exports;
 });
 
+System.register("npm:famous@0.3.5/transitions/MultipleTransition", ["npm:famous@0.3.5/utilities/Utility"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Utility = require("npm:famous@0.3.5/utilities/Utility");
+  function MultipleTransition(method) {
+    this.method = method;
+    this._instances = [];
+    this.state = [];
+  }
+  MultipleTransition.SUPPORTS_MULTIPLE = true;
+  MultipleTransition.prototype.get = function get() {
+    for (var i = 0; i < this._instances.length; i++) {
+      this.state[i] = this._instances[i].get();
+    }
+    return this.state;
+  };
+  MultipleTransition.prototype.set = function set(endState, transition, callback) {
+    var _allCallback = Utility.after(endState.length, callback);
+    for (var i = 0; i < endState.length; i++) {
+      if (!this._instances[i])
+        this._instances[i] = new this.method();
+      this._instances[i].set(endState[i], transition, _allCallback);
+    }
+  };
+  MultipleTransition.prototype.reset = function reset(startState) {
+    for (var i = 0; i < startState.length; i++) {
+      if (!this._instances[i])
+        this._instances[i] = new this.method();
+      this._instances[i].reset(startState[i]);
+    }
+  };
+  module.exports = MultipleTransition;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:famous@0.3.5/transitions/TweenTransition", [], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  function TweenTransition(options) {
+    this.options = Object.create(TweenTransition.DEFAULT_OPTIONS);
+    if (options)
+      this.setOptions(options);
+    this._startTime = 0;
+    this._startValue = 0;
+    this._updateTime = 0;
+    this._endValue = 0;
+    this._curve = undefined;
+    this._duration = 0;
+    this._active = false;
+    this._callback = undefined;
+    this.state = 0;
+    this.velocity = undefined;
+  }
+  TweenTransition.Curves = {
+    linear: function(t) {
+      return t;
+    },
+    easeIn: function(t) {
+      return t * t;
+    },
+    easeOut: function(t) {
+      return t * (2 - t);
+    },
+    easeInOut: function(t) {
+      if (t <= 0.5)
+        return 2 * t * t;
+      else
+        return -2 * t * t + 4 * t - 1;
+    },
+    easeOutBounce: function(t) {
+      return t * (3 - 2 * t);
+    },
+    spring: function(t) {
+      return (1 - t) * Math.sin(6 * Math.PI * t) + t;
+    }
+  };
+  TweenTransition.SUPPORTS_MULTIPLE = true;
+  TweenTransition.DEFAULT_OPTIONS = {
+    curve: TweenTransition.Curves.linear,
+    duration: 500,
+    speed: 0
+  };
+  var registeredCurves = {};
+  TweenTransition.registerCurve = function registerCurve(curveName, curve) {
+    if (!registeredCurves[curveName]) {
+      registeredCurves[curveName] = curve;
+      return true;
+    } else {
+      return false;
+    }
+  };
+  TweenTransition.unregisterCurve = function unregisterCurve(curveName) {
+    if (registeredCurves[curveName]) {
+      delete registeredCurves[curveName];
+      return true;
+    } else {
+      return false;
+    }
+  };
+  TweenTransition.getCurve = function getCurve(curveName) {
+    var curve = registeredCurves[curveName];
+    if (curve !== undefined)
+      return curve;
+    else
+      throw new Error('curve not registered');
+  };
+  TweenTransition.getCurves = function getCurves() {
+    return registeredCurves;
+  };
+  function _interpolate(a, b, t) {
+    return (1 - t) * a + t * b;
+  }
+  function _clone(obj) {
+    if (obj instanceof Object) {
+      if (obj instanceof Array)
+        return obj.slice(0);
+      else
+        return Object.create(obj);
+    } else
+      return obj;
+  }
+  function _normalize(transition, defaultTransition) {
+    var result = {curve: defaultTransition.curve};
+    if (defaultTransition.duration)
+      result.duration = defaultTransition.duration;
+    if (defaultTransition.speed)
+      result.speed = defaultTransition.speed;
+    if (transition instanceof Object) {
+      if (transition.duration !== undefined)
+        result.duration = transition.duration;
+      if (transition.curve)
+        result.curve = transition.curve;
+      if (transition.speed)
+        result.speed = transition.speed;
+    }
+    if (typeof result.curve === 'string')
+      result.curve = TweenTransition.getCurve(result.curve);
+    return result;
+  }
+  TweenTransition.prototype.setOptions = function setOptions(options) {
+    if (options.curve !== undefined)
+      this.options.curve = options.curve;
+    if (options.duration !== undefined)
+      this.options.duration = options.duration;
+    if (options.speed !== undefined)
+      this.options.speed = options.speed;
+  };
+  TweenTransition.prototype.set = function set(endValue, transition, callback) {
+    if (!transition) {
+      this.reset(endValue);
+      if (callback)
+        callback();
+      return ;
+    }
+    this._startValue = _clone(this.get());
+    transition = _normalize(transition, this.options);
+    if (transition.speed) {
+      var startValue = this._startValue;
+      if (startValue instanceof Object) {
+        var variance = 0;
+        for (var i in startValue)
+          variance += (endValue[i] - startValue[i]) * (endValue[i] - startValue[i]);
+        transition.duration = Math.sqrt(variance) / transition.speed;
+      } else {
+        transition.duration = Math.abs(endValue - startValue) / transition.speed;
+      }
+    }
+    this._startTime = Date.now();
+    this._endValue = _clone(endValue);
+    this._startVelocity = _clone(transition.velocity);
+    this._duration = transition.duration;
+    this._curve = transition.curve;
+    this._active = true;
+    this._callback = callback;
+  };
+  TweenTransition.prototype.reset = function reset(startValue, startVelocity) {
+    if (this._callback) {
+      var callback = this._callback;
+      this._callback = undefined;
+      callback();
+    }
+    this.state = _clone(startValue);
+    this.velocity = _clone(startVelocity);
+    this._startTime = 0;
+    this._duration = 0;
+    this._updateTime = 0;
+    this._startValue = this.state;
+    this._startVelocity = this.velocity;
+    this._endValue = this.state;
+    this._active = false;
+  };
+  TweenTransition.prototype.getVelocity = function getVelocity() {
+    return this.velocity;
+  };
+  TweenTransition.prototype.get = function get(timestamp) {
+    this.update(timestamp);
+    return this.state;
+  };
+  function _calculateVelocity(current, start, curve, duration, t) {
+    var velocity;
+    var eps = 1e-7;
+    var speed = (curve(t) - curve(t - eps)) / eps;
+    if (current instanceof Array) {
+      velocity = [];
+      for (var i = 0; i < current.length; i++) {
+        if (typeof current[i] === 'number')
+          velocity[i] = speed * (current[i] - start[i]) / duration;
+        else
+          velocity[i] = 0;
+      }
+    } else
+      velocity = speed * (current - start) / duration;
+    return velocity;
+  }
+  function _calculateState(start, end, t) {
+    var state;
+    if (start instanceof Array) {
+      state = [];
+      for (var i = 0; i < start.length; i++) {
+        if (typeof start[i] === 'number')
+          state[i] = _interpolate(start[i], end[i], t);
+        else
+          state[i] = start[i];
+      }
+    } else
+      state = _interpolate(start, end, t);
+    return state;
+  }
+  TweenTransition.prototype.update = function update(timestamp) {
+    if (!this._active) {
+      if (this._callback) {
+        var callback = this._callback;
+        this._callback = undefined;
+        callback();
+      }
+      return ;
+    }
+    if (!timestamp)
+      timestamp = Date.now();
+    if (this._updateTime >= timestamp)
+      return ;
+    this._updateTime = timestamp;
+    var timeSinceStart = timestamp - this._startTime;
+    if (timeSinceStart >= this._duration) {
+      this.state = this._endValue;
+      this.velocity = _calculateVelocity(this.state, this._startValue, this._curve, this._duration, 1);
+      this._active = false;
+    } else if (timeSinceStart < 0) {
+      this.state = this._startValue;
+      this.velocity = this._startVelocity;
+    } else {
+      var t = timeSinceStart / this._duration;
+      this.state = _calculateState(this._startValue, this._endValue, this._curve(t));
+      this.velocity = _calculateVelocity(this.state, this._startValue, this._curve, this._duration, t);
+    }
+  };
+  TweenTransition.prototype.isActive = function isActive() {
+    return this._active;
+  };
+  TweenTransition.prototype.halt = function halt() {
+    this.reset(this.get());
+  };
+  TweenTransition.registerCurve('linear', TweenTransition.Curves.linear);
+  TweenTransition.registerCurve('easeIn', TweenTransition.Curves.easeIn);
+  TweenTransition.registerCurve('easeOut', TweenTransition.Curves.easeOut);
+  TweenTransition.registerCurve('easeInOut', TweenTransition.Curves.easeInOut);
+  TweenTransition.registerCurve('easeOutBounce', TweenTransition.Curves.easeOutBounce);
+  TweenTransition.registerCurve('spring', TweenTransition.Curves.spring);
+  TweenTransition.customCurve = function customCurve(v1, v2) {
+    v1 = v1 || 0;
+    v2 = v2 || 0;
+    return function(t) {
+      return v1 * t + (-2 * v1 - v2 + 3) * t * t + (v1 + v2 - 2) * t * t * t;
+    };
+  };
+  module.exports = TweenTransition;
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
@@ -6427,181 +6249,217 @@ System.register("npm:famous@0.3.5/modifiers/StateModifier", ["npm:famous@0.3.5/c
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/Engine", ["npm:famous@0.3.5/core/Context", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/OptionsManager"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/core/ElementAllocator", [], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  var Context = require("npm:famous@0.3.5/core/Context");
-  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
-  var Engine = {};
-  var contexts = [];
-  var nextTickQueue = [];
-  var currentFrame = 0;
-  var nextTickFrame = 0;
-  var deferQueue = [];
-  var lastTime = Date.now();
-  var frameTime;
-  var frameTimeLimit;
-  var loopEnabled = true;
-  var eventForwarders = {};
-  var eventHandler = new EventHandler();
-  var options = {
-    containerType: 'div',
-    containerClass: 'famous-container',
-    fpsCap: undefined,
-    runLoop: true,
-    appMode: true
-  };
-  var optionsManager = new OptionsManager(options);
-  var MAX_DEFER_FRAME_TIME = 10;
-  Engine.step = function step() {
-    currentFrame++;
-    nextTickFrame = currentFrame;
-    var currentTime = Date.now();
-    if (frameTimeLimit && currentTime - lastTime < frameTimeLimit)
+  function ElementAllocator(container) {
+    if (!container)
+      container = document.createDocumentFragment();
+    this.container = container;
+    this.detachedNodes = {};
+    this.nodeCount = 0;
+  }
+  ElementAllocator.prototype.migrate = function migrate(container) {
+    var oldContainer = this.container;
+    if (container === oldContainer)
       return ;
-    var i = 0;
-    frameTime = currentTime - lastTime;
-    lastTime = currentTime;
-    eventHandler.emit('prerender');
-    var numFunctions = nextTickQueue.length;
-    while (numFunctions--)
-      nextTickQueue.shift()(currentFrame);
-    while (deferQueue.length && Date.now() - currentTime < MAX_DEFER_FRAME_TIME) {
-      deferQueue.shift().call(this);
-    }
-    for (i = 0; i < contexts.length; i++)
-      contexts[i].update();
-    eventHandler.emit('postrender');
-  };
-  function loop() {
-    if (options.runLoop) {
-      Engine.step();
-      window.requestAnimationFrame(loop);
-    } else
-      loopEnabled = false;
-  }
-  window.requestAnimationFrame(loop);
-  function handleResize(event) {
-    for (var i = 0; i < contexts.length; i++) {
-      contexts[i].emit('resize');
-    }
-    eventHandler.emit('resize');
-  }
-  window.addEventListener('resize', handleResize, false);
-  handleResize();
-  function initialize() {
-    window.addEventListener('touchmove', function(event) {
-      event.preventDefault();
-    }, true);
-    addRootClasses();
-  }
-  var initialized = false;
-  function addRootClasses() {
-    if (!document.body) {
-      Engine.nextTick(addRootClasses);
-      return ;
-    }
-    document.body.classList.add('famous-root');
-    document.documentElement.classList.add('famous-root');
-  }
-  Engine.pipe = function pipe(target) {
-    if (target.subscribe instanceof Function)
-      return target.subscribe(Engine);
-    else
-      return eventHandler.pipe(target);
-  };
-  Engine.unpipe = function unpipe(target) {
-    if (target.unsubscribe instanceof Function)
-      return target.unsubscribe(Engine);
-    else
-      return eventHandler.unpipe(target);
-  };
-  Engine.on = function on(type, handler) {
-    if (!(type in eventForwarders)) {
-      eventForwarders[type] = eventHandler.emit.bind(eventHandler, type);
-      addEngineListener(type, eventForwarders[type]);
-    }
-    return eventHandler.on(type, handler);
-  };
-  function addEngineListener(type, forwarder) {
-    if (!document.body) {
-      Engine.nextTick(addEventListener.bind(this, type, forwarder));
-      return ;
-    }
-    document.body.addEventListener(type, forwarder);
-  }
-  Engine.emit = function emit(type, event) {
-    return eventHandler.emit(type, event);
-  };
-  Engine.removeListener = function removeListener(type, handler) {
-    return eventHandler.removeListener(type, handler);
-  };
-  Engine.getFPS = function getFPS() {
-    return 1000 / frameTime;
-  };
-  Engine.setFPSCap = function setFPSCap(fps) {
-    frameTimeLimit = Math.floor(1000 / fps);
-  };
-  Engine.getOptions = function getOptions(key) {
-    return optionsManager.getOptions(key);
-  };
-  Engine.setOptions = function setOptions(options) {
-    return optionsManager.setOptions.apply(optionsManager, arguments);
-  };
-  Engine.createContext = function createContext(el) {
-    if (!initialized && options.appMode)
-      Engine.nextTick(initialize);
-    var needMountContainer = false;
-    if (!el) {
-      el = document.createElement(options.containerType);
-      el.classList.add(options.containerClass);
-      needMountContainer = true;
-    }
-    var context = new Context(el);
-    Engine.registerContext(context);
-    if (needMountContainer)
-      mount(context, el);
-    return context;
-  };
-  function mount(context, el) {
-    if (!document.body) {
-      Engine.nextTick(mount.bind(this, context, el));
-      return ;
-    }
-    document.body.appendChild(el);
-    context.emit('resize');
-  }
-  Engine.registerContext = function registerContext(context) {
-    contexts.push(context);
-    return context;
-  };
-  Engine.getContexts = function getContexts() {
-    return contexts;
-  };
-  Engine.deregisterContext = function deregisterContext(context) {
-    var i = contexts.indexOf(context);
-    if (i >= 0)
-      contexts.splice(i, 1);
-  };
-  Engine.nextTick = function nextTick(fn) {
-    nextTickQueue.push(fn);
-  };
-  Engine.defer = function defer(fn) {
-    deferQueue.push(fn);
-  };
-  optionsManager.on('change', function(data) {
-    if (data.id === 'fpsCap')
-      Engine.setFPSCap(data.value);
-    else if (data.id === 'runLoop') {
-      if (!loopEnabled && data.value) {
-        loopEnabled = true;
-        window.requestAnimationFrame(loop);
+    if (oldContainer instanceof DocumentFragment) {
+      container.appendChild(oldContainer);
+    } else {
+      while (oldContainer.hasChildNodes()) {
+        container.appendChild(oldContainer.firstChild);
       }
     }
-  });
-  module.exports = Engine;
+    this.container = container;
+  };
+  ElementAllocator.prototype.allocate = function allocate(type) {
+    type = type.toLowerCase();
+    if (!(type in this.detachedNodes))
+      this.detachedNodes[type] = [];
+    var nodeStore = this.detachedNodes[type];
+    var result;
+    if (nodeStore.length > 0) {
+      result = nodeStore.pop();
+    } else {
+      result = document.createElement(type);
+      this.container.appendChild(result);
+    }
+    this.nodeCount++;
+    return result;
+  };
+  ElementAllocator.prototype.deallocate = function deallocate(element) {
+    var nodeType = element.nodeName.toLowerCase();
+    var nodeStore = this.detachedNodes[nodeType];
+    nodeStore.push(element);
+    this.nodeCount--;
+  };
+  ElementAllocator.prototype.getNodeCount = function getNodeCount() {
+    return this.nodeCount;
+  };
+  module.exports = ElementAllocator;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:eventemitter3@1.1.0/index", [], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  'use strict';
+  var prefix = typeof Object.create !== 'function' ? '~' : false;
+  function EE(fn, context, once) {
+    this.fn = fn;
+    this.context = context;
+    this.once = once || false;
+  }
+  function EventEmitter() {}
+  EventEmitter.prototype._events = undefined;
+  EventEmitter.prototype.listeners = function listeners(event, exists) {
+    var evt = prefix ? prefix + event : event,
+        available = this._events && this._events[evt];
+    if (exists)
+      return !!available;
+    if (!available)
+      return [];
+    if (this._events[evt].fn)
+      return [this._events[evt].fn];
+    for (var i = 0,
+        l = this._events[evt].length,
+        ee = new Array(l); i < l; i++) {
+      ee[i] = this._events[evt][i].fn;
+    }
+    return ee;
+  };
+  EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return false;
+    var listeners = this._events[evt],
+        len = arguments.length,
+        args,
+        i;
+    if ('function' === typeof listeners.fn) {
+      if (listeners.once)
+        this.removeListener(event, listeners.fn, undefined, true);
+      switch (len) {
+        case 1:
+          return listeners.fn.call(listeners.context), true;
+        case 2:
+          return listeners.fn.call(listeners.context, a1), true;
+        case 3:
+          return listeners.fn.call(listeners.context, a1, a2), true;
+        case 4:
+          return listeners.fn.call(listeners.context, a1, a2, a3), true;
+        case 5:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+        case 6:
+          return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+      }
+      for (i = 1, args = new Array(len - 1); i < len; i++) {
+        args[i - 1] = arguments[i];
+      }
+      listeners.fn.apply(listeners.context, args);
+    } else {
+      var length = listeners.length,
+          j;
+      for (i = 0; i < length; i++) {
+        if (listeners[i].once)
+          this.removeListener(event, listeners[i].fn, undefined, true);
+        switch (len) {
+          case 1:
+            listeners[i].fn.call(listeners[i].context);
+            break;
+          case 2:
+            listeners[i].fn.call(listeners[i].context, a1);
+            break;
+          case 3:
+            listeners[i].fn.call(listeners[i].context, a1, a2);
+            break;
+          default:
+            if (!args)
+              for (j = 1, args = new Array(len - 1); j < len; j++) {
+                args[j - 1] = arguments[j];
+              }
+            listeners[i].fn.apply(listeners[i].context, args);
+        }
+      }
+    }
+    return true;
+  };
+  EventEmitter.prototype.on = function on(event, fn, context) {
+    var listener = new EE(fn, context || this),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.once = function once(event, fn, context) {
+    var listener = new EE(fn, context || this, true),
+        evt = prefix ? prefix + event : event;
+    if (!this._events)
+      this._events = prefix ? {} : Object.create(null);
+    if (!this._events[evt])
+      this._events[evt] = listener;
+    else {
+      if (!this._events[evt].fn)
+        this._events[evt].push(listener);
+      else
+        this._events[evt] = [this._events[evt], listener];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+    var evt = prefix ? prefix + event : event;
+    if (!this._events || !this._events[evt])
+      return this;
+    var listeners = this._events[evt],
+        events = [];
+    if (fn) {
+      if (listeners.fn) {
+        if (listeners.fn !== fn || (once && !listeners.once) || (context && listeners.context !== context)) {
+          events.push(listeners);
+        }
+      } else {
+        for (var i = 0,
+            length = listeners.length; i < length; i++) {
+          if (listeners[i].fn !== fn || (once && !listeners[i].once) || (context && listeners[i].context !== context)) {
+            events.push(listeners[i]);
+          }
+        }
+      }
+    }
+    if (events.length) {
+      this._events[evt] = events.length === 1 ? events[0] : events;
+    } else {
+      delete this._events[evt];
+    }
+    return this;
+  };
+  EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+    if (!this._events)
+      return this;
+    if (event)
+      delete this._events[prefix ? prefix + event : event];
+    else
+      this._events = prefix ? {} : Object.create(null);
+    return this;
+  };
+  EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+  EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+  EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+    return this;
+  };
+  EventEmitter.prefixed = prefix;
+  module.exports = EventEmitter;
   global.define = __define;
   return module.exports;
 });
@@ -15168,11 +15026,110 @@ System.register("npm:process@0.10.1", ["npm:process@0.10.1/browser"], true, func
   return module.exports;
 });
 
-System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/core/EventHandler", ["npm:famous@0.3.5/core/EventEmitter"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  module.exports = require("npm:eventemitter3@1.1.0/index");
+  var EventEmitter = require("npm:famous@0.3.5/core/EventEmitter");
+  function EventHandler() {
+    EventEmitter.apply(this, arguments);
+    this.downstream = [];
+    this.downstreamFn = [];
+    this.upstream = [];
+    this.upstreamListeners = {};
+  }
+  EventHandler.prototype = Object.create(EventEmitter.prototype);
+  EventHandler.prototype.constructor = EventHandler;
+  EventHandler.setInputHandler = function setInputHandler(object, handler) {
+    object.trigger = handler.trigger.bind(handler);
+    if (handler.subscribe && handler.unsubscribe) {
+      object.subscribe = handler.subscribe.bind(handler);
+      object.unsubscribe = handler.unsubscribe.bind(handler);
+    }
+  };
+  EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
+    if (handler instanceof EventHandler)
+      handler.bindThis(object);
+    object.pipe = handler.pipe.bind(handler);
+    object.unpipe = handler.unpipe.bind(handler);
+    object.on = handler.on.bind(handler);
+    object.addListener = object.on;
+    object.removeListener = handler.removeListener.bind(handler);
+  };
+  EventHandler.prototype.emit = function emit(type, event) {
+    EventEmitter.prototype.emit.apply(this, arguments);
+    var i = 0;
+    for (i = 0; i < this.downstream.length; i++) {
+      if (this.downstream[i].trigger)
+        this.downstream[i].trigger(type, event);
+    }
+    for (i = 0; i < this.downstreamFn.length; i++) {
+      this.downstreamFn[i](type, event);
+    }
+    return this;
+  };
+  EventHandler.prototype.trigger = EventHandler.prototype.emit;
+  EventHandler.prototype.pipe = function pipe(target) {
+    if (target.subscribe instanceof Function)
+      return target.subscribe(this);
+    var downstreamCtx = target instanceof Function ? this.downstreamFn : this.downstream;
+    var index = downstreamCtx.indexOf(target);
+    if (index < 0)
+      downstreamCtx.push(target);
+    if (target instanceof Function)
+      target('pipe', null);
+    else if (target.trigger)
+      target.trigger('pipe', null);
+    return target;
+  };
+  EventHandler.prototype.unpipe = function unpipe(target) {
+    if (target.unsubscribe instanceof Function)
+      return target.unsubscribe(this);
+    var downstreamCtx = target instanceof Function ? this.downstreamFn : this.downstream;
+    var index = downstreamCtx.indexOf(target);
+    if (index >= 0) {
+      downstreamCtx.splice(index, 1);
+      if (target instanceof Function)
+        target('unpipe', null);
+      else if (target.trigger)
+        target.trigger('unpipe', null);
+      return target;
+    } else
+      return false;
+  };
+  EventHandler.prototype.on = function on(type, handler) {
+    EventEmitter.prototype.on.apply(this, arguments);
+    if (!(type in this.upstreamListeners)) {
+      var upstreamListener = this.trigger.bind(this, type);
+      this.upstreamListeners[type] = upstreamListener;
+      for (var i = 0; i < this.upstream.length; i++) {
+        this.upstream[i].on(type, upstreamListener);
+      }
+    }
+    return this;
+  };
+  EventHandler.prototype.addListener = EventHandler.prototype.on;
+  EventHandler.prototype.subscribe = function subscribe(source) {
+    var index = this.upstream.indexOf(source);
+    if (index < 0) {
+      this.upstream.push(source);
+      for (var type in this.upstreamListeners) {
+        source.on(type, this.upstreamListeners[type]);
+      }
+    }
+    return this;
+  };
+  EventHandler.prototype.unsubscribe = function unsubscribe(source) {
+    var index = this.upstream.indexOf(source);
+    if (index >= 0) {
+      this.upstream.splice(index, 1);
+      for (var type in this.upstreamListeners) {
+        source.removeListener(type, this.upstreamListeners[type]);
+      }
+    }
+    return this;
+  };
+  module.exports = EventHandler;
   global.define = __define;
   return module.exports;
 });
@@ -15283,195 +15240,6 @@ System.register("npm:famous@0.3.5/core/SpecParser", ["npm:famous@0.3.5/core/Tran
     }
   };
   module.exports = SpecParser;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/core/EventHandler", ["npm:famous@0.3.5/core/EventEmitter"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var EventEmitter = require("npm:famous@0.3.5/core/EventEmitter");
-  function EventHandler() {
-    EventEmitter.apply(this, arguments);
-    this.downstream = [];
-    this.downstreamFn = [];
-    this.upstream = [];
-    this.upstreamListeners = {};
-  }
-  EventHandler.prototype = Object.create(EventEmitter.prototype);
-  EventHandler.prototype.constructor = EventHandler;
-  EventHandler.setInputHandler = function setInputHandler(object, handler) {
-    object.trigger = handler.trigger.bind(handler);
-    if (handler.subscribe && handler.unsubscribe) {
-      object.subscribe = handler.subscribe.bind(handler);
-      object.unsubscribe = handler.unsubscribe.bind(handler);
-    }
-  };
-  EventHandler.setOutputHandler = function setOutputHandler(object, handler) {
-    if (handler instanceof EventHandler)
-      handler.bindThis(object);
-    object.pipe = handler.pipe.bind(handler);
-    object.unpipe = handler.unpipe.bind(handler);
-    object.on = handler.on.bind(handler);
-    object.addListener = object.on;
-    object.removeListener = handler.removeListener.bind(handler);
-  };
-  EventHandler.prototype.emit = function emit(type, event) {
-    EventEmitter.prototype.emit.apply(this, arguments);
-    var i = 0;
-    for (i = 0; i < this.downstream.length; i++) {
-      if (this.downstream[i].trigger)
-        this.downstream[i].trigger(type, event);
-    }
-    for (i = 0; i < this.downstreamFn.length; i++) {
-      this.downstreamFn[i](type, event);
-    }
-    return this;
-  };
-  EventHandler.prototype.trigger = EventHandler.prototype.emit;
-  EventHandler.prototype.pipe = function pipe(target) {
-    if (target.subscribe instanceof Function)
-      return target.subscribe(this);
-    var downstreamCtx = target instanceof Function ? this.downstreamFn : this.downstream;
-    var index = downstreamCtx.indexOf(target);
-    if (index < 0)
-      downstreamCtx.push(target);
-    if (target instanceof Function)
-      target('pipe', null);
-    else if (target.trigger)
-      target.trigger('pipe', null);
-    return target;
-  };
-  EventHandler.prototype.unpipe = function unpipe(target) {
-    if (target.unsubscribe instanceof Function)
-      return target.unsubscribe(this);
-    var downstreamCtx = target instanceof Function ? this.downstreamFn : this.downstream;
-    var index = downstreamCtx.indexOf(target);
-    if (index >= 0) {
-      downstreamCtx.splice(index, 1);
-      if (target instanceof Function)
-        target('unpipe', null);
-      else if (target.trigger)
-        target.trigger('unpipe', null);
-      return target;
-    } else
-      return false;
-  };
-  EventHandler.prototype.on = function on(type, handler) {
-    EventEmitter.prototype.on.apply(this, arguments);
-    if (!(type in this.upstreamListeners)) {
-      var upstreamListener = this.trigger.bind(this, type);
-      this.upstreamListeners[type] = upstreamListener;
-      for (var i = 0; i < this.upstream.length; i++) {
-        this.upstream[i].on(type, upstreamListener);
-      }
-    }
-    return this;
-  };
-  EventHandler.prototype.addListener = EventHandler.prototype.on;
-  EventHandler.prototype.subscribe = function subscribe(source) {
-    var index = this.upstream.indexOf(source);
-    if (index < 0) {
-      this.upstream.push(source);
-      for (var type in this.upstreamListeners) {
-        source.on(type, this.upstreamListeners[type]);
-      }
-    }
-    return this;
-  };
-  EventHandler.prototype.unsubscribe = function unsubscribe(source) {
-    var index = this.upstream.indexOf(source);
-    if (index >= 0) {
-      this.upstream.splice(index, 1);
-      for (var type in this.upstreamListeners) {
-        source.removeListener(type, this.upstreamListeners[type]);
-      }
-    }
-    return this;
-  };
-  module.exports = EventHandler;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/transitions/MultipleTransition", ["npm:famous@0.3.5/utilities/Utility"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var Utility = require("npm:famous@0.3.5/utilities/Utility");
-  function MultipleTransition(method) {
-    this.method = method;
-    this._instances = [];
-    this.state = [];
-  }
-  MultipleTransition.SUPPORTS_MULTIPLE = true;
-  MultipleTransition.prototype.get = function get() {
-    for (var i = 0; i < this._instances.length; i++) {
-      this.state[i] = this._instances[i].get();
-    }
-    return this.state;
-  };
-  MultipleTransition.prototype.set = function set(endState, transition, callback) {
-    var _allCallback = Utility.after(endState.length, callback);
-    for (var i = 0; i < endState.length; i++) {
-      if (!this._instances[i])
-        this._instances[i] = new this.method();
-      this._instances[i].set(endState[i], transition, _allCallback);
-    }
-  };
-  MultipleTransition.prototype.reset = function reset(startState) {
-    for (var i = 0; i < startState.length; i++) {
-      if (!this._instances[i])
-        this._instances[i] = new this.method();
-      this._instances[i].reset(startState[i]);
-    }
-  };
-  module.exports = MultipleTransition;
-  global.define = __define;
-  return module.exports;
-});
-
-System.register("npm:famous@0.3.5/core/View", ["npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Utility"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
-  var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
-  var Utility = require("npm:famous@0.3.5/utilities/Utility");
-  function View(options) {
-    this._node = new RenderNode();
-    this._eventInput = new EventHandler();
-    this._eventOutput = new EventHandler();
-    EventHandler.setInputHandler(this, this._eventInput);
-    EventHandler.setOutputHandler(this, this._eventOutput);
-    this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
-    this._optionsManager = new OptionsManager(this.options);
-    if (options)
-      this.setOptions(options);
-  }
-  View.DEFAULT_OPTIONS = {};
-  View.prototype.getOptions = function getOptions(key) {
-    return this._optionsManager.getOptions(key);
-  };
-  View.prototype.setOptions = function setOptions(options) {
-    this._optionsManager.patch(options);
-  };
-  View.prototype.add = function add() {
-    return this._node.add.apply(this._node, arguments);
-  };
-  View.prototype._add = View.prototype.add;
-  View.prototype.render = function render() {
-    return this._node.render();
-  };
-  View.prototype.getSize = function getSize() {
-    if (this._node && this._node.getSize) {
-      return this._node.getSize.apply(this._node, arguments) || this.options.size;
-    } else
-      return this.options.size;
-  };
-  module.exports = View;
   global.define = __define;
   return module.exports;
 });
@@ -16265,6 +16033,139 @@ System.register("npm:famous@0.3.5/physics/forces/Spring", ["npm:famous@0.3.5/phy
   return module.exports;
 });
 
+System.register("npm:famous@0.3.5/transitions/Transitionable", ["npm:famous@0.3.5/transitions/MultipleTransition", "npm:famous@0.3.5/transitions/TweenTransition"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var MultipleTransition = require("npm:famous@0.3.5/transitions/MultipleTransition");
+  var TweenTransition = require("npm:famous@0.3.5/transitions/TweenTransition");
+  function Transitionable(start) {
+    this.currentAction = null;
+    this.actionQueue = [];
+    this.callbackQueue = [];
+    this.state = 0;
+    this.velocity = undefined;
+    this._callback = undefined;
+    this._engineInstance = null;
+    this._currentMethod = null;
+    this.set(start);
+  }
+  var transitionMethods = {};
+  Transitionable.register = function register(methods) {
+    var success = true;
+    for (var method in methods) {
+      if (!Transitionable.registerMethod(method, methods[method]))
+        success = false;
+    }
+    return success;
+  };
+  Transitionable.registerMethod = function registerMethod(name, engineClass) {
+    if (!(name in transitionMethods)) {
+      transitionMethods[name] = engineClass;
+      return true;
+    } else
+      return false;
+  };
+  Transitionable.unregisterMethod = function unregisterMethod(name) {
+    if (name in transitionMethods) {
+      delete transitionMethods[name];
+      return true;
+    } else
+      return false;
+  };
+  function _loadNext() {
+    if (this._callback) {
+      var callback = this._callback;
+      this._callback = undefined;
+      callback();
+    }
+    if (this.actionQueue.length <= 0) {
+      this.set(this.get());
+      return ;
+    }
+    this.currentAction = this.actionQueue.shift();
+    this._callback = this.callbackQueue.shift();
+    var method = null;
+    var endValue = this.currentAction[0];
+    var transition = this.currentAction[1];
+    if (transition instanceof Object && transition.method) {
+      method = transition.method;
+      if (typeof method === 'string')
+        method = transitionMethods[method];
+    } else {
+      method = TweenTransition;
+    }
+    if (this._currentMethod !== method) {
+      if (!(endValue instanceof Object) || method.SUPPORTS_MULTIPLE === true || endValue.length <= method.SUPPORTS_MULTIPLE) {
+        this._engineInstance = new method();
+      } else {
+        this._engineInstance = new MultipleTransition(method);
+      }
+      this._currentMethod = method;
+    }
+    this._engineInstance.reset(this.state, this.velocity);
+    if (this.velocity !== undefined)
+      transition.velocity = this.velocity;
+    this._engineInstance.set(endValue, transition, _loadNext.bind(this));
+  }
+  Transitionable.prototype.set = function set(endState, transition, callback) {
+    if (!transition) {
+      this.reset(endState);
+      if (callback)
+        callback();
+      return this;
+    }
+    var action = [endState, transition];
+    this.actionQueue.push(action);
+    this.callbackQueue.push(callback);
+    if (!this.currentAction)
+      _loadNext.call(this);
+    return this;
+  };
+  Transitionable.prototype.reset = function reset(startState, startVelocity) {
+    this._currentMethod = null;
+    this._engineInstance = null;
+    this._callback = undefined;
+    this.state = startState;
+    this.velocity = startVelocity;
+    this.currentAction = null;
+    this.actionQueue = [];
+    this.callbackQueue = [];
+  };
+  Transitionable.prototype.delay = function delay(duration, callback) {
+    var endValue;
+    if (this.actionQueue.length)
+      endValue = this.actionQueue[this.actionQueue.length - 1][0];
+    else if (this.currentAction)
+      endValue = this.currentAction[0];
+    else
+      endValue = this.get();
+    return this.set(endValue, {
+      duration: duration,
+      curve: function() {
+        return 0;
+      }
+    }, callback);
+  };
+  Transitionable.prototype.get = function get(timestamp) {
+    if (this._engineInstance) {
+      if (this._engineInstance.getVelocity)
+        this.velocity = this._engineInstance.getVelocity();
+      this.state = this._engineInstance.get(timestamp);
+    }
+    return this.state;
+  };
+  Transitionable.prototype.isActive = function isActive() {
+    return !!this.currentAction;
+  };
+  Transitionable.prototype.halt = function halt() {
+    return this.set(this.get());
+  };
+  module.exports = Transitionable;
+  global.define = __define;
+  return module.exports;
+});
+
 System.register("npm:famous@0.3.5/core/Modifier", ["npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/transitions/Transitionable", "npm:famous@0.3.5/transitions/TransitionableTransform"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -16506,102 +16407,118 @@ System.register("npm:famous@0.3.5/core/Modifier", ["npm:famous@0.3.5/core/Transf
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/utilities/Timer", ["npm:famous@0.3.5/core/Engine"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/core/Context", ["npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/ElementAllocator", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/transitions/Transitionable"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  var FamousEngine = require("npm:famous@0.3.5/core/Engine");
-  var _event = 'prerender';
-  var getTime = window.performance && window.performance.now ? function() {
-    return window.performance.now();
-  } : function() {
-    return Date.now();
+  var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
+  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+  var ElementAllocator = require("npm:famous@0.3.5/core/ElementAllocator");
+  var Transform = require("npm:famous@0.3.5/core/Transform");
+  var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
+  var _zeroZero = [0, 0];
+  var usePrefix = !('perspective' in document.documentElement.style);
+  function _getElementSize() {
+    var element = this.container;
+    return [element.clientWidth, element.clientHeight];
+  }
+  var _setPerspective = usePrefix ? function(element, perspective) {
+    element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
+  } : function(element, perspective) {
+    element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
   };
-  function addTimerFunction(fn) {
-    FamousEngine.on(_event, fn);
-    return fn;
-  }
-  function setTimeout(fn, duration) {
-    var t = getTime();
-    var callback = function() {
-      var t2 = getTime();
-      if (t2 - t >= duration) {
-        fn.apply(this, arguments);
-        FamousEngine.removeListener(_event, callback);
-      }
+  function Context(container) {
+    this.container = container;
+    this._allocator = new ElementAllocator(container);
+    this._node = new RenderNode();
+    this._eventOutput = new EventHandler();
+    this._size = _getElementSize.call(this);
+    this._perspectiveState = new Transitionable(0);
+    this._perspective = undefined;
+    this._nodeContext = {
+      allocator: this._allocator,
+      transform: Transform.identity,
+      opacity: 1,
+      origin: _zeroZero,
+      align: _zeroZero,
+      size: this._size
     };
-    return addTimerFunction(callback);
+    this._eventOutput.on('resize', function() {
+      this.setSize(_getElementSize.call(this));
+    }.bind(this));
   }
-  function setInterval(fn, duration) {
-    var t = getTime();
-    var callback = function() {
-      var t2 = getTime();
-      if (t2 - t >= duration) {
-        fn.apply(this, arguments);
-        t = getTime();
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function after(fn, numTicks) {
-    if (numTicks === undefined)
-      return undefined;
-    var callback = function() {
-      numTicks--;
-      if (numTicks <= 0) {
-        fn.apply(this, arguments);
-        clear(callback);
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function every(fn, numTicks) {
-    numTicks = numTicks || 1;
-    var initial = numTicks;
-    var callback = function() {
-      numTicks--;
-      if (numTicks <= 0) {
-        fn.apply(this, arguments);
-        numTicks = initial;
-      }
-    };
-    return addTimerFunction(callback);
-  }
-  function clear(fn) {
-    FamousEngine.removeListener(_event, fn);
-  }
-  function debounce(func, wait) {
-    var timeout;
-    var ctx;
-    var timestamp;
-    var result;
-    var args;
-    return function() {
-      ctx = this;
-      args = arguments;
-      timestamp = getTime();
-      var fn = function() {
-        var last = getTime - timestamp;
-        if (last < wait) {
-          timeout = setTimeout(fn, wait - last);
-        } else {
-          timeout = null;
-          result = func.apply(ctx, args);
-        }
-      };
-      clear(timeout);
-      timeout = setTimeout(fn, wait);
-      return result;
-    };
-  }
-  module.exports = {
-    setTimeout: setTimeout,
-    setInterval: setInterval,
-    debounce: debounce,
-    after: after,
-    every: every,
-    clear: clear
+  Context.prototype.getAllocator = function getAllocator() {
+    return this._allocator;
   };
+  Context.prototype.add = function add(obj) {
+    return this._node.add(obj);
+  };
+  Context.prototype.migrate = function migrate(container) {
+    if (container === this.container)
+      return ;
+    this.container = container;
+    this._allocator.migrate(container);
+  };
+  Context.prototype.getSize = function getSize() {
+    return this._size;
+  };
+  Context.prototype.setSize = function setSize(size) {
+    if (!size)
+      size = _getElementSize.call(this);
+    this._size[0] = size[0];
+    this._size[1] = size[1];
+  };
+  Context.prototype.update = function update(contextParameters) {
+    if (contextParameters) {
+      if (contextParameters.transform)
+        this._nodeContext.transform = contextParameters.transform;
+      if (contextParameters.opacity)
+        this._nodeContext.opacity = contextParameters.opacity;
+      if (contextParameters.origin)
+        this._nodeContext.origin = contextParameters.origin;
+      if (contextParameters.align)
+        this._nodeContext.align = contextParameters.align;
+      if (contextParameters.size)
+        this._nodeContext.size = contextParameters.size;
+    }
+    var perspective = this._perspectiveState.get();
+    if (perspective !== this._perspective) {
+      _setPerspective(this.container, perspective);
+      this._perspective = perspective;
+    }
+    this._node.commit(this._nodeContext);
+  };
+  Context.prototype.getPerspective = function getPerspective() {
+    return this._perspectiveState.get();
+  };
+  Context.prototype.setPerspective = function setPerspective(perspective, transition, callback) {
+    return this._perspectiveState.set(perspective, transition, callback);
+  };
+  Context.prototype.emit = function emit(type, event) {
+    return this._eventOutput.emit(type, event);
+  };
+  Context.prototype.on = function on(type, handler) {
+    return this._eventOutput.on(type, handler);
+  };
+  Context.prototype.removeListener = function removeListener(type, handler) {
+    return this._eventOutput.removeListener(type, handler);
+  };
+  Context.prototype.pipe = function pipe(target) {
+    return this._eventOutput.pipe(target);
+  };
+  Context.prototype.unpipe = function unpipe(target) {
+    return this._eventOutput.unpipe(target);
+  };
+  module.exports = Context;
+  global.define = __define;
+  return module.exports;
+});
+
+System.register("npm:eventemitter3@1.1.0", ["npm:eventemitter3@1.1.0/index"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  module.exports = require("npm:eventemitter3@1.1.0/index");
   global.define = __define;
   return module.exports;
 });
@@ -18936,139 +18853,6 @@ System.register("npm:famous@0.3.5/core/RenderNode", ["npm:famous@0.3.5/core/Enti
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/transitions/Transitionable", ["npm:famous@0.3.5/transitions/MultipleTransition", "npm:famous@0.3.5/transitions/TweenTransition"], true, function(require, exports, module) {
-  var global = System.global,
-      __define = global.define;
-  global.define = undefined;
-  var MultipleTransition = require("npm:famous@0.3.5/transitions/MultipleTransition");
-  var TweenTransition = require("npm:famous@0.3.5/transitions/TweenTransition");
-  function Transitionable(start) {
-    this.currentAction = null;
-    this.actionQueue = [];
-    this.callbackQueue = [];
-    this.state = 0;
-    this.velocity = undefined;
-    this._callback = undefined;
-    this._engineInstance = null;
-    this._currentMethod = null;
-    this.set(start);
-  }
-  var transitionMethods = {};
-  Transitionable.register = function register(methods) {
-    var success = true;
-    for (var method in methods) {
-      if (!Transitionable.registerMethod(method, methods[method]))
-        success = false;
-    }
-    return success;
-  };
-  Transitionable.registerMethod = function registerMethod(name, engineClass) {
-    if (!(name in transitionMethods)) {
-      transitionMethods[name] = engineClass;
-      return true;
-    } else
-      return false;
-  };
-  Transitionable.unregisterMethod = function unregisterMethod(name) {
-    if (name in transitionMethods) {
-      delete transitionMethods[name];
-      return true;
-    } else
-      return false;
-  };
-  function _loadNext() {
-    if (this._callback) {
-      var callback = this._callback;
-      this._callback = undefined;
-      callback();
-    }
-    if (this.actionQueue.length <= 0) {
-      this.set(this.get());
-      return ;
-    }
-    this.currentAction = this.actionQueue.shift();
-    this._callback = this.callbackQueue.shift();
-    var method = null;
-    var endValue = this.currentAction[0];
-    var transition = this.currentAction[1];
-    if (transition instanceof Object && transition.method) {
-      method = transition.method;
-      if (typeof method === 'string')
-        method = transitionMethods[method];
-    } else {
-      method = TweenTransition;
-    }
-    if (this._currentMethod !== method) {
-      if (!(endValue instanceof Object) || method.SUPPORTS_MULTIPLE === true || endValue.length <= method.SUPPORTS_MULTIPLE) {
-        this._engineInstance = new method();
-      } else {
-        this._engineInstance = new MultipleTransition(method);
-      }
-      this._currentMethod = method;
-    }
-    this._engineInstance.reset(this.state, this.velocity);
-    if (this.velocity !== undefined)
-      transition.velocity = this.velocity;
-    this._engineInstance.set(endValue, transition, _loadNext.bind(this));
-  }
-  Transitionable.prototype.set = function set(endState, transition, callback) {
-    if (!transition) {
-      this.reset(endState);
-      if (callback)
-        callback();
-      return this;
-    }
-    var action = [endState, transition];
-    this.actionQueue.push(action);
-    this.callbackQueue.push(callback);
-    if (!this.currentAction)
-      _loadNext.call(this);
-    return this;
-  };
-  Transitionable.prototype.reset = function reset(startState, startVelocity) {
-    this._currentMethod = null;
-    this._engineInstance = null;
-    this._callback = undefined;
-    this.state = startState;
-    this.velocity = startVelocity;
-    this.currentAction = null;
-    this.actionQueue = [];
-    this.callbackQueue = [];
-  };
-  Transitionable.prototype.delay = function delay(duration, callback) {
-    var endValue;
-    if (this.actionQueue.length)
-      endValue = this.actionQueue[this.actionQueue.length - 1][0];
-    else if (this.currentAction)
-      endValue = this.currentAction[0];
-    else
-      endValue = this.get();
-    return this.set(endValue, {
-      duration: duration,
-      curve: function() {
-        return 0;
-      }
-    }, callback);
-  };
-  Transitionable.prototype.get = function get(timestamp) {
-    if (this._engineInstance) {
-      if (this._engineInstance.getVelocity)
-        this.velocity = this._engineInstance.getVelocity();
-      this.state = this._engineInstance.get(timestamp);
-    }
-    return this.state;
-  };
-  Transitionable.prototype.isActive = function isActive() {
-    return !!this.currentAction;
-  };
-  Transitionable.prototype.halt = function halt() {
-    return this.set(this.get());
-  };
-  module.exports = Transitionable;
-  global.define = __define;
-  return module.exports;
-});
-
 (function() {
 function define(){};  define.amd = {};
 System.register("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/physics/PhysicsEngine", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "npm:famous@0.3.5/transitions/Transitionable"], false, function(__require, __exports, __module) {
@@ -19436,6 +19220,185 @@ System.register("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", ["npm
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/core/Engine", ["npm:famous@0.3.5/core/Context", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/OptionsManager"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var Context = require("npm:famous@0.3.5/core/Context");
+  var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+  var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
+  var Engine = {};
+  var contexts = [];
+  var nextTickQueue = [];
+  var currentFrame = 0;
+  var nextTickFrame = 0;
+  var deferQueue = [];
+  var lastTime = Date.now();
+  var frameTime;
+  var frameTimeLimit;
+  var loopEnabled = true;
+  var eventForwarders = {};
+  var eventHandler = new EventHandler();
+  var options = {
+    containerType: 'div',
+    containerClass: 'famous-container',
+    fpsCap: undefined,
+    runLoop: true,
+    appMode: true
+  };
+  var optionsManager = new OptionsManager(options);
+  var MAX_DEFER_FRAME_TIME = 10;
+  Engine.step = function step() {
+    currentFrame++;
+    nextTickFrame = currentFrame;
+    var currentTime = Date.now();
+    if (frameTimeLimit && currentTime - lastTime < frameTimeLimit)
+      return ;
+    var i = 0;
+    frameTime = currentTime - lastTime;
+    lastTime = currentTime;
+    eventHandler.emit('prerender');
+    var numFunctions = nextTickQueue.length;
+    while (numFunctions--)
+      nextTickQueue.shift()(currentFrame);
+    while (deferQueue.length && Date.now() - currentTime < MAX_DEFER_FRAME_TIME) {
+      deferQueue.shift().call(this);
+    }
+    for (i = 0; i < contexts.length; i++)
+      contexts[i].update();
+    eventHandler.emit('postrender');
+  };
+  function loop() {
+    if (options.runLoop) {
+      Engine.step();
+      window.requestAnimationFrame(loop);
+    } else
+      loopEnabled = false;
+  }
+  window.requestAnimationFrame(loop);
+  function handleResize(event) {
+    for (var i = 0; i < contexts.length; i++) {
+      contexts[i].emit('resize');
+    }
+    eventHandler.emit('resize');
+  }
+  window.addEventListener('resize', handleResize, false);
+  handleResize();
+  function initialize() {
+    window.addEventListener('touchmove', function(event) {
+      event.preventDefault();
+    }, true);
+    addRootClasses();
+  }
+  var initialized = false;
+  function addRootClasses() {
+    if (!document.body) {
+      Engine.nextTick(addRootClasses);
+      return ;
+    }
+    document.body.classList.add('famous-root');
+    document.documentElement.classList.add('famous-root');
+  }
+  Engine.pipe = function pipe(target) {
+    if (target.subscribe instanceof Function)
+      return target.subscribe(Engine);
+    else
+      return eventHandler.pipe(target);
+  };
+  Engine.unpipe = function unpipe(target) {
+    if (target.unsubscribe instanceof Function)
+      return target.unsubscribe(Engine);
+    else
+      return eventHandler.unpipe(target);
+  };
+  Engine.on = function on(type, handler) {
+    if (!(type in eventForwarders)) {
+      eventForwarders[type] = eventHandler.emit.bind(eventHandler, type);
+      addEngineListener(type, eventForwarders[type]);
+    }
+    return eventHandler.on(type, handler);
+  };
+  function addEngineListener(type, forwarder) {
+    if (!document.body) {
+      Engine.nextTick(addEventListener.bind(this, type, forwarder));
+      return ;
+    }
+    document.body.addEventListener(type, forwarder);
+  }
+  Engine.emit = function emit(type, event) {
+    return eventHandler.emit(type, event);
+  };
+  Engine.removeListener = function removeListener(type, handler) {
+    return eventHandler.removeListener(type, handler);
+  };
+  Engine.getFPS = function getFPS() {
+    return 1000 / frameTime;
+  };
+  Engine.setFPSCap = function setFPSCap(fps) {
+    frameTimeLimit = Math.floor(1000 / fps);
+  };
+  Engine.getOptions = function getOptions(key) {
+    return optionsManager.getOptions(key);
+  };
+  Engine.setOptions = function setOptions(options) {
+    return optionsManager.setOptions.apply(optionsManager, arguments);
+  };
+  Engine.createContext = function createContext(el) {
+    if (!initialized && options.appMode)
+      Engine.nextTick(initialize);
+    var needMountContainer = false;
+    if (!el) {
+      el = document.createElement(options.containerType);
+      el.classList.add(options.containerClass);
+      needMountContainer = true;
+    }
+    var context = new Context(el);
+    Engine.registerContext(context);
+    if (needMountContainer)
+      mount(context, el);
+    return context;
+  };
+  function mount(context, el) {
+    if (!document.body) {
+      Engine.nextTick(mount.bind(this, context, el));
+      return ;
+    }
+    document.body.appendChild(el);
+    context.emit('resize');
+  }
+  Engine.registerContext = function registerContext(context) {
+    contexts.push(context);
+    return context;
+  };
+  Engine.getContexts = function getContexts() {
+    return contexts;
+  };
+  Engine.deregisterContext = function deregisterContext(context) {
+    var i = contexts.indexOf(context);
+    if (i >= 0)
+      contexts.splice(i, 1);
+  };
+  Engine.nextTick = function nextTick(fn) {
+    nextTickQueue.push(fn);
+  };
+  Engine.defer = function defer(fn) {
+    deferQueue.push(fn);
+  };
+  optionsManager.on('change', function(data) {
+    if (data.id === 'fpsCap')
+      Engine.setFPSCap(data.value);
+    else if (data.id === 'runLoop') {
+      if (!loopEnabled && data.value) {
+        loopEnabled = true;
+        window.requestAnimationFrame(loop);
+      }
+    }
+  });
+  module.exports = Engine;
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["npm:famous@0.3.5/utilities/Utility", "npm:famous@0.3.5/core/Entity", "npm:famous@0.3.5/core/ViewSequence", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/EventHandler", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:Ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "npm:famous@0.3.5/core/Transform", "github:Ijzerenhein/famous-flex@0.3.2/src/helpers/LayoutDockHelper"], false, function(__require, __exports, __module) {
@@ -20488,109 +20451,46 @@ System.register("github:jspm/nodelibs-process@0.1.1", ["github:jspm/nodelibs-pro
   return module.exports;
 });
 
-System.register("npm:famous@0.3.5/core/Context", ["npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/ElementAllocator", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/transitions/Transitionable"], true, function(require, exports, module) {
+System.register("npm:famous@0.3.5/core/View", ["npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/OptionsManager", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Utility"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
   var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
-  var ElementAllocator = require("npm:famous@0.3.5/core/ElementAllocator");
-  var Transform = require("npm:famous@0.3.5/core/Transform");
-  var Transitionable = require("npm:famous@0.3.5/transitions/Transitionable");
-  var _zeroZero = [0, 0];
-  var usePrefix = !('perspective' in document.documentElement.style);
-  function _getElementSize() {
-    var element = this.container;
-    return [element.clientWidth, element.clientHeight];
-  }
-  var _setPerspective = usePrefix ? function(element, perspective) {
-    element.style.webkitPerspective = perspective ? perspective.toFixed() + 'px' : '';
-  } : function(element, perspective) {
-    element.style.perspective = perspective ? perspective.toFixed() + 'px' : '';
-  };
-  function Context(container) {
-    this.container = container;
-    this._allocator = new ElementAllocator(container);
+  var OptionsManager = require("npm:famous@0.3.5/core/OptionsManager");
+  var RenderNode = require("npm:famous@0.3.5/core/RenderNode");
+  var Utility = require("npm:famous@0.3.5/utilities/Utility");
+  function View(options) {
     this._node = new RenderNode();
+    this._eventInput = new EventHandler();
     this._eventOutput = new EventHandler();
-    this._size = _getElementSize.call(this);
-    this._perspectiveState = new Transitionable(0);
-    this._perspective = undefined;
-    this._nodeContext = {
-      allocator: this._allocator,
-      transform: Transform.identity,
-      opacity: 1,
-      origin: _zeroZero,
-      align: _zeroZero,
-      size: this._size
-    };
-    this._eventOutput.on('resize', function() {
-      this.setSize(_getElementSize.call(this));
-    }.bind(this));
+    EventHandler.setInputHandler(this, this._eventInput);
+    EventHandler.setOutputHandler(this, this._eventOutput);
+    this.options = Utility.clone(this.constructor.DEFAULT_OPTIONS || View.DEFAULT_OPTIONS);
+    this._optionsManager = new OptionsManager(this.options);
+    if (options)
+      this.setOptions(options);
   }
-  Context.prototype.getAllocator = function getAllocator() {
-    return this._allocator;
+  View.DEFAULT_OPTIONS = {};
+  View.prototype.getOptions = function getOptions(key) {
+    return this._optionsManager.getOptions(key);
   };
-  Context.prototype.add = function add(obj) {
-    return this._node.add(obj);
+  View.prototype.setOptions = function setOptions(options) {
+    this._optionsManager.patch(options);
   };
-  Context.prototype.migrate = function migrate(container) {
-    if (container === this.container)
-      return ;
-    this.container = container;
-    this._allocator.migrate(container);
+  View.prototype.add = function add() {
+    return this._node.add.apply(this._node, arguments);
   };
-  Context.prototype.getSize = function getSize() {
-    return this._size;
+  View.prototype._add = View.prototype.add;
+  View.prototype.render = function render() {
+    return this._node.render();
   };
-  Context.prototype.setSize = function setSize(size) {
-    if (!size)
-      size = _getElementSize.call(this);
-    this._size[0] = size[0];
-    this._size[1] = size[1];
+  View.prototype.getSize = function getSize() {
+    if (this._node && this._node.getSize) {
+      return this._node.getSize.apply(this._node, arguments) || this.options.size;
+    } else
+      return this.options.size;
   };
-  Context.prototype.update = function update(contextParameters) {
-    if (contextParameters) {
-      if (contextParameters.transform)
-        this._nodeContext.transform = contextParameters.transform;
-      if (contextParameters.opacity)
-        this._nodeContext.opacity = contextParameters.opacity;
-      if (contextParameters.origin)
-        this._nodeContext.origin = contextParameters.origin;
-      if (contextParameters.align)
-        this._nodeContext.align = contextParameters.align;
-      if (contextParameters.size)
-        this._nodeContext.size = contextParameters.size;
-    }
-    var perspective = this._perspectiveState.get();
-    if (perspective !== this._perspective) {
-      _setPerspective(this.container, perspective);
-      this._perspective = perspective;
-    }
-    this._node.commit(this._nodeContext);
-  };
-  Context.prototype.getPerspective = function getPerspective() {
-    return this._perspectiveState.get();
-  };
-  Context.prototype.setPerspective = function setPerspective(perspective, transition, callback) {
-    return this._perspectiveState.set(perspective, transition, callback);
-  };
-  Context.prototype.emit = function emit(type, event) {
-    return this._eventOutput.emit(type, event);
-  };
-  Context.prototype.on = function on(type, handler) {
-    return this._eventOutput.on(type, handler);
-  };
-  Context.prototype.removeListener = function removeListener(type, handler) {
-    return this._eventOutput.removeListener(type, handler);
-  };
-  Context.prototype.pipe = function pipe(target) {
-    return this._eventOutput.pipe(target);
-  };
-  Context.prototype.unpipe = function unpipe(target) {
-    return this._eventOutput.unpipe(target);
-  };
-  module.exports = Context;
+  module.exports = View;
   global.define = __define;
   return module.exports;
 });
@@ -21237,6 +21137,106 @@ System.register("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", ["n
   }).call(__exports, __require, __exports, __module);
 });
 })();
+System.register("npm:famous@0.3.5/utilities/Timer", ["npm:famous@0.3.5/core/Engine"], true, function(require, exports, module) {
+  var global = System.global,
+      __define = global.define;
+  global.define = undefined;
+  var FamousEngine = require("npm:famous@0.3.5/core/Engine");
+  var _event = 'prerender';
+  var getTime = window.performance && window.performance.now ? function() {
+    return window.performance.now();
+  } : function() {
+    return Date.now();
+  };
+  function addTimerFunction(fn) {
+    FamousEngine.on(_event, fn);
+    return fn;
+  }
+  function setTimeout(fn, duration) {
+    var t = getTime();
+    var callback = function() {
+      var t2 = getTime();
+      if (t2 - t >= duration) {
+        fn.apply(this, arguments);
+        FamousEngine.removeListener(_event, callback);
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function setInterval(fn, duration) {
+    var t = getTime();
+    var callback = function() {
+      var t2 = getTime();
+      if (t2 - t >= duration) {
+        fn.apply(this, arguments);
+        t = getTime();
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function after(fn, numTicks) {
+    if (numTicks === undefined)
+      return undefined;
+    var callback = function() {
+      numTicks--;
+      if (numTicks <= 0) {
+        fn.apply(this, arguments);
+        clear(callback);
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function every(fn, numTicks) {
+    numTicks = numTicks || 1;
+    var initial = numTicks;
+    var callback = function() {
+      numTicks--;
+      if (numTicks <= 0) {
+        fn.apply(this, arguments);
+        numTicks = initial;
+      }
+    };
+    return addTimerFunction(callback);
+  }
+  function clear(fn) {
+    FamousEngine.removeListener(_event, fn);
+  }
+  function debounce(func, wait) {
+    var timeout;
+    var ctx;
+    var timestamp;
+    var result;
+    var args;
+    return function() {
+      ctx = this;
+      args = arguments;
+      timestamp = getTime();
+      var fn = function() {
+        var last = getTime - timestamp;
+        if (last < wait) {
+          timeout = setTimeout(fn, wait - last);
+        } else {
+          timeout = null;
+          result = func.apply(ctx, args);
+        }
+      };
+      clear(timeout);
+      timeout = setTimeout(fn, wait);
+      return result;
+    };
+  }
+  module.exports = {
+    setTimeout: setTimeout,
+    setInterval: setInterval,
+    debounce: debounce,
+    after: after,
+    every: every,
+    clear: clear
+  };
+  global.define = __define;
+  return module.exports;
+});
+
 (function() {
 function define(){};  define.amd = {};
 System.register("github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", ["npm:famous@0.3.5/core/View", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/Modifier", "npm:famous@0.3.5/modifiers/StateModifier", "npm:famous@0.3.5/core/RenderNode", "npm:famous@0.3.5/utilities/Timer", "npm:famous@0.3.5/transitions/Easing"], false, function(__require, __exports, __module) {
@@ -21698,7 +21698,7 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/AnimationController", 
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"], true, function(require, exports, module) {
+System.register("npm:lodash@3.9.3/index", ["github:jspm/nodelibs-process@0.1.1"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
@@ -21707,7 +21707,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
     ;
     (function() {
       var undefined;
-      var VERSION = '3.9.1';
+      var VERSION = '3.9.3';
       var BIND_FLAG = 1,
           BIND_KEY_FLAG = 2,
           CURRY_BOUND_FLAG = 4,
@@ -21770,6 +21770,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
       var reFlags = /\w*$/;
       var reHasHexPrefix = /^0[xX]/;
       var reIsHostCtor = /^\[object .+?Constructor\]$/;
+      var reIsUint = /^\d+$/;
       var reLatin1 = /[\xc0-\xd6\xd8-\xde\xdf-\xf6\xf8-\xff]/g;
       var reNoMatch = /($^)/;
       var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
@@ -21779,7 +21780,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
         return RegExp(upper + '+(?=' + upper + lower + ')|' + upper + '?' + lower + '|' + upper + '+|[0-9]+', 'g');
       }());
       var whitespace = (' \t\x0b\f\xa0\ufeff' + '\n\r\u2028\u2029' + '\u1680\u180e\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000');
-      var contextProps = ['Array', 'ArrayBuffer', 'Date', 'Error', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Math', 'Number', 'Object', 'RegExp', 'Set', 'String', '_', 'clearTimeout', 'document', 'isFinite', 'parseInt', 'setTimeout', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'WeakMap', 'window'];
+      var contextProps = ['Array', 'ArrayBuffer', 'Date', 'Error', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Math', 'Number', 'Object', 'RegExp', 'Set', 'String', '_', 'clearTimeout', 'document', 'isFinite', 'parseFloat', 'parseInt', 'setTimeout', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'WeakMap', 'window'];
       var templateCounter = -1;
       var typedArrayTags = {};
       typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
@@ -22068,6 +22069,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
             clearTimeout = context.clearTimeout,
             floor = Math.floor,
             getPrototypeOf = getNative(Object, 'getPrototypeOf'),
+            parseFloat = context.parseFloat,
             push = arrayProto.push,
             Set = getNative(context, 'Set'),
             setTimeout = context.setTimeout,
@@ -22091,7 +22093,8 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
             nativeNumIsFinite = getNative(Number, 'isFinite'),
             nativeParseInt = context.parseInt,
             nativeRandom = Math.random;
-        var POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+        var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY,
+            POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
         var MAX_ARRAY_LENGTH = 4294967295,
             MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
             HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
@@ -22669,7 +22672,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
           if (value === other) {
             return true;
           }
-          if (value == null || other == null || (!isObject(value) && !isObject(other))) {
+          if (value == null || other == null || (!isObject(value) && !isObjectLike(other))) {
             return value !== value && other !== other;
           }
           return baseIsEqualDeep(value, other, baseIsEqual, customizer, isLoose, stackA, stackB);
@@ -23764,7 +23767,7 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
           return value != null && isLength(getLength(value));
         }
         function isIndex(value, length) {
-          value = typeof value == 'number' ? value : parseFloat(value);
+          value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
           length = length == null ? MAX_SAFE_INTEGER : length;
           return value > -1 && value % 1 == 0 && value < length;
         }
@@ -23792,7 +23795,15 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
         }
         function isLaziable(func) {
           var funcName = getFuncName(func);
-          return !!funcName && func === lodash[funcName] && funcName in LazyWrapper.prototype;
+          if (!(funcName in LazyWrapper.prototype)) {
+            return false;
+          }
+          var other = lodash[funcName];
+          if (func === other) {
+            return true;
+          }
+          var data = getData(other);
+          return !!data && func === data[0];
         }
         function isLength(value) {
           return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
@@ -24435,23 +24446,22 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
             var length = collection.length;
             return length > 0 ? collection[baseRandom(0, length - 1)] : undefined;
           }
-          var result = shuffle(collection);
-          result.length = nativeMin(n < 0 ? 0 : (+n || 0), result.length);
+          var index = -1,
+              result = toArray(collection),
+              length = result.length,
+              lastIndex = length - 1;
+          n = nativeMin(n < 0 ? 0 : (+n || 0), length);
+          while (++index < n) {
+            var rand = baseRandom(index, lastIndex),
+                value = result[rand];
+            result[rand] = result[index];
+            result[index] = value;
+          }
+          result.length = n;
           return result;
         }
         function shuffle(collection) {
-          collection = toIterable(collection);
-          var index = -1,
-              length = collection.length,
-              result = Array(length);
-          while (++index < length) {
-            var rand = baseRandom(0, index);
-            if (index != rand) {
-              result[index] = result[rand];
-            }
-            result[rand] = collection[index];
-          }
-          return result;
+          return sample(collection, POSITIVE_INFINITY);
         }
         function size(collection) {
           var length = collection ? getLength(collection) : 0;
@@ -25076,12 +25086,12 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
           path = (object[pathKey] != null || isKey(path, object)) ? [pathKey] : toPath(path);
           var index = -1,
               length = path.length,
-              endIndex = length - 1,
+              lastIndex = length - 1,
               nested = object;
           while (nested != null && ++index < length) {
             var key = path[index];
             if (isObject(nested)) {
-              if (index == endIndex) {
+              if (index == lastIndex) {
                 nested[key] = value;
               } else if (nested[key] == null) {
                 nested[key] = isIndex(path[index + 1]) ? [] : {};
@@ -25540,8 +25550,8 @@ System.register("npm:lodash@3.9.1/index", ["github:jspm/nodelibs-process@0.1.1"]
         function add(augend, addend) {
           return (+augend || 0) + (+addend || 0);
         }
-        var max = createExtremum(gt, -Infinity);
-        var min = createExtremum(lt, Infinity);
+        var max = createExtremum(gt, NEGATIVE_INFINITY);
+        var min = createExtremum(lt, POSITIVE_INFINITY);
         function sum(collection, iteratee, thisArg) {
           if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
             iteratee = null;
@@ -26462,11 +26472,11 @@ System.register("github:ijzerenhein/famous-flex@0.3.2/src/AnimationController", 
   }).call(__exports, __require, __exports, __module);
 });
 })();
-System.register("npm:lodash@3.9.1", ["npm:lodash@3.9.1/index"], true, function(require, exports, module) {
+System.register("npm:lodash@3.9.3", ["npm:lodash@3.9.3/index"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
   global.define = undefined;
-  module.exports = require("npm:lodash@3.9.1/index");
+  module.exports = require("npm:lodash@3.9.3/index");
   global.define = __define;
   return module.exports;
 });
@@ -26756,6 +26766,274 @@ System.register("github:Bizboard/di.js@master/providers", ["github:Bizboard/di.j
   };
 });
 
+System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lodash@3.9.3"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/utils/objectHelper";
+  var _,
+      ObjectHelper;
+  return {
+    setters: [function($__m) {
+      _ = $__m.default;
+    }],
+    execute: function() {
+      ObjectHelper = (function() {
+        function ObjectHelper() {}
+        return ($traceurRuntime.createClass)(ObjectHelper, {}, {
+          hideMethodsAndPrivatePropertiesFromObject: function(object) {
+            for (var propName in object) {
+              var prototype = Object.getPrototypeOf(object);
+              var descriptor = prototype ? Object.getOwnPropertyDescriptor(prototype, propName) : undefined;
+              if (descriptor && (descriptor.get || descriptor.set) && !propName.startsWith('_')) {
+                continue;
+              }
+              var property = object[propName];
+              if (typeof property === 'function' || propName.startsWith('_')) {
+                ObjectHelper.hidePropertyFromObject(object, propName);
+              }
+            }
+          },
+          hideMethodsFromObject: function(object) {
+            for (var propName in object) {
+              var property = object[propName];
+              if (typeof property === 'function') {
+                ObjectHelper.hidePropertyFromObject(object, propName);
+              }
+            }
+          },
+          hidePropertyFromObject: function(object, propName) {
+            var prototype = object;
+            var descriptor = Object.getOwnPropertyDescriptor(object, propName);
+            while (!descriptor) {
+              prototype = Object.getPrototypeOf(prototype);
+              if (prototype.constructor.name === 'Object' || prototype.constructor.name === 'Array') {
+                return ;
+              }
+              descriptor = Object.getOwnPropertyDescriptor(prototype, propName);
+            }
+            descriptor.enumerable = false;
+            Object.defineProperty(prototype, propName, descriptor);
+            Object.defineProperty(object, propName, descriptor);
+          },
+          hideAllPropertiesFromObject: function(object) {
+            for (var propName in object) {
+              ObjectHelper.hidePropertyFromObject(object, propName);
+            }
+          },
+          addHiddenPropertyToObject: function(object, propName, prop) {
+            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
+            var useAccessors = arguments[4] !== (void 0) ? arguments[4] : true;
+            return ObjectHelper.addPropertyToObject(object, propName, prop, false, writable, undefined, useAccessors);
+          },
+          addPropertyToObject: function(object, propName, prop) {
+            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
+            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
+            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
+            var useAccessors = arguments[6] !== (void 0) ? arguments[6] : true;
+            if (!writable || !useAccessors) {
+              var descriptor = {
+                enumerable: enumerable,
+                writable: writable,
+                value: prop
+              };
+              Object.defineProperty(object, propName, descriptor);
+            } else {
+              ObjectHelper.addGetSetPropertyWithShadow(object, propName, prop, enumerable, writable, setCallback);
+            }
+          },
+          addGetSetPropertyWithShadow: function(object, propName, prop) {
+            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
+            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
+            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
+            ObjectHelper.buildPropertyShadow(object, propName, prop);
+            ObjectHelper.buildGetSetProperty(object, propName, enumerable, writable, setCallback);
+          },
+          buildPropertyShadow: function(object, propName, prop) {
+            var shadow = {};
+            try {
+              if ('shadow' in object) {
+                shadow = object.shadow;
+              }
+            } catch (error) {
+              return ;
+            }
+            shadow[propName] = prop;
+            Object.defineProperty(object, 'shadow', {
+              writable: true,
+              configurable: true,
+              enumerable: false,
+              value: shadow
+            });
+          },
+          buildGetSetProperty: function(object, propName) {
+            var enumerable = arguments[2] !== (void 0) ? arguments[2] : true;
+            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
+            var setCallback = arguments[4] !== (void 0) ? arguments[4] : null;
+            var descriptor = {
+              enumerable: enumerable,
+              configurable: true,
+              get: function() {
+                return object.shadow[propName];
+              },
+              set: function(value) {
+                if (writable) {
+                  object.shadow[propName] = value;
+                  if (setCallback && typeof setCallback === 'function') {
+                    setCallback({
+                      propertyName: propName,
+                      newValue: value
+                    });
+                  }
+                } else {
+                  throw new ReferenceError('Attempted to write to non-writable property ' + propName + '.');
+                }
+              }
+            };
+            Object.defineProperty(object, propName, descriptor);
+          },
+          bindAllMethods: function(object, bindTarget) {
+            var methodNames = ObjectHelper.getMethodNames(object);
+            methodNames.forEach(function(name) {
+              object[name] = object[name].bind(bindTarget);
+            });
+          },
+          getMethodNames: function(object) {
+            var methodNames = arguments[1] !== (void 0) ? arguments[1] : [];
+            var propNames = Object.getOwnPropertyNames(object).filter(function(c) {
+              return typeof object[c] === 'function';
+            });
+            methodNames = methodNames.concat(propNames);
+            var prototype = Object.getPrototypeOf(object);
+            if (prototype.constructor.name !== 'Object' && prototype.constructor.name !== 'Array') {
+              return ObjectHelper.getMethodNames(prototype, methodNames);
+            }
+            return methodNames;
+          },
+          getEnumerableProperties: function(object) {
+            return ObjectHelper.getPrototypeEnumerableProperties(object, object);
+          },
+          getPrototypeEnumerableProperties: function(rootObject, prototype) {
+            var result = {};
+            var propNames = Object.keys(prototype);
+            var $__4 = true;
+            var $__5 = false;
+            var $__6 = undefined;
+            try {
+              for (var $__2 = void 0,
+                  $__1 = (propNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__4 = ($__2 = $__1.next()).done); $__4 = true) {
+                var name = $__2.value;
+                {
+                  var value = rootObject[name];
+                  if (value !== null && value !== undefined && typeof value !== 'function') {
+                    if (typeof value == 'object') {
+                      result[name] = ObjectHelper.getEnumerableProperties(value);
+                    } else {
+                      result[name] = value;
+                    }
+                  }
+                }
+              }
+            } catch ($__7) {
+              $__5 = true;
+              $__6 = $__7;
+            } finally {
+              try {
+                if (!$__4 && $__1.return != null) {
+                  $__1.return();
+                }
+              } finally {
+                if ($__5) {
+                  throw $__6;
+                }
+              }
+            }
+            var descriptorNames = Object.getOwnPropertyNames(prototype);
+            descriptorNames = descriptorNames.filter(function(name) {
+              return propNames.indexOf(name) < 0;
+            });
+            var $__11 = true;
+            var $__12 = false;
+            var $__13 = undefined;
+            try {
+              for (var $__9 = void 0,
+                  $__8 = (descriptorNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__11 = ($__9 = $__8.next()).done); $__11 = true) {
+                var name$__15 = $__9.value;
+                {
+                  var descriptor = Object.getOwnPropertyDescriptor(prototype, name$__15);
+                  if (descriptor && descriptor.enumerable) {
+                    var value$__16 = rootObject[name$__15];
+                    if (value$__16 !== null && value$__16 !== undefined && typeof value$__16 !== 'function') {
+                      if (typeof value$__16 == 'object') {
+                        result[name$__15] = ObjectHelper.getEnumerableProperties(value$__16);
+                      } else {
+                        result[name$__15] = value$__16;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch ($__14) {
+              $__12 = true;
+              $__13 = $__14;
+            } finally {
+              try {
+                if (!$__11 && $__8.return != null) {
+                  $__8.return();
+                }
+              } finally {
+                if ($__12) {
+                  throw $__13;
+                }
+              }
+            }
+            var superPrototype = Object.getPrototypeOf(prototype);
+            var ignorableTypes = ['Object', 'Array', 'EventEmitter'];
+            if (ignorableTypes.indexOf(superPrototype.constructor.name) === -1) {
+              var prototypeEnumerables = ObjectHelper.getPrototypeEnumerableProperties(rootObject, superPrototype);
+              _.merge(result, prototypeEnumerables);
+            }
+            return result;
+          }
+        });
+      }());
+      $__export("ObjectHelper", ObjectHelper);
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/core/App";
+  var Inject,
+      annotate,
+      Router,
+      Context,
+      App;
+  return {
+    setters: [function($__m) {
+      Inject = $__m.Inject;
+      annotate = $__m.annotate;
+    }, function($__m) {
+      Router = $__m.Router;
+    }, function($__m) {
+      Context = $__m.default;
+    }],
+    execute: function() {
+      App = (function() {
+        function App(router, context) {
+          this.router = router;
+          this.context = context;
+          this.router.run();
+        }
+        return ($traceurRuntime.createClass)(App, {}, {});
+      }());
+      $__export("App", App);
+      Object.defineProperty(App, "annotations", {get: function() {
+          return [new Inject(Router, Context)];
+        }});
+    }
+  };
+});
+
 System.register("github:Bizboard/arva-context@master/Context", [], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-context@master/Context";
@@ -26845,6 +27123,9 @@ System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function(
           push: function(newData) {},
           setWithPriority: function(newData, priority) {},
           setPriority: function(newPriority) {},
+          authWithOAuthToken: function(provider, credentials, onComplete, options) {},
+          authWithPassword: function(credentials, onComplete, options) {},
+          getAuth: function() {},
           setValueChangedCallback: function(callback) {},
           removeValueChangedCallback: function() {},
           setChildAddedCallback: function(callback) {},
@@ -26883,16 +27164,17 @@ System.register("utils/helpers", [], function($__export) {
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/utils/objectHelper", ["npm:lodash@3.9.1"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/utils/objectHelper", ["npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/utils/objectHelper";
-  var _;
+  var _,
+      ObjectHelper;
   return {
     setters: [function($__m) {
       _ = $__m.default;
     }],
     execute: function() {
-      $__export('default', (function() {
+      ObjectHelper = (function() {
         function ObjectHelper() {}
         return ($traceurRuntime.createClass)(ObjectHelper, {}, {
           hideMethodsAndPrivatePropertiesFromObject: function(object) {
@@ -27113,7 +27395,8 @@ System.register("github:Bizboard/arva-ds@develop/utils/objectHelper", ["npm:loda
             return result;
           }
         });
-      }()));
+      }());
+      $__export("ObjectHelper", ObjectHelper);
     }
   };
 });
@@ -27121,10 +27404,11 @@ System.register("github:Bizboard/arva-ds@develop/utils/objectHelper", ["npm:loda
 System.register("github:Bizboard/arva-ds@develop/core/Model/snapshot", [], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/snapshot";
+  var Snapshot;
   return {
     setters: [],
     execute: function() {
-      $__export('default', (function() {
+      Snapshot = (function() {
         function Snapshot(dataSnapshot) {}
         return ($traceurRuntime.createClass)(Snapshot, {
           key: function() {},
@@ -27134,30 +27418,32 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/snapshot", [], funct
           forEach: function() {},
           numChildren: function() {}
         }, {});
-      }()));
+      }());
+      $__export("Snapshot", Snapshot);
     }
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", ["github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context", "npm:eventemitter3@1.1.0"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedArray";
-  var DataSource,
+  var EventEmitter,
+      DataSource,
       ObjectHelper,
       Context,
-      EventEmitter;
+      PrioritisedArray;
   return {
     setters: [function($__m) {
+      EventEmitter = $__m.default;
+    }, function($__m) {
       DataSource = $__m.DataSource;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       Context = $__m.Context;
-    }, function($__m) {
-      EventEmitter = $__m.default;
     }],
     execute: function() {
-      $__export('default', (function($__super) {
+      PrioritisedArray = (function($__super) {
         function PrioritisedArray(dataType) {
           var dataSource = arguments[1] !== (void 0) ? arguments[1] : null;
           var dataSnapshot = arguments[2] !== (void 0) ? arguments[2] : null;
@@ -27356,7 +27642,8 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             return -1;
           }
         }, {}, $__super);
-      }(Array)));
+      }(Array));
+      $__export("PrioritisedArray", PrioritisedArray);
     }
   };
 });
@@ -27367,7 +27654,7 @@ System.register("models/Avatar", ["github:Bizboard/arva-ds@develop/core/Model"],
   var Model;
   return {
     setters: [function($__m) {
-      Model = $__m.default;
+      Model = $__m.Model;
     }],
     execute: function() {
       $__export('default', (function($__super) {
@@ -27386,7 +27673,7 @@ System.register("models/Game", ["github:Bizboard/arva-ds@develop/core/Model"], f
   var Model;
   return {
     setters: [function($__m) {
-      Model = $__m.default;
+      Model = $__m.Model;
     }],
     execute: function() {
       $__export('default', (function($__super) {
@@ -27413,7 +27700,7 @@ System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"],
   var Model;
   return {
     setters: [function($__m) {
-      Model = $__m.default;
+      Model = $__m.Model;
     }],
     execute: function() {
       $__export('default', (function($__super) {
@@ -27429,7 +27716,7 @@ System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash@3.9.1", "github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash@3.9.3", "github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Controller";
   var _,
@@ -27445,9 +27732,9 @@ System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash
     }, function($__m) {
       Inject = $__m.Inject;
     }, function($__m) {
-      Router = $__m.default;
+      Router = $__m.Router;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       EventHandler = $__m.default;
     }, function($__m) {
@@ -27523,7 +27810,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
@@ -27547,18 +27834,24 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
         return ($traceurRuntime.createClass)(PlayView, {
           set: function(activePlayer, gameState) {
             var $__0 = this;
-            this.nextPlayer = gameState.nextPlayer;
-            this.nextPlayerName = gameState.player1.id == gameState.nextPlayer ? gameState.player1.name : gameState.player2.name;
+            this.activePlayer = activePlayer;
             this._renderables.header.setContent(("<div class=\"player1\">" + gameState.player1.name + "<span>X</span></div>\n        <div class=\"player2\">" + gameState.player2.name + "<span>O</span></div>"));
-            this._renderables.footer.setContent(("Turn: " + this.nextPlayerName));
-            if (gameState.data && gameState.data[gameState.player1.id]) {
-              gameState.data[gameState.player1.id].forEach((function(move) {
-                $__0._renderables[("surface" + move.position)].setContent('X');
-              }));
+            if (gameState.status == 'won') {
+              var winningPlayer = gameState.player1.id == gameState.winner ? gameState.player1.name : gameState.player2.name;
+              this._renderables.footer.setContent((winningPlayer + " heeft gewonnen!"));
+            } else if (gameState.status == 'draw') {
+              this._renderables.footer.setContent("Jammer! Het potje is onbeslist!");
+            } else {
+              var nextPlayerName = gameState.player1.id == gameState.nextPlayer ? gameState.player1.name : gameState.player2.name;
+              this._renderables.footer.setContent((nextPlayerName + " is aan de beurt."));
             }
-            if (gameState.data && gameState.data[gameState.player2.id]) {
-              gameState.data[gameState.player2.id].forEach((function(move) {
-                $__0._renderables[("surface" + move.position)].setContent('O');
+            if (gameState.data) {
+              gameState.data.forEach((function(move) {
+                if (move.by == gameState.player1.id) {
+                  $__0._renderables[("surface" + move.position)].setContent('X');
+                } else {
+                  $__0._renderables[("surface" + move.position)].setContent('O');
+                }
               }));
             }
           },
@@ -27636,55 +27929,55 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
             var viewContext = this;
             this._renderables.surface1.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 1
               });
             });
             this._renderables.surface2.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 2
               });
             });
             this._renderables.surface3.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 3
               });
             });
             this._renderables.surface4.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 4
               });
             });
             this._renderables.surface5.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 5
               });
             });
             this._renderables.surface6.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 6
               });
             });
             this._renderables.surface7.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 7
               });
             });
             this._renderables.surface8.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 8
               });
             });
             this._renderables.surface9.on('click', function() {
               viewContext._eventOutput.emit('move', {
-                by: viewContext.nextPlayer,
+                by: viewContext.activePlayer,
                 position: 9
               });
             });
@@ -27774,6 +28067,7 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
                   origin: [0, 1],
                   translate: [0, -this.options.navigationHeight, 1000]
                 });
+                context.get('footer').renderNode.properties.lineHeight = ((top - this.options.navigationHeight) + "px");
               }.bind(this),
               dataSource: this._renderables
             });
@@ -27787,60 +28081,64 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
   };
 });
 
-System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0"], function($__export) {
+System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "utils/BKEEEngine";
   var Game,
       EventEmitter,
+      _,
       winningCombinations;
   return {
     setters: [function($__m) {
       Game = $__m.default;
     }, function($__m) {
       EventEmitter = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
     }],
     execute: function() {
-      winningCombinations = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+      winningCombinations = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]];
       $__export('default', (function($__super) {
         function BKEEEngine(activePlayer, game) {
           $traceurRuntime.superConstructor(BKEEEngine).call(this);
           this._activePlayer = activePlayer;
           this._game = game;
           if (!this._game.data) {
-            this._state = {};
-            this._state[this._game.player1.id] = [];
-            this._state[this._game.player2.id] = [];
+            this._state = [];
           } else {
             this._state = this._game.data;
           }
         }
         return ($traceurRuntime.createClass)(BKEEEngine, {
           move: function(by, position) {
-            if (!this._state[by])
-              this._state[by] = [];
-            this._state[by].push({
+            if (this._game.winner)
+              return ;
+            var allowedMove = true;
+            this._state.forEach(function(move) {
+              if (move.position == position)
+                allowedMove = false;
+            });
+            if (!allowedMove)
+              return ;
+            this._state.push({
               by: by,
               position: position
             });
             this._game.data = this._state;
-            var didIWin = this._evaluateGameResult(this._state[by]);
+            var didIWin = this._evaluateGameResult(_.filter(this._state, {by: by}));
             if (didIWin) {
               this._game.winner = by;
               this._game.status = 'won';
-              this._game.nextPlayer = '';
+              this._game.nextPlayer = null;
               this.emit('won');
-            } else if ((this._state[this._game.player1.id].length + this._state[this._game.player2.id].length) == 9) {
-              this._game.status = 'finished';
-              this._game.nextPlayer = '';
+            } else if (this._state.length == 9) {
+              this._game.status = 'draw';
+              this._game.nextPlayer = null;
               this.emit('draw');
             } else {
-              this._game.nextPlayer = this._game.nextPlayer == this._game.player1.id ? this._game.player2.id : this._game.player1.id;
-            }
-          },
-          evaluate: function() {
-            if (this._game.status == 'won' && this._game.winner != this._activePlayer) {
-              this._game.status = 'finished';
-              this.emit('loss');
+              if (this._game.nextPlayer) {
+                this._game.nextPlayer = this._game.nextPlayer == this._game.player1.id ? this._game.player2.id : this._game.player1.id;
+              }
             }
           },
           _evaluateGameResult: function(moves) {
@@ -27849,12 +28147,13 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0"], 
               if (!won) {
                 var foundMoves = 0;
                 moves.forEach(function(move) {
-                  if (combination.indexOf(move.position)) {
+                  if (combination.indexOf(move.position) > -1) {
                     foundMoves++;
                   }
                 });
-                if (foundMoves == 3)
+                if (foundMoves == 3) {
                   won = true;
+                }
               }
             });
             return won;
@@ -28081,26 +28380,92 @@ System.register("github:Bizboard/di.js@master/annotations", ["github:Bizboard/di
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.1", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "github:Bizboard/arva-context@master/Context", "npm:famous@0.3.5/core/Engine", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/DefaultContext";
+  var Injector,
+      Provide,
+      ArvaRouter,
+      ArvaContext,
+      Engine,
+      Context,
+      AnimationController,
+      famousContext;
+  function createFamousContext() {
+    if (famousContext) {
+      return famousContext;
+    }
+    famousContext = Engine.createContext();
+    return famousContext;
+  }
+  function newAnimationController() {
+    famousContext = createFamousContext();
+    var controller = new AnimationController();
+    famousContext.add(controller);
+    return controller;
+  }
+  function GetDefaultContext() {
+    return ArvaContext.getContext('Default');
+  }
+  function reCreateDefaultContext() {
+    var router = arguments[0] !== (void 0) ? arguments[0] : ArvaRouter;
+    var arrayOfInjectors = [router, createFamousContext, newAnimationController];
+    for (var i = 0; i < arguments.length; i++) {
+      arrayOfInjectors.push(arguments[i]);
+    }
+    ArvaContext.setContext('Default', new Injector(arrayOfInjectors));
+    return ArvaContext.getContext('Default');
+  }
+  $__export("GetDefaultContext", GetDefaultContext);
+  $__export("reCreateDefaultContext", reCreateDefaultContext);
+  return {
+    setters: [function($__m) {
+      Injector = $__m.Injector;
+      Provide = $__m.Provide;
+    }, function($__m) {
+      ArvaRouter = $__m.ArvaRouter;
+    }, function($__m) {
+      ArvaContext = $__m.Context;
+    }, function($__m) {
+      Engine = $__m.default;
+    }, function($__m) {
+      Context = $__m.default;
+    }, function($__m) {
+      AnimationController = $__m.default;
+    }],
+    execute: function() {
+      famousContext = null;
+      Object.defineProperty(createFamousContext, "annotations", {get: function() {
+          return [new Provide(Context)];
+        }});
+      Object.defineProperty(newAnimationController, "annotations", {get: function() {
+          return [new Provide(AnimationController)];
+        }});
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.3", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
   var _,
       EventEmitter,
       ObjectHelper,
-      Snapshot;
+      Snapshot,
+      PrioritisedObject;
   return {
     setters: [function($__m) {
       _ = $__m.default;
     }, function($__m) {
       EventEmitter = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
-      Snapshot = $__m.default;
+      Snapshot = $__m.Snapshot;
     }],
     execute: function() {
       'use strict';
-      $__export('default', (function($__super) {
+      PrioritisedObject = (function($__super) {
         function PrioritisedObject(dataSource) {
           var dataSnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
           $traceurRuntime.superConstructor(PrioritisedObject).call(this);
@@ -28266,7 +28631,8 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
             this.emit('value', this);
           }
         }, {}, $__super);
-      }(EventEmitter)));
+      }(EventEmitter));
+      $__export("PrioritisedObject", PrioritisedObject);
     }
   };
 });
@@ -28278,7 +28644,7 @@ System.register("collections/Players", ["github:Bizboard/arva-ds@develop/core/Mo
       Player;
   return {
     setters: [function($__m) {
-      PrioritisedArray = $__m.default;
+      PrioritisedArray = $__m.PrioritisedArray;
     }, function($__m) {
       Player = $__m.default;
     }],
@@ -28302,7 +28668,7 @@ System.register("collections/Avatars", ["github:Bizboard/arva-ds@develop/core/Mo
       Avatar;
   return {
     setters: [function($__m) {
-      PrioritisedArray = $__m.default;
+      PrioritisedArray = $__m.PrioritisedArray;
     }, function($__m) {
       Avatar = $__m.default;
     }],
@@ -28326,7 +28692,7 @@ System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Mo
       Invite;
   return {
     setters: [function($__m) {
-      PrioritisedArray = $__m.default;
+      PrioritisedArray = $__m.PrioritisedArray;
     }, function($__m) {
       Invite = $__m.default;
     }],
@@ -28384,7 +28750,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
@@ -28497,7 +28863,7 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
@@ -28654,15 +29020,13 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
             var activePlayer = this.gameContext.getPlayerId();
             var gameEngine = new BKEEEngine(activePlayer, gameState);
             gameEngine.on('won', (function() {
-              $__0.gameContext.setWinnerScore();
+              var losingPlayer = gameState.player1.id == activePlayer ? gameState.player2.id : gameState.player1.id;
+              $__0.gameContext.setWinnerScore(activePlayer);
+              $__0.gameContext.setLossScore(losingPlayer);
             }));
             gameEngine.on('draw', (function() {
               $__0.gameContext.setDrawScore();
             }));
-            gameEngine.on('loss', (function() {
-              $__0.gameContext.setLossScore();
-            }));
-            gameEngine.evaluate();
             return gameEngine;
           },
           Main: function() {
@@ -28976,6 +29340,40 @@ System.register("github:Bizboard/di.js@master/injector", ["github:Bizboard/di.js
   };
 });
 
+System.register("github:Bizboard/arva-mvc@develop/core/Router", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-mvc@develop/utils/objectHelper"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/core/Router";
+  var EventEmitter,
+      ObjectHelper,
+      Router;
+  return {
+    setters: [function($__m) {
+      EventEmitter = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }],
+    execute: function() {
+      Router = (function($__super) {
+        function Router() {
+          $traceurRuntime.superConstructor(Router).call(this);
+          ObjectHelper.bindAllMethods(this, this);
+          this.controllers = [];
+          this.defaultController = 'Home';
+          this.defaultMethod = 'Index';
+        }
+        return ($traceurRuntime.createClass)(Router, {
+          run: function() {},
+          setDefault: function(controller, method) {},
+          add: function(route, handler) {},
+          go: function(controller, method, params) {},
+          _executeRoute: function(rule, route) {}
+        }, {}, $__super);
+      }(EventEmitter));
+      $__export("Router", Router);
+    }
+  };
+});
+
 System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
   "use strict";
   var __moduleName = "views/Shared/Navigation";
@@ -28994,7 +29392,7 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
@@ -29048,28 +29446,29 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.1", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.3", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model";
   var _,
       PrioritisedObject,
       DataSource,
       ObjectHelper,
-      Context;
+      Context,
+      Model;
   return {
     setters: [function($__m) {
       _ = $__m.default;
     }, function($__m) {
-      PrioritisedObject = $__m.default;
+      PrioritisedObject = $__m.PrioritisedObject;
     }, function($__m) {
       DataSource = $__m.DataSource;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       Context = $__m.Context;
     }],
     execute: function() {
-      $__export('default', (function($__super) {
+      Model = (function($__super) {
         function Model(id) {
           var data = arguments[1] !== (void 0) ? arguments[1] : null;
           var options = arguments[2] !== (void 0) ? arguments[2] : {};
@@ -29167,7 +29566,8 @@ System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.1
               prototype = Object.getPrototypeOf(prototype);
             }
           }}, {}, $__super);
-      }(PrioritisedObject)));
+      }(PrioritisedObject));
+      $__export("Model", Model);
     }
   };
 });
@@ -29353,7 +29753,7 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
       FirebaseDataSource;
   return {
     setters: [function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       DataSource = $__m.DataSource;
     }, function($__m) {
@@ -29404,6 +29804,15 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           },
           setPriority: function(newPriority) {
             return this._dataReference.setPriority(newPriority);
+          },
+          authWithOAuthToken: function(provider, credentials, onComplete, options) {
+            return this._dataReference.authWithOAuthToken(provider, credentials, onComplete, options);
+          },
+          authWithPassword: function(credentials, onComplete, options) {
+            return this._dataReference.authWithPassword(credentials, onComplete, options);
+          },
+          getAuth: function() {
+            return this._dataReference.getAuth();
           },
           setValueChangedCallback: function(callback) {
             this._onValueCallback = callback;
@@ -29500,7 +29909,7 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   var Model;
   return {
     setters: [function($__m) {
-      Model = $__m.default;
+      Model = $__m.Model;
     }],
     execute: function() {
       $__export('default', (function($__super) {
@@ -29631,12 +30040,14 @@ System.register("github:Bizboard/di.js@master", ["github:Bizboard/di.js@master/i
   };
 });
 
-System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
+System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:lodash@3.9.3", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Invites", "models/Invite"], function($__export) {
   "use strict";
   var __moduleName = "utils/GameContext";
   var GetDefaultContext,
       DataSource,
       FireOnceAndWait,
+      ObjectHelper,
+      _,
       Player,
       Players,
       Avatars,
@@ -29652,7 +30063,11 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
     }, function($__m) {
       DataSource = $__m.DataSource;
     }, function($__m) {
-      FireOnceAndWait = $__m.default;
+      FireOnceAndWait = $__m.FireOnceAndWait;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }, function($__m) {
+      _ = $__m.default;
     }, function($__m) {
       Player = $__m.default;
     }, function($__m) {
@@ -29754,8 +30169,8 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
                   case 4:
                     dice = (Math.random() * 10) + 1;
                     newGame = new Game(null, {
-                      player1: player1,
-                      player2: player2,
+                      player1: _.merge(ObjectHelper.getEnumerableProperties(player1), {id: invitation.player1}),
+                      player2: _.merge(ObjectHelper.getEnumerableProperties(player2), {id: invitation.player2}),
                       status: 'active',
                       activeSince: Date.now(),
                       nextPlayer: dice > 5 ? invitation.player1 : invitation.player2
@@ -29837,7 +30252,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
     }, function($__m) {
       View = $__m.default;
     }, function($__m) {
-      ObjectHelper = $__m.default;
+      ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
@@ -29932,26 +30347,96 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lodash@3.9.1", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/di.js@master", "npm:famous@0.3.5/transitions/Easing", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop/core/Controller", "views/Home/InvitePlayerView", "models/Game", "models/Invite", "collections/Players", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "controllers/ProfileController", "controllers/PlayController"], function($__export) {
+  "use strict";
+  var __moduleName = "controllers/HomeController";
+  var Controller,
+      InvitePlayerView,
+      Game,
+      Invite,
+      Players,
+      GameContext,
+      GetDefaultContext,
+      ProfileController,
+      PlayController,
+      HomeController;
+  return {
+    setters: [function($__m) {
+      Controller = $__m.Controller;
+    }, function($__m) {
+      InvitePlayerView = $__m.default;
+    }, function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
+      Invite = $__m.default;
+    }, function($__m) {
+      Players = $__m.default;
+    }, function($__m) {
+      GameContext = $__m.default;
+    }, function($__m) {
+      GetDefaultContext = $__m.GetDefaultContext;
+    }, function($__m) {
+      ProfileController = $__m.ProfileController;
+    }, function($__m) {
+      PlayController = $__m.PlayController;
+    }],
+    execute: function() {
+      HomeController = (function($__super) {
+        function HomeController(router, context) {
+          var $__0;
+          $traceurRuntime.superConstructor(HomeController).call(this, router, context);
+          this.gameContext = GetDefaultContext().get(GameContext);
+          this.invitePlayerView = new InvitePlayerView({dataSource: this.gameContext.players});
+          this.invitePlayerView.on('invite', ($__0 = this, function(player) {
+            if ($__0.gameContext.hasGame(player.id)) {
+              $__0.router.go(PlayController, 'Play', {gameId: $__0.gameContext.getGameId(player.id)});
+            } else if (window.confirm(("Challenge " + player.name + "?"))) {
+              $__0.router.go($__0, 'SendChallenge', {playerId: player.id});
+            }
+          }));
+        }
+        return ($traceurRuntime.createClass)(HomeController, {
+          Main: function() {
+            if (this.gameContext.isNewPlayer()) {
+              this.router.go(ProfileController, 'Register');
+            } else {
+              return this.invitePlayerView;
+            }
+          },
+          SendChallenge: function(playerId) {
+            this.gameContext.invitePlayer(playerId);
+            this.router.go(this, 'Main');
+          },
+          AcceptChallenge: function(gameId) {
+            this.gameContext.acceptGame(gameId);
+          }
+        }, {}, $__super);
+      }(Controller));
+      $__export("HomeController", HomeController);
+    }
+  };
+});
+
+System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lodash@3.9.3", "github:Bizboard/di.js@master", "npm:famous@0.3.5/transitions/Easing", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController", "github:Bizboard/arva-mvc@develop/core/Router"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/routers/ArvaRouter";
   var _,
-      Router,
       Provide,
       Easing,
       AnimationController,
+      Router,
       ArvaRouter;
   return {
     setters: [function($__m) {
       _ = $__m.default;
-    }, function($__m) {
-      Router = $__m.default;
     }, function($__m) {
       Provide = $__m.Provide;
     }, function($__m) {
       Easing = $__m.default;
     }, function($__m) {
       AnimationController = $__m.default;
+    }, function($__m) {
+      Router = $__m.Router;
     }],
     execute: function() {
       ArvaRouter = (function($__super) {
@@ -29968,12 +30453,7 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
         return ($traceurRuntime.createClass)(ArvaRouter, {
           setDefault: function(controller) {
             var method = arguments[1] !== (void 0) ? arguments[1] : null;
-            var controllerName = '';
-            if (Object.getPrototypeOf(controller).constructor.name == "Function")
-              controllerName = controller.name;
-            else
-              controllerName = Object.getPrototypeOf(controller).constructor.name;
-            this.defaultController = controllerName.replace('Controller', '');
+            this.defaultController = this._getControllerName(controller);
             if (method != null) {
               this.defaultMethod = method;
             }
@@ -29983,11 +30463,7 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
           },
           go: function(controller, method) {
             var params = arguments[2] !== (void 0) ? arguments[2] : null;
-            var controllerName = '';
-            if (Object.getPrototypeOf(controller).constructor.name == "Function")
-              controllerName = controller.name;
-            else
-              controllerName = Object.getPrototypeOf(controller).constructor.name;
+            var controllerName = this._getControllerName(controller);
             var routeRoot = controllerName.replace(this.defaultController, '').replace('Controller', '');
             var hash = '#' + (routeRoot.length > 0 ? '/' + routeRoot : '') + ('/' + method);
             if (params) {
@@ -30066,13 +30542,16 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
               };
               currentRoute.spec = previousRoute ? this._getAnimationSpec(previousRoute, currentRoute) : {};
               this._setHistory(currentRoute);
-              rule['@'](currentRoute);
-              this.emit('routechange', currentRoute);
+              this._executeRoute(rule, currentRoute);
               return true;
             } else {
               console.log('Controller doesn\'t exist!');
             }
             return false;
+          },
+          _executeRoute: function(rule, route) {
+            rule['@'](route);
+            this.emit('routechange', route);
           },
           _setHistory: function(currentRoute) {
             for (var i = 0; i < this.history.length; i++) {
@@ -30138,445 +30617,21 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
               }
             }
             console.log('No spec defined from ' + fromController + ' to ' + toController + '. Please check router.setControllerSpecs() in your app constructor.');
+          },
+          _getControllerName: function(controller) {
+            if (typeof controller === "string") {
+              return controller.replace('Controller', '');
+            } else if (typeof controller === "function" && Object.getPrototypeOf(controller).constructor.name == "Function") {
+              return controller.name.replace('Controller', '');
+            } else {
+              return typeof controller === "object" ? Object.getPrototypeOf(controller).constructor.name.replace('Controller', '') : typeof controller;
+            }
           }
         }, {}, $__super);
       }(Router));
       $__export("ArvaRouter", ArvaRouter);
       Object.defineProperty(ArvaRouter, "annotations", {get: function() {
           return [new Provide(Router)];
-        }});
-    }
-  };
-});
-
-System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop/core/Controller", "views/Home/InvitePlayerView", "models/Game", "models/Invite", "collections/Players", "utils/GameContext", "github:Bizboard/arva-mvc@develop/DefaultContext", "controllers/ProfileController", "controllers/PlayController"], function($__export) {
-  "use strict";
-  var __moduleName = "controllers/HomeController";
-  var Controller,
-      InvitePlayerView,
-      Game,
-      Invite,
-      Players,
-      GameContext,
-      GetDefaultContext,
-      ProfileController,
-      PlayController,
-      HomeController;
-  return {
-    setters: [function($__m) {
-      Controller = $__m.Controller;
-    }, function($__m) {
-      InvitePlayerView = $__m.default;
-    }, function($__m) {
-      Game = $__m.default;
-    }, function($__m) {
-      Invite = $__m.default;
-    }, function($__m) {
-      Players = $__m.default;
-    }, function($__m) {
-      GameContext = $__m.default;
-    }, function($__m) {
-      GetDefaultContext = $__m.GetDefaultContext;
-    }, function($__m) {
-      ProfileController = $__m.ProfileController;
-    }, function($__m) {
-      PlayController = $__m.PlayController;
-    }],
-    execute: function() {
-      HomeController = (function($__super) {
-        function HomeController(router, context) {
-          var $__0;
-          $traceurRuntime.superConstructor(HomeController).call(this, router, context);
-          this.gameContext = GetDefaultContext().get(GameContext);
-          this.invitePlayerView = new InvitePlayerView({dataSource: this.gameContext.players});
-          this.invitePlayerView.on('invite', ($__0 = this, function(player) {
-            if ($__0.gameContext.hasGame(player.id)) {
-              $__0.router.go(PlayController, 'Play', {gameId: $__0.gameContext.getGameId(player.id)});
-            } else if (window.confirm(("Challenge " + player.name + "?"))) {
-              $__0.router.go($__0, 'SendChallenge', {playerId: player.id});
-            }
-          }));
-        }
-        return ($traceurRuntime.createClass)(HomeController, {
-          Main: function() {
-            if (this.gameContext.isNewPlayer()) {
-              this.router.go(ProfileController, 'Register');
-            } else {
-              return this.invitePlayerView;
-            }
-          },
-          SendChallenge: function(playerId) {
-            this.gameContext.invitePlayer(playerId);
-            this.router.go(this, 'Main');
-          },
-          AcceptChallenge: function(gameId) {
-            this.gameContext.acceptGame(gameId);
-          }
-        }, {}, $__super);
-      }(Controller));
-      $__export("HomeController", HomeController);
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lodash@3.9.1"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/utils/objectHelper";
-  var _;
-  return {
-    setters: [function($__m) {
-      _ = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function() {
-        function ObjectHelper() {}
-        return ($traceurRuntime.createClass)(ObjectHelper, {}, {
-          hideMethodsAndPrivatePropertiesFromObject: function(object) {
-            for (var propName in object) {
-              var prototype = Object.getPrototypeOf(object);
-              var descriptor = prototype ? Object.getOwnPropertyDescriptor(prototype, propName) : undefined;
-              if (descriptor && (descriptor.get || descriptor.set) && !propName.startsWith('_')) {
-                continue;
-              }
-              var property = object[propName];
-              if (typeof property === 'function' || propName.startsWith('_')) {
-                ObjectHelper.hidePropertyFromObject(object, propName);
-              }
-            }
-          },
-          hideMethodsFromObject: function(object) {
-            for (var propName in object) {
-              var property = object[propName];
-              if (typeof property === 'function') {
-                ObjectHelper.hidePropertyFromObject(object, propName);
-              }
-            }
-          },
-          hidePropertyFromObject: function(object, propName) {
-            var prototype = object;
-            var descriptor = Object.getOwnPropertyDescriptor(object, propName);
-            while (!descriptor) {
-              prototype = Object.getPrototypeOf(prototype);
-              if (prototype.constructor.name === 'Object' || prototype.constructor.name === 'Array') {
-                return ;
-              }
-              descriptor = Object.getOwnPropertyDescriptor(prototype, propName);
-            }
-            descriptor.enumerable = false;
-            Object.defineProperty(prototype, propName, descriptor);
-            Object.defineProperty(object, propName, descriptor);
-          },
-          hideAllPropertiesFromObject: function(object) {
-            for (var propName in object) {
-              ObjectHelper.hidePropertyFromObject(object, propName);
-            }
-          },
-          addHiddenPropertyToObject: function(object, propName, prop) {
-            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var useAccessors = arguments[4] !== (void 0) ? arguments[4] : true;
-            return ObjectHelper.addPropertyToObject(object, propName, prop, false, writable, undefined, useAccessors);
-          },
-          addPropertyToObject: function(object, propName, prop) {
-            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
-            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
-            var useAccessors = arguments[6] !== (void 0) ? arguments[6] : true;
-            if (!writable || !useAccessors) {
-              var descriptor = {
-                enumerable: enumerable,
-                writable: writable,
-                value: prop
-              };
-              Object.defineProperty(object, propName, descriptor);
-            } else {
-              ObjectHelper.addGetSetPropertyWithShadow(object, propName, prop, enumerable, writable, setCallback);
-            }
-          },
-          addGetSetPropertyWithShadow: function(object, propName, prop) {
-            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
-            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
-            ObjectHelper.buildPropertyShadow(object, propName, prop);
-            ObjectHelper.buildGetSetProperty(object, propName, enumerable, writable, setCallback);
-          },
-          buildPropertyShadow: function(object, propName, prop) {
-            var shadow = {};
-            try {
-              if ('shadow' in object) {
-                shadow = object.shadow;
-              }
-            } catch (error) {
-              return ;
-            }
-            shadow[propName] = prop;
-            Object.defineProperty(object, 'shadow', {
-              writable: true,
-              configurable: true,
-              enumerable: false,
-              value: shadow
-            });
-          },
-          buildGetSetProperty: function(object, propName) {
-            var enumerable = arguments[2] !== (void 0) ? arguments[2] : true;
-            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var setCallback = arguments[4] !== (void 0) ? arguments[4] : null;
-            var descriptor = {
-              enumerable: enumerable,
-              configurable: true,
-              get: function() {
-                return object.shadow[propName];
-              },
-              set: function(value) {
-                if (writable) {
-                  object.shadow[propName] = value;
-                  if (setCallback && typeof setCallback === 'function') {
-                    setCallback({
-                      propertyName: propName,
-                      newValue: value
-                    });
-                  }
-                } else {
-                  throw new ReferenceError('Attempted to write to non-writable property ' + propName + '.');
-                }
-              }
-            };
-            Object.defineProperty(object, propName, descriptor);
-          },
-          bindAllMethods: function(object, bindTarget) {
-            var methodNames = ObjectHelper.getMethodNames(object);
-            methodNames.forEach(function(name) {
-              object[name] = object[name].bind(bindTarget);
-            });
-          },
-          getMethodNames: function(object) {
-            var methodNames = arguments[1] !== (void 0) ? arguments[1] : [];
-            var propNames = Object.getOwnPropertyNames(object).filter(function(c) {
-              return typeof object[c] === 'function';
-            });
-            methodNames = methodNames.concat(propNames);
-            var prototype = Object.getPrototypeOf(object);
-            if (prototype.constructor.name !== 'Object' && prototype.constructor.name !== 'Array') {
-              return ObjectHelper.getMethodNames(prototype, methodNames);
-            }
-            return methodNames;
-          },
-          getEnumerableProperties: function(object) {
-            return ObjectHelper.getPrototypeEnumerableProperties(object, object);
-          },
-          getPrototypeEnumerableProperties: function(rootObject, prototype) {
-            var result = {};
-            var propNames = Object.keys(prototype);
-            var $__4 = true;
-            var $__5 = false;
-            var $__6 = undefined;
-            try {
-              for (var $__2 = void 0,
-                  $__1 = (propNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__4 = ($__2 = $__1.next()).done); $__4 = true) {
-                var name = $__2.value;
-                {
-                  var value = rootObject[name];
-                  if (value !== null && value !== undefined && typeof value !== 'function') {
-                    if (typeof value == 'object') {
-                      result[name] = ObjectHelper.getEnumerableProperties(value);
-                    } else {
-                      result[name] = value;
-                    }
-                  }
-                }
-              }
-            } catch ($__7) {
-              $__5 = true;
-              $__6 = $__7;
-            } finally {
-              try {
-                if (!$__4 && $__1.return != null) {
-                  $__1.return();
-                }
-              } finally {
-                if ($__5) {
-                  throw $__6;
-                }
-              }
-            }
-            var descriptorNames = Object.getOwnPropertyNames(prototype);
-            descriptorNames = descriptorNames.filter(function(name) {
-              return propNames.indexOf(name) < 0;
-            });
-            var $__11 = true;
-            var $__12 = false;
-            var $__13 = undefined;
-            try {
-              for (var $__9 = void 0,
-                  $__8 = (descriptorNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__11 = ($__9 = $__8.next()).done); $__11 = true) {
-                var name$__15 = $__9.value;
-                {
-                  var descriptor = Object.getOwnPropertyDescriptor(prototype, name$__15);
-                  if (descriptor && descriptor.enumerable) {
-                    var value$__16 = rootObject[name$__15];
-                    if (value$__16 !== null && value$__16 !== undefined && typeof value$__16 !== 'function') {
-                      if (typeof value$__16 == 'object') {
-                        result[name$__15] = ObjectHelper.getEnumerableProperties(value$__16);
-                      } else {
-                        result[name$__15] = value$__16;
-                      }
-                    }
-                  }
-                }
-              }
-            } catch ($__14) {
-              $__12 = true;
-              $__13 = $__14;
-            } finally {
-              try {
-                if (!$__11 && $__8.return != null) {
-                  $__8.return();
-                }
-              } finally {
-                if ($__12) {
-                  throw $__13;
-                }
-              }
-            }
-            var superPrototype = Object.getPrototypeOf(prototype);
-            var ignorableTypes = ['Object', 'Array', 'EventEmitter'];
-            if (ignorableTypes.indexOf(superPrototype.constructor.name) === -1) {
-              var prototypeEnumerables = ObjectHelper.getPrototypeEnumerableProperties(rootObject, superPrototype);
-              _.merge(result, prototypeEnumerables);
-            }
-            return result;
-          }
-        });
-      }()));
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "npm:famous@0.3.5/core/Engine", "github:Bizboard/arva-context@master/Context", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/DefaultContext";
-  var Injector,
-      annotate,
-      Provide,
-      ArvaRouter,
-      Engine,
-      ArvaContext,
-      Context,
-      AnimationController,
-      famousContext;
-  function createFamousContext() {
-    if (famousContext) {
-      return famousContext;
-    }
-    famousContext = Engine.createContext();
-    return famousContext;
-  }
-  function newAnimationController() {
-    famousContext = createFamousContext();
-    var controller = new AnimationController();
-    famousContext.add(controller);
-    return controller;
-  }
-  function GetDefaultContext() {
-    return ArvaContext.getContext('Default');
-  }
-  function reCreateDefaultContext() {
-    var arrayOfInjectors = [ArvaRouter, createFamousContext, newAnimationController];
-    for (var i = 0; i < arguments.length; i++) {
-      arrayOfInjectors.push(arguments[i]);
-    }
-    ArvaContext.setContext('Default', new Injector(arrayOfInjectors));
-    return ArvaContext.getContext('Default');
-  }
-  $__export("GetDefaultContext", GetDefaultContext);
-  $__export("reCreateDefaultContext", reCreateDefaultContext);
-  return {
-    setters: [function($__m) {
-      Injector = $__m.Injector;
-      annotate = $__m.annotate;
-      Provide = $__m.Provide;
-    }, function($__m) {
-      ArvaRouter = $__m.ArvaRouter;
-    }, function($__m) {
-      Engine = $__m.default;
-    }, function($__m) {
-      ArvaContext = $__m.Context;
-    }, function($__m) {
-      Context = $__m.default;
-    }, function($__m) {
-      AnimationController = $__m.default;
-    }],
-    execute: function() {
-      famousContext = null;
-      Object.defineProperty(createFamousContext, "annotations", {get: function() {
-          return [new Provide(Context)];
-        }});
-      Object.defineProperty(newAnimationController, "annotations", {get: function() {
-          return [new Provide(AnimationController)];
-        }});
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-mvc@develop/core/Router", ["github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:eventemitter3@1.1.0"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/core/Router";
-  var ObjectHelper,
-      EventEmitter;
-  return {
-    setters: [function($__m) {
-      ObjectHelper = $__m.default;
-    }, function($__m) {
-      EventEmitter = $__m.default;
-    }],
-    execute: function() {
-      $__export('default', (function($__super) {
-        function Router() {
-          $traceurRuntime.superConstructor(Router).call(this);
-          ObjectHelper.bindAllMethods(this, this);
-          this.controllers = [];
-          this.defaultController = 'Home';
-          this.defaultMethod = 'Index';
-        }
-        return ($traceurRuntime.createClass)(Router, {
-          run: function() {},
-          setDefault: function(controller, method) {},
-          add: function(route, handler) {},
-          go: function(controller, method, params) {}
-        }, {}, $__super);
-      }(EventEmitter)));
-    }
-  };
-});
-
-System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "npm:famous@0.3.5/core/Context"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/core/App";
-  var Inject,
-      annotate,
-      Router,
-      Context,
-      App;
-  return {
-    setters: [function($__m) {
-      Inject = $__m.Inject;
-      annotate = $__m.annotate;
-    }, function($__m) {
-      Router = $__m.Router;
-    }, function($__m) {
-      Context = $__m.default;
-    }],
-    execute: function() {
-      App = (function() {
-        function App(router, context) {
-          this.router = router;
-          this.context = context;
-          this.router.run();
-        }
-        return ($traceurRuntime.createClass)(App, {}, {});
-      }());
-      $__export("App", App);
-      Object.defineProperty(App, "annotations", {get: function() {
-          return [new Inject(Router, Context)];
         }});
     }
   };
@@ -30606,7 +30661,7 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
     }, function($__m) {
       App = $__m.App;
     }, function($__m) {
-      Router = $__m.default;
+      Router = $__m.Router;
     }, function($__m) {
       Context = $__m.default;
     }, function($__m) {
@@ -30732,10 +30787,11 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
   };
 });
 
-System.register("main", ["github:Bizboard/di.js@master", "BkeeApp", "settings", "github:Bizboard/arva-mvc@develop/DefaultContext", "utils/GameContext"], function($__export) {
+System.register("main", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "BkeeApp", "settings", "github:Bizboard/arva-mvc@develop/DefaultContext", "utils/GameContext"], function($__export) {
   "use strict";
   var __moduleName = "main";
   var Injector,
+      ArvaRouter,
       BkeeApp,
       BkeeDataSource,
       reCreateDefaultContext,
@@ -30743,6 +30799,8 @@ System.register("main", ["github:Bizboard/di.js@master", "BkeeApp", "settings", 
   return {
     setters: [function($__m) {
       Injector = $__m.Injector;
+    }, function($__m) {
+      ArvaRouter = $__m.ArvaRouter;
     }, function($__m) {
       BkeeApp = $__m.BkeeApp;
     }, function($__m) {
@@ -30753,7 +30811,7 @@ System.register("main", ["github:Bizboard/di.js@master", "BkeeApp", "settings", 
       GameContext = $__m.default;
     }],
     execute: function() {
-      reCreateDefaultContext(BkeeDataSource, GameContext).get(BkeeApp);
+      reCreateDefaultContext(ArvaRouter, BkeeDataSource, GameContext).get(BkeeApp);
     }
   };
 });

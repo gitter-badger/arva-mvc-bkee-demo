@@ -4,7 +4,7 @@
 
 import {Inject}                 from 'di.js';
 import {App}                    from 'arva-mvc/core/App';
-import Router                   from 'arva-mvc/core/Router';
+import {Router}                 from 'arva-mvc/core/Router';
 import Context                  from 'famous/core/Context';
 import {GetDefaultContext}      from 'arva-mvc/DefaultContext';
 import AnimationController      from 'famous-flex/src/AnimationController';

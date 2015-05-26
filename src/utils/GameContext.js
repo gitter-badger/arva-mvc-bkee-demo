@@ -4,7 +4,9 @@
 
 import {GetDefaultContext} from 'arva-mvc/DefaultContext';
 import {DataSource}        from 'arva-ds/core/DataSource';
-import FireOnceAndWait     from './helpers';
+import {FireOnceAndWait}   from './helpers';
+import {ObjectHelper}      from 'arva-mvc/utils/objectHelper';
+import _                   from 'lodash';
 
 import Player              from '../models/Player';
 import Players             from '../collections/Players';
@@ -114,8 +116,8 @@ export default class GameContext {
 
         let dice = (Math.random()*10)+1;
         let newGame = new Game(null, {
-            player1: player1,
-            player2: player2,
+            player1: _.merge(ObjectHelper.getEnumerableProperties(player1), {id: invitation.player1}),
+            player2: _.merge(ObjectHelper.getEnumerableProperties(player2), {id: invitation.player2}),
             status: 'active',
             activeSince: Date.now(),
             nextPlayer: dice>5?invitation.player1:invitation.player2

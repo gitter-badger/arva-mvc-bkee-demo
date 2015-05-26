@@ -4,7 +4,7 @@
 
 import Surface                      from 'famous/core/Surface';
 import View                         from 'famous/core/View';
-import ObjectHelper                 from 'arva-mvc/utils/objectHelper';
+import {ObjectHelper}               from 'arva-mvc/utils/objectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
 import Background                   from '../../components/Background';
 
@@ -36,26 +36,36 @@ export class PlayView extends View {
 
     set(activePlayer, gameState) {
 
-        this.nextPlayer = gameState.nextPlayer;
-        this.nextPlayerName = gameState.player1.id==gameState.nextPlayer?
-            gameState.player1.name:
-            gameState.player2.name;
+        this.activePlayer = activePlayer;
 
         this._renderables.header.setContent(`<div class="player1">${gameState.player1.name}<span>X</span></div>
         <div class="player2">${gameState.player2.name}<span>O</span></div>`);
 
+        if (gameState.status == 'won') {
+                let winningPlayer = gameState.player1.id==gameState.winner?
+                    gameState.player1.name:
+                    gameState.player2.name;
 
-        this._renderables.footer.setContent(`Turn: ${this.nextPlayerName}`);
-
-        if (gameState.data && gameState.data[gameState.player1.id]) {
-            gameState.data[gameState.player1.id].forEach((move) => {
-                this._renderables[`surface${move.position}`].setContent('X');
-            });
+                this._renderables.footer.setContent(`${winningPlayer} heeft gewonnen!`);
+        }
+        else if (gameState.status == 'draw'){
+            this._renderables.footer.setContent(`Jammer! Het potje is onbeslist!`);
+        }
+        else {
+            let nextPlayerName = gameState.player1.id==gameState.nextPlayer?
+                gameState.player1.name:
+                gameState.player2.name;
+            this._renderables.footer.setContent(`${nextPlayerName} is aan de beurt.`);
         }
 
-        if (gameState.data && gameState.data[gameState.player2.id]) {
-            gameState.data[gameState.player2.id].forEach((move) => {
-                this._renderables[`surface${move.position}`].setContent('O');
+        if (gameState.data) {
+            gameState.data.forEach((move) => {
+                if (move.by==gameState.player1.id) {
+                    this._renderables[`surface${move.position}`].setContent('X');
+                }
+                else {
+                    this._renderables[`surface${move.position}`].setContent('O');
+                }
             });
         }
     }
@@ -82,39 +92,39 @@ export class PlayView extends View {
         let viewContext = this;
 
         this._renderables.surface1.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 1 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 1 });
         });
 
         this._renderables.surface2.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 2 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 2 });
         });
 
         this._renderables.surface3.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 3 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 3 });
         });
 
         this._renderables.surface4.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 4 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 4 });
         });
 
         this._renderables.surface5.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 5 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 5 });
         });
 
         this._renderables.surface6.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 6 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 6 });
         });
 
         this._renderables.surface7.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 7 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 7 });
         });
 
         this._renderables.surface8.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 8 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 8 });
         });
 
         this._renderables.surface9.on('click', function() {
-            viewContext._eventOutput.emit('move', { by: viewContext.nextPlayer, position: 9 });
+            viewContext._eventOutput.emit('move', { by: viewContext.activePlayer, position: 9 });
         });
     }
 
@@ -223,6 +233,8 @@ export class PlayView extends View {
                     origin: [0,1],
                     translate: [0, -this.options.navigationHeight, 1000]
                 });
+
+                context.get('footer').renderNode.properties.lineHeight = `${top-this.options.navigationHeight}px`;
 
             }.bind(this),
             dataSource: this._renderables

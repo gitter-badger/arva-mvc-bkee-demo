@@ -58,18 +58,18 @@ export class PlayController extends Controller {
         let gameEngine = new BKEEEngine(activePlayer, gameState);
 
         gameEngine.on('won', () => {
-            this.gameContext.setWinnerScore();
+            let losingPlayer = gameState.player1.id == activePlayer?
+                gameState.player2.id:
+                gameState.player1.id;
+
+            this.gameContext.setWinnerScore(activePlayer);
+            this.gameContext.setLossScore(losingPlayer);
         });
 
         gameEngine.on('draw', () => {
             this.gameContext.setDrawScore();
         });
 
-        gameEngine.on('loss', () => {
-            this.gameContext.setLossScore();
-        });
-
-        gameEngine.evaluate();
         return gameEngine;
     }
 

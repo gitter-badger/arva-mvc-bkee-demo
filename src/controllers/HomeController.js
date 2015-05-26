@@ -67,6 +67,8 @@ export class HomeController extends Controller {
         this.router.go(this, 'Main');
     }
 
+
+
     /**
      * 2. Accept a challenge from online user
      * @param playerId

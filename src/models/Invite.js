@@ -1,5 +1,5 @@
 
-import Model                from 'arva-ds/core/Model';
+import {Model}                from 'arva-ds/core/Model';
 
 export default class Invite extends Model {
 
