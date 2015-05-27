@@ -9,7 +9,8 @@ import {GetDefaultContext}  from 'arva-mvc/DefaultContext';
 import Player               from '../models/Player';
 import {HomeController}     from './HomeController';
 import GameContext          from '../utils/GameContext';
-import {FireOnceAndWait}    from '../utils/helpers';
+import {FireOnceAndWait,
+        RegisterNewAccount} from '../utils/helpers';
 
 import ProfileView          from '../views/Profile/ProfileView';
 import ChangeAvatarView     from '../views/Profile/ChangeAvatarView';
@@ -20,7 +21,7 @@ export class ProfileController extends Controller {
     constructor(router, context) {
         super(router, context);
 
-        this.gameContext = new GameContext();
+        this.gameContext = GetDefaultContext().get(GameContext);
     }
 
 
@@ -29,14 +30,15 @@ export class ProfileController extends Controller {
      * @constructor
      */
     async Register() {
-        let newPlayer = { id: undefined };
-        let newPlayerName = this.gameContext.getDefaultPlayerName();
-
-        await this.gameContext.ready('avatars');
 
         if (this.gameContext.isNewPlayer()) {
+            let newPlayerName = this.gameContext.getDefaultPlayerName();
+            let authData = await RegisterNewAccount(this.gameContext.ds);
 
-            newPlayer = new Player(null, {
+            await this.gameContext.ready('avatars');
+
+            let newPlayer = new Player(null, {
+                    uid: authData.uid,
                     name: newPlayerName,
                     lost: 0,
                     won: 0,
@@ -46,10 +48,11 @@ export class ProfileController extends Controller {
                     avatar: this.gameContext.avatars[0].url
             });
             this.gameContext.players.add(newPlayer);
-            this.gameContext.setPlayerId(newPlayer.id);
+            this.gameContext.setActivePlayer(newPlayer.id, authData.token);
+            this.router.go(this, 'Show', {playerId: newPlayer.id});
+        } else {
+            this.router.go(HomeController, 'Main');
         }
-
-        this.router.go(this, 'Show', {playerId: newPlayer.id});
     }
 
     /**

@@ -2,6 +2,7 @@
 import {Model}                from 'arva-ds/core/Model';
 
 export default class Player extends Model {
+    get uid() { }
     get name() { }
     get avatar() {}
     get won() {}

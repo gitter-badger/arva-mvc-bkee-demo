@@ -27268,8 +27268,10 @@ System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function(
           setWithPriority: function(newData, priority) {},
           setPriority: function(newPriority) {},
           authWithOAuthToken: function(provider, credentials, onComplete, options) {},
+          authWithCustomToken: function(authToken, onComplete, options) {},
           authWithPassword: function(credentials, onComplete, options) {},
           getAuth: function() {},
+          unauth: function() {},
           setValueChangedCallback: function(callback) {},
           removeValueChangedCallback: function() {},
           setChildAddedCallback: function(callback) {},
@@ -27300,7 +27302,19 @@ System.register("utils/helpers", [], function($__export) {
     } else
       return Promise.resolve();
   }
+  function RegisterNewAccount(dataSource) {
+    return new Promise(function(resolve, reject) {
+      dataSource._dataReference.authAnonymously(function(error, authData) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(authData);
+        }
+      });
+    });
+  }
   $__export("FireOnceAndWait", FireOnceAndWait);
+  $__export("RegisterNewAccount", RegisterNewAccount);
   return {
     setters: [],
     execute: function() {
@@ -28315,11 +28329,18 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
               return ;
             }
             this.options.dataStore.on('child_added', function(child) {
+              if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
+                return ;
+              }
               this.insert(child.priority, this.options.template(child));
               this._reTouchList();
             }, this);
             this.options.dataStore.on('child_changed', function(child) {
-              this.replace(child.priority, this.options.template(child));
+              if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
+                this.remove(child.priority);
+              } else {
+                this.replace(child.priority, this.options.template(child));
+              }
               this._reTouchList();
             }, this);
             this.options.dataStore.on('child_moved', function(child, oldposition) {
@@ -28327,10 +28348,7 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
               this._reTouchList();
             }, this);
             this.options.dataStore.on('child_removed', function(child) {
-              for (var i = 0; i < this._dataSource.length; i++) {
-                if (this._dataSource[i].properties && this._dataSource[i].properties.id === child.id)
-                  this.remove(i);
-              }
+              this.remove(child.priority);
               this._reTouchList();
             }, this);
           }
@@ -28483,6 +28501,9 @@ System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm
                 margins: [5, 5, 5, 5],
                 spacing: 5
               },
+              dataFilter: (function(game) {
+                return game.status == 'active' && (game.player1.id == $__0.options.activePlayer || game.player2.id == $__0.options.activePlayer);
+              }),
               template: (function(game) {
                 var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
                 var surface = new Surface({
@@ -29212,7 +29233,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
@@ -29222,6 +29243,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
       DataboundFlexScrollView,
       Background,
       AutoFontsizeSurface,
+      _,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
@@ -29238,24 +29260,26 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
       Background = $__m.default;
     }, function($__m) {
       AutoFontsizeSurface = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {headerHeight: 75};
       $__export('default', (function($__super) {
         function InvitePlayerView() {
           var options = arguments[0] !== (void 0) ? arguments[0] : {};
-          $traceurRuntime.superConstructor(InvitePlayerView).call(this, DEFAULT_OPTIONS);
+          var newOptions = _.extend(options, DEFAULT_OPTIONS);
+          $traceurRuntime.superConstructor(InvitePlayerView).call(this, newOptions);
           ObjectHelper.bindAllMethods(this, this);
           ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          if (options.dataSource)
-            this._dataSource = options.dataSource;
           this._createRenderables();
           this._createLayout();
           this._createListeners();
         }
         return ($traceurRuntime.createClass)(InvitePlayerView, {
           _createRenderables: function() {
+            var $__0 = this;
             var contextView = this;
             var invitePlayers = new DataboundFlexScrollView({
               flowOptions: {
@@ -29269,6 +29293,9 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                 margins: [5, 5, 5, 5],
                 spacing: 5
               },
+              dataFilter: (function(player) {
+                return player.id != $__0.options.activePlayer;
+              }),
               template: function(player) {
                 var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
                 var surface = new Surface({
@@ -29287,7 +29314,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                 });
                 return surface;
               },
-              dataStore: this._dataSource
+              dataStore: this.options.dataSource
             });
             this._renderables = {
               background: new Background(),
@@ -30026,11 +30053,17 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           authWithOAuthToken: function(provider, credentials, onComplete, options) {
             return this._dataReference.authWithOAuthToken(provider, credentials, onComplete, options);
           },
+          authWithCustomToken: function(authToken, onComplete, options) {
+            return this._dataReference.authWithCustomToken(authToken, onComplete, options);
+          },
           authWithPassword: function(credentials, onComplete, options) {
             return this._dataReference.authWithPassword(credentials, onComplete, options);
           },
           getAuth: function() {
             return this._dataReference.getAuth();
+          },
+          unauth: function() {
+            return this._dataReference.unauth();
           },
           setValueChangedCallback: function(callback) {
             this._onValueCallback = callback;
@@ -30135,6 +30168,7 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
           $traceurRuntime.superConstructor(Player).apply(this, arguments);
         }
         return ($traceurRuntime.createClass)(Player, {
+          get uid() {},
           get name() {},
           get avatar() {},
           get won() {},
@@ -30268,23 +30302,38 @@ System.register("settings", ["github:Bizboard/di.js@master", "github:Bizboard/ar
   var __moduleName = "settings";
   var annotate,
       Provide,
+      ProvidePromise,
       DataSource,
       FirebaseDataSource;
   function BkeeDataSource() {
-    return new FirebaseDataSource("https://bkee.firebaseio.com");
+    var ds = new FirebaseDataSource("https://bkee.firebaseio.com");
+    if (localStorage["bkee.playertoken"]) {
+      var token = localStorage["bkee.playertoken"];
+      ds.authWithCustomToken(token, function(error, authData) {
+        if (error) {
+          console.log("Access not allowed.");
+        } else {
+          console.log("Authenticated.");
+        }
+      });
+    }
+    return ds;
   }
   $__export("BkeeDataSource", BkeeDataSource);
   return {
     setters: [function($__m) {
       annotate = $__m.annotate;
       Provide = $__m.Provide;
+      ProvidePromise = $__m.ProvidePromise;
     }, function($__m) {
       DataSource = $__m.DataSource;
     }, function($__m) {
       FirebaseDataSource = $__m.FirebaseDataSource;
     }],
     execute: function() {
-      annotate(BkeeDataSource, new Provide(DataSource));
+      Object.defineProperty(BkeeDataSource, "annotations", {get: function() {
+          return [new Provide(DataSource)];
+        }});
     }
   };
 });
@@ -30310,6 +30359,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
   var GetDefaultContext,
       DataSource,
       FireOnceAndWait,
+      AuthenticateWithToken,
       ObjectHelper,
       _,
       Player,
@@ -30320,6 +30370,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       Invites,
       Invite,
       BKEE_PLAYERID,
+      BKEE_PLAYERTOKEN,
       BKEE_LASTGAMEID,
       BKEE_ACTIVEGAMES;
   return {
@@ -30329,6 +30380,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       DataSource = $__m.DataSource;
     }, function($__m) {
       FireOnceAndWait = $__m.FireOnceAndWait;
+      AuthenticateWithToken = $__m.AuthenticateWithToken;
     }, function($__m) {
       ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
@@ -30350,6 +30402,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
     }],
     execute: function() {
       BKEE_PLAYERID = 'bkee.playerid';
+      BKEE_PLAYERTOKEN = 'bkee.playertoken';
       BKEE_LASTGAMEID = 'bkee.lastgameid';
       BKEE_ACTIVEGAMES = 'bkee.activegames';
       $__export('default', (function() {
@@ -30357,10 +30410,10 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           var $__0 = this;
           if (!localStorage[BKEE_ACTIVEGAMES])
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
-          this.ds = GetDefaultContext().get(DataSource);
           this.players = new Players();
           this.avatars = new Avatars();
           this.games = new Games();
+          this.ds = GetDefaultContext().get(DataSource);
           if (!this.isNewPlayer()) {
             this.invites = new Invites(this.ds.child('Invites').child(this.getPlayerId()));
             this.invites.on('child_added', (function(invite) {
@@ -30390,11 +30443,17 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
               return localStorage[BKEE_PLAYERID];
             return undefined;
           },
-          setPlayerId: function(playerId) {
+          getPlayerToken: function() {
+            if (localStorage[BKEE_PLAYERTOKEN])
+              return localStorage[BKEE_PLAYERTOKEN];
+            return undefined;
+          },
+          setActivePlayer: function(playerId, token) {
+            localStorage[BKEE_PLAYERTOKEN] = token;
             localStorage[BKEE_PLAYERID] = playerId;
           },
           getDefaultPlayerName: function() {
-            return ("player-" + Math.floor(Math.random() * 100000));
+            return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
           },
           getLastActiveGame: function() {
             var gameId = localStorage[BKEE_LASTGAMEID];
@@ -30488,6 +30547,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           trackOnline: function() {
             var $__0 = this;
             setInterval((function() {
+              return ;
               if ($__0.isNewPlayer())
                 return ;
               var playerName = $__0.getPlayerId();
@@ -30512,6 +30572,7 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
       HomeController,
       GameContext,
       FireOnceAndWait,
+      RegisterNewAccount,
       ProfileView,
       ChangeAvatarView,
       ProfileController;
@@ -30528,6 +30589,7 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
       GameContext = $__m.default;
     }, function($__m) {
       FireOnceAndWait = $__m.FireOnceAndWait;
+      RegisterNewAccount = $__m.RegisterNewAccount;
     }, function($__m) {
       ProfileView = $__m.default;
     }, function($__m) {
@@ -30537,38 +30599,51 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
       ProfileController = (function($__super) {
         function ProfileController(router, context) {
           $traceurRuntime.superConstructor(ProfileController).call(this, router, context);
-          this.gameContext = new GameContext();
+          this.gameContext = GetDefaultContext().get(GameContext);
         }
         return ($traceurRuntime.createClass)(ProfileController, {
           Register: function() {
-            var newPlayer,
-                newPlayerName;
+            var newPlayerName,
+                authData,
+                newPlayer;
             return $traceurRuntime.asyncWrap(function($ctx) {
               while (true)
                 switch ($ctx.state) {
                   case 0:
-                    newPlayer = {id: undefined};
-                    newPlayerName = this.gameContext.getDefaultPlayerName();
-                    $ctx.state = 4;
+                    $ctx.state = (this.gameContext.isNewPlayer()) ? 6 : 10;
                     break;
-                  case 4:
-                    Promise.resolve(this.gameContext.ready('avatars')).then($ctx.createCallback(2), $ctx.errback);
+                  case 6:
+                    newPlayerName = this.gameContext.getDefaultPlayerName();
+                    $ctx.state = 7;
+                    break;
+                  case 7:
+                    Promise.resolve(RegisterNewAccount(this.gameContext.ds)).then($ctx.createCallback(3), $ctx.errback);
                     return ;
+                  case 3:
+                    authData = $ctx.value;
+                    $ctx.state = 2;
+                    break;
                   case 2:
-                    if (this.gameContext.isNewPlayer()) {
-                      newPlayer = new Player(null, {
-                        name: newPlayerName,
-                        lost: 0,
-                        won: 0,
-                        draw: 0,
-                        score: 0,
-                        lastTimeAccessed: Date.now(),
-                        avatar: this.gameContext.avatars[0].url
-                      });
-                      this.gameContext.players.add(newPlayer);
-                      this.gameContext.setPlayerId(newPlayer.id);
-                    }
+                    Promise.resolve(this.gameContext.ready('avatars')).then($ctx.createCallback(5), $ctx.errback);
+                    return ;
+                  case 5:
+                    newPlayer = new Player(null, {
+                      uid: authData.uid,
+                      name: newPlayerName,
+                      lost: 0,
+                      won: 0,
+                      draw: 0,
+                      score: 0,
+                      lastTimeAccessed: Date.now(),
+                      avatar: this.gameContext.avatars[0].url
+                    });
+                    this.gameContext.players.add(newPlayer);
+                    this.gameContext.setActivePlayer(newPlayer.id, authData.token);
                     this.router.go(this, 'Show', {playerId: newPlayer.id});
+                    $ctx.state = -2;
+                    break;
+                  case 10:
+                    this.router.go(HomeController, 'Main');
                     $ctx.state = -2;
                     break;
                   default:
@@ -30686,8 +30761,11 @@ System.register("controllers/HomeController", ["github:Bizboard/arva-mvc@develop
               $__2,
               $__3;
           $traceurRuntime.superConstructor(HomeController).call(this, router, context);
-          this.gameContext = new GameContext();
-          this.invitePlayerView = new InvitePlayerView({dataSource: this.gameContext.players});
+          this.gameContext = GetDefaultContext().get(GameContext);
+          this.invitePlayerView = new InvitePlayerView({
+            dataSource: this.gameContext.players,
+            activePlayer: this.gameContext.getPlayerId()
+          });
           this.myGamesView = new MyGamesView({
             dataSource: this.gameContext.games,
             activePlayer: this.gameContext.getPlayerId()
@@ -31007,10 +31085,7 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
     execute: function() {
       BkeeApp = (function($__super) {
         function BkeeApp(router, context) {
-          var $__0;
           router.setDefault(HomeController, 'Main');
-          $traceurRuntime.superConstructor(BkeeApp).call(this, router);
-          context.setSize();
           router.setControllerSpecs({
             HomeController: {
               controllers: [{
@@ -31080,27 +31155,31 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
               }
             }
           });
-          this.gameContext = new GameContext();
+          var gameContext = GetDefaultContext().get(GameContext);
           var navigation = new Navigation();
-          navigation._renderables.tabBar.on('tabchange', ($__0 = this, function(event) {
+          var routChangeInProgress = false;
+          navigation._renderables.tabBar.on('tabchange', (function(event) {
+            if (routChangeInProgress)
+              return ;
             switch (event.index) {
               case 0:
-                $__0.router.go(HomeController, 'Main');
+                router.go(HomeController, 'Main');
                 break;
               case 1:
-                $__0.router.go(PlayController, 'Main');
+                router.go(PlayController, 'Main');
                 break;
               case 2:
-                var playerId = $__0.gameContext.getPlayerId();
+                var playerId = gameContext.getPlayerId();
                 if (playerId)
-                  $__0.router.go(ProfileController, 'Show', {playerId: playerId});
+                  router.go(ProfileController, 'Show', {playerId: playerId});
                 else
-                  $__0.router.go(ProfileController, 'Register');
+                  router.go(ProfileController, 'Register');
                 break;
             }
           }));
           context.add(navigation);
           router.on('routechange', function(routerSpec) {
+            routChangeInProgress = true;
             switch (routerSpec.controller) {
               case 'Home':
                 navigation._renderables.tabBar.setSelectedItemIndex(0);
@@ -31112,8 +31191,10 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
                 navigation._renderables.tabBar.setSelectedItemIndex(2);
                 break;
             }
+            routChangeInProgress = false;
           });
-          this.gameContext.trackOnline();
+          gameContext.trackOnline();
+          $traceurRuntime.superConstructor(BkeeApp).call(this, router, context);
         }
         return ($traceurRuntime.createClass)(BkeeApp, {}, {}, $__super);
       }(App));
@@ -31125,15 +31206,17 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
   };
 });
 
-System.register("main", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "BkeeApp", "settings", "github:Bizboard/arva-mvc@develop/DefaultContext", "utils/GameContext"], function($__export) {
+System.register("main", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "BkeeApp", "settings", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-mvc@develop/DefaultContext", "utils/GameContext"], function($__export) {
   "use strict";
   var __moduleName = "main";
   var Injector,
       ArvaRouter,
       BkeeApp,
       BkeeDataSource,
+      DataSource,
       reCreateDefaultContext,
-      GameContext;
+      GameContext,
+      context;
   return {
     setters: [function($__m) {
       Injector = $__m.Injector;
@@ -31144,12 +31227,27 @@ System.register("main", ["github:Bizboard/di.js@master", "github:Bizboard/arva-m
     }, function($__m) {
       BkeeDataSource = $__m.BkeeDataSource;
     }, function($__m) {
+      DataSource = $__m.DataSource;
+    }, function($__m) {
       reCreateDefaultContext = $__m.reCreateDefaultContext;
     }, function($__m) {
       GameContext = $__m.default;
     }],
     execute: function() {
-      reCreateDefaultContext(ArvaRouter, BkeeDataSource).get(BkeeApp);
+      context = reCreateDefaultContext(ArvaRouter, BkeeDataSource, GameContext);
+      if (localStorage["bkee.playertoken"]) {
+        var dataSource = context.get(DataSource);
+        var token = localStorage["bkee.playertoken"];
+        dataSource.authWithCustomToken(token, function(error, authData) {
+          if (error) {
+            console.log("Access not allowed.");
+          } else {
+            console.log("Authenticated.");
+          }
+          context.get(BkeeApp);
+        });
+      } else
+        context.get(BkeeApp);
     }
   };
 });

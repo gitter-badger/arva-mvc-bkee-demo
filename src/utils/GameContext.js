@@ -4,7 +4,8 @@
 
 import {GetDefaultContext} from 'arva-mvc/DefaultContext';
 import {DataSource}        from 'arva-ds/core/DataSource';
-import {FireOnceAndWait}   from './helpers';
+import {FireOnceAndWait,
+    AuthenticateWithToken} from './helpers';
 import {ObjectHelper}      from 'arva-mvc/utils/objectHelper';
 import _                   from 'lodash';
 
@@ -17,6 +18,7 @@ import Invites             from '../collections/Invites';
 import Invite              from '../models/Invite';
 
 const BKEE_PLAYERID = 'bkee.playerid';
+const BKEE_PLAYERTOKEN = 'bkee.playertoken';
 const BKEE_LASTGAMEID = 'bkee.lastgameid';
 const BKEE_ACTIVEGAMES = 'bkee.activegames';
 
@@ -24,17 +26,15 @@ export default class GameContext {
 
     constructor() {
 
-        //super();
-
         if (!localStorage[BKEE_ACTIVEGAMES])
             localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
 
 
-        this.ds = GetDefaultContext().get(DataSource);
-
         this.players = new Players();
         this.avatars = new Avatars();
         this.games = new Games();
+
+        this.ds = GetDefaultContext().get(DataSource);
 
         // my invites
         if (!this.isNewPlayer()) {
@@ -74,7 +74,13 @@ export default class GameContext {
         return undefined;
     }
 
-    setPlayerId(playerId) {
+    getPlayerToken() {
+        if (localStorage[BKEE_PLAYERTOKEN]) return localStorage[BKEE_PLAYERTOKEN];
+        return undefined;
+    }
+
+    setActivePlayer(playerId, token) {
+        localStorage[BKEE_PLAYERTOKEN] = token;
         localStorage[BKEE_PLAYERID] = playerId;
     }
 

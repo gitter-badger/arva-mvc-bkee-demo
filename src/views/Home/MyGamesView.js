@@ -63,6 +63,12 @@ export default class MyGamesView extends View {
                 spacing: 5
             },
 
+            dataFilter: (game) => {
+                return game.status == 'active' &&
+                    (game.player1.id == this.options.activePlayer ||
+                    game.player2.id == this.options.activePlayer);
+            },
+
             template: (game) => {
                 let playerToShow = game.player1.id==this.options.activePlayer?
                     game.player2:

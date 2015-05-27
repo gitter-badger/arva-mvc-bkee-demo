@@ -8,6 +8,7 @@ import LayoutController             from 'famous-flex/src/LayoutController';
 import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
 import Background                   from '../../components/Background';
 import AutoFontsizeSurface          from 'famous-autofontsizesurface/AutoFontSizeSurface';
+import _                            from 'lodash';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75
@@ -18,7 +19,8 @@ export default class InvitePlayerView extends View {
 
 
     constructor(options = {}) {
-        super(DEFAULT_OPTIONS);
+        let newOptions = _.extend(options, DEFAULT_OPTIONS);
+        super(newOptions);
 
         /* Bind all local methods to the current object instance, so we can refer to 'this'
          * in the methods as expected, even when they're called from event handlers.        */
@@ -30,8 +32,6 @@ export default class InvitePlayerView extends View {
 
         /* Hide the priority field from enumeration, so we don't save it to the dataSource. */
         ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-
-        if (options.dataSource) this._dataSource = options.dataSource;
 
         this._createRenderables();
         this._createLayout();
@@ -62,6 +62,11 @@ export default class InvitePlayerView extends View {
                 margins: [5, 5, 5, 5],
                 spacing: 5
             },
+
+            dataFilter: (player) => {
+                return player.id != this.options.activePlayer;
+            },
+
             template: function(player) {
 
                 let isOnline = (Date.now() - player.lastTimeAccessed)<10000?'online':'offline';
@@ -88,7 +93,7 @@ export default class InvitePlayerView extends View {
                 return surface;
             },
 
-            dataStore: this._dataSource
+            dataStore: this.options.dataSource
 
         });
 

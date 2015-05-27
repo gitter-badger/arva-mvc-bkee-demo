@@ -22,11 +22,12 @@ export class HomeController extends Controller {
     constructor(router, context) {
         super(router, context);
 
-        this.gameContext = new GameContext();
+        this.gameContext = GetDefaultContext().get(GameContext);
 
         // views and databinding
         this.invitePlayerView = new InvitePlayerView({
-            dataSource: this.gameContext.players
+            dataSource: this.gameContext.players,
+            activePlayer: this.gameContext.getPlayerId()
         });
 
         this.myGamesView = new MyGamesView({
@@ -74,6 +75,7 @@ export class HomeController extends Controller {
             return this.myGamesView;
         }
     }
+
 
     InvitePlayers() {
         if (this.gameContext.isNewPlayer()) {

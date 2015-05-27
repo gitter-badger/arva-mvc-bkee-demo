@@ -49,6 +49,12 @@ export default class DataBoundFlexScrollView extends FlexScrollView {
 
         this.options.dataStore.on('child_added', function(child) {
 
+            if (this.options.dataFilter &&
+                typeof this.options.dataFilter === "function" &&
+                !this.options.dataFilter(child)) {
+                    return;
+            }
+
             this.insert(child.priority, this.options.template(child));
             this._reTouchList();
 
@@ -57,8 +63,16 @@ export default class DataBoundFlexScrollView extends FlexScrollView {
 
         this.options.dataStore.on('child_changed', function(child) {
 
-             this.replace(child.priority, this.options.template(child));
-             this._reTouchList();
+            if (this.options.dataFilter &&
+                typeof this.options.dataFilter === "function" &&
+                !this.options.dataFilter(child)) {
+                this.remove(child.priority);
+            }
+            else {
+                this.replace(child.priority, this.options.template(child));
+            }
+
+            this._reTouchList();
 
         }, this);
 
@@ -72,10 +86,12 @@ export default class DataBoundFlexScrollView extends FlexScrollView {
 
         this.options.dataStore.on('child_removed', function(child) {
 
-            for (let i=0;i<this._dataSource.length;i++) {
-                if (this._dataSource[i].properties&&this._dataSource[i].properties.id===child.id)
-                    this.remove(i);
-            }
+            this.remove(child.priority);
+
+            //for (let i=0;i<this._dataSource.length;i++) {
+            //    if (this._dataSource[i].properties&&this._dataSource[i].properties.id===child.id)
+            //        this.remove(i);
+            //}
 
             this._reTouchList();
 

@@ -25,10 +25,10 @@ export class BkeeApp extends App {
 
 
     constructor(router, context) {
+
         // make one of the controllers default
         router.setDefault(HomeController, 'Main');
-        super(router);
-        
+
 
         router.setControllerSpecs({
             HomeController: {
@@ -88,25 +88,28 @@ export class BkeeApp extends App {
 
 
 
-        this.gameContext = new GameContext();
+        let gameContext = GetDefaultContext().get(GameContext);
 
         // add a navigation component for the application
         let navigation = new Navigation();
+        let routChangeInProgress = false;
+
         navigation._renderables.tabBar.on('tabchange', (event) =>{
+            if (routChangeInProgress)return;
             switch (event.index)
             {
                 case 0: /* Invite Players */
-                    this.router.go(HomeController, 'Main');
+                    router.go(HomeController, 'Main');
                     break;
 
                 case 1: /* Current Game View */
-                    this.router.go(PlayController, 'Main');
+                    router.go(PlayController, 'Main');
                     break;
 
                 case 2: /* Profile */
-                    let playerId = this.gameContext.getPlayerId();
-                    if (playerId) this.router.go(ProfileController, 'Show', {playerId: playerId});
-                    else this.router.go(ProfileController, 'Register');
+                    let playerId = gameContext.getPlayerId();
+                    if (playerId) router.go(ProfileController, 'Show', {playerId: playerId});
+                    else router.go(ProfileController, 'Register');
                     break;
             }
         });
@@ -114,6 +117,7 @@ export class BkeeApp extends App {
 
 
         router.on('routechange', function(routerSpec) {
+            routChangeInProgress = true;
             switch (routerSpec.controller) {
                 case 'Home':
                     navigation._renderables.tabBar.setSelectedItemIndex(0);
@@ -125,11 +129,15 @@ export class BkeeApp extends App {
                     navigation._renderables.tabBar.setSelectedItemIndex(2);
                     break;
             }
+            routChangeInProgress = false;
         });
 
-        this.gameContext.trackOnline();
+        gameContext.trackOnline();
 
+        super(router, context);
     }
+
+
 }
 
 

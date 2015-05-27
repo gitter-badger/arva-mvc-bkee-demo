@@ -11,3 +11,15 @@ export function FireOnceAndWait(object) {
         });
     } else return Promise.resolve();
 }
+
+export function RegisterNewAccount(dataSource) {
+    return new Promise(function(resolve, reject){
+        dataSource._dataReference.authAnonymously(function(error, authData) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(authData);
+            }
+        });
+    });
+}
