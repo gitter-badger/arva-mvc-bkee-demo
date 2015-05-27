@@ -47,7 +47,7 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
 
 .ff-tabbar.background {
     background-color: #ECECEC;
-    border-top: 1px solid #D6D6D6; !important;
+    border-top: 1px solid #D6D6D6 !important;
 }
 .ff-tabbar.item {
     color: #333333 !important;
@@ -197,4 +197,11 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
 .footer.players {
     font-size: 16px;
     color: #000000;
+}
+
+#container {
+    width:100%;
+    height:100%;
+    max-width:320px;
+    max-height:568px;
 }

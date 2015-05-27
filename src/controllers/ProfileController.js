@@ -57,13 +57,13 @@ export class ProfileController extends Controller {
      * @param playerId
      * @constructor
      */
-    async Show(playerId) {
+    Show(playerId) {
         let controllerContext = this;
 
         if (!playerId) this.router.go(HomeController, 'Main');
         else {
             let playerToShow = new Player(playerId);
-            await FireOnceAndWait(playerToShow);
+            //await FireOnceAndWait(playerToShow);
 
             let profileView = new ProfileView();
             profileView.set(playerToShow);

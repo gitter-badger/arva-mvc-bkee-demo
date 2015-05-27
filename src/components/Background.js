@@ -13,7 +13,7 @@ export default class Background extends BkImageSurface {
 
         super({
             content: 'img/back.png',
-            sizeMode: BkImageSurface.SizeMode.ASPECTFIT
+            sizeMode: BkImageSurface.SizeMode.ASPECTFILL
         });
     }
 }

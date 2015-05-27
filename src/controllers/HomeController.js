@@ -48,10 +48,7 @@ export class HomeController extends Controller {
         this.invitePlayerView.on('invite',
             (player) => {
 
-                if (this.gameContext.hasGame(player.id)) {
-                    this.router.go(PlayController, 'Play', {gameId: this.gameContext.getGameId(player.id)});
-                }
-                else if (window.confirm(`Challenge ${player.name}?`)) {
+                if (window.confirm(`Challenge ${player.name}?`)) {
                     this.router.go(this, 'SendChallenge', {playerId: player.id});
                 }
         });

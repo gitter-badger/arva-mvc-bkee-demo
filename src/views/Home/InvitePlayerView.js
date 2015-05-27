@@ -130,7 +130,7 @@ export default class InvitePlayerView extends View {
 
                 context.set('close', {
                     size: [56, 56],
-                    translate: [0,0,25],
+                    translate: [0,0,3],
                     align: [0.90,0.85],
                     origin: [0.5,0.5]
                 });
