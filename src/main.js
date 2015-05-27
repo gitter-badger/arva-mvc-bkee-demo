@@ -13,5 +13,5 @@ import {BkeeDataSource}                         from './settings';
 import {reCreateDefaultContext}                 from 'arva-mvc/DefaultContext';
 import GameContext                              from '../utils/GameContext';
 
-reCreateDefaultContext(ArvaRouter, BkeeDataSource, GameContext)
+reCreateDefaultContext(ArvaRouter, BkeeDataSource)
     .get(BkeeApp);

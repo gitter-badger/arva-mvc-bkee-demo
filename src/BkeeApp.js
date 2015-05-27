@@ -28,6 +28,7 @@ export class BkeeApp extends App {
         // make one of the controllers default
         router.setDefault(HomeController, 'Main');
         super(router);
+        
 
         router.setControllerSpecs({
             HomeController: {
@@ -87,7 +88,7 @@ export class BkeeApp extends App {
 
 
 
-        this.gameContext = GetDefaultContext().get(GameContext);
+        this.gameContext = new GameContext();
 
         // add a navigation component for the application
         let navigation = new Navigation();

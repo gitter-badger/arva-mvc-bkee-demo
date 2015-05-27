@@ -22,7 +22,7 @@ export class HomeController extends Controller {
     constructor(router, context) {
         super(router, context);
 
-        this.gameContext = GetDefaultContext().get(GameContext);
+        this.gameContext = new GameContext();
 
         // views and databinding
         this.invitePlayerView = new InvitePlayerView({

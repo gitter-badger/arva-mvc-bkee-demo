@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>190DFBB9-ED2C-40F9-9CBD-0CF3312BD687</string>
+	<key>IDESourceControlProjectName</key>
+	<string>project</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>6D7F41B049EDB3F87F56DC8FDA4C8E34DA42C2FE</key>
+		<string>github.com:Bizboard/arva-mvc-bkee-demo.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>platforms/ios/BkeeWars.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>6D7F41B049EDB3F87F56DC8FDA4C8E34DA42C2FE</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:Bizboard/arva-mvc-bkee-demo.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>6D7F41B049EDB3F87F56DC8FDA4C8E34DA42C2FE</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>6D7F41B049EDB3F87F56DC8FDA4C8E34DA42C2FE</string>
+			<key>IDESourceControlWCCName</key>
+			<string>arva-mvc-bkee-demo</string>
+		</dict>
+	</array>
+</dict>
+</plist>
