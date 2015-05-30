@@ -29,27 +29,28 @@ export class ProfileController extends Controller {
      * Register as new Player
      * @constructor
      */
-    async Register() {
+    Register() {
 
         if (this.gameContext.isNewPlayer()) {
             let newPlayerName = this.gameContext.getDefaultPlayerName();
-            let authData = await RegisterNewAccount(this.gameContext.ds);
 
-            await this.gameContext.ready('avatars');
-
-            let newPlayer = new Player(null, {
-                    uid: authData.uid,
-                    name: newPlayerName,
-                    lost: 0,
-                    won: 0,
-                    draw: 0,
-                    score: 0,
-                    lastTimeAccessed: Date.now(),
-                    avatar: this.gameContext.avatars[0].url
+            RegisterNewAccount(this.gameContext.ds)
+                .then((authData) => {
+                    let newPlayer = new Player(null, {
+                        uid: authData.uid,
+                        name: newPlayerName,
+                        lost: 0,
+                        won: 0,
+                        draw: 0,
+                        score: 0,
+                        lastTimeAccessed: Date.now(),
+                        avatar: 'https://bitcoinwallet.com/images/users/unknown_user.png'
+                    });
+                    this.gameContext.players.add(newPlayer);
+                    this.gameContext.setActivePlayer(newPlayer.id, authData.token);
+                    this.router.go(this, 'Show', {playerId: newPlayer.id});
             });
-            this.gameContext.players.add(newPlayer);
-            this.gameContext.setActivePlayer(newPlayer.id, authData.token);
-            this.router.go(this, 'Show', {playerId: newPlayer.id});
+
         } else {
             this.router.go(HomeController, 'Main');
         }
@@ -88,12 +89,15 @@ export class ProfileController extends Controller {
         }
     }
 
-    async ChangeAvatar() {
+    ChangeAvatar() {
         let controllerContext = this;
 
-        await FireOnceAndWait(this.gameContext.avatars);
         let avatarView = new ChangeAvatarView();
-        avatarView.set(this.gameContext.avatars);
+
+        this.gameContext.avatars.once('value', function() {
+            avatarView.set(this.gameContext.avatars);
+
+        });
 
         avatarView.on('select', function(avatar) {
             let playerId = controllerContext.gameContext.getPlayerId();

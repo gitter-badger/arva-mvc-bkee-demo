@@ -74,16 +74,21 @@ export default class MyGamesView extends View {
                     game.player2:
                     game.player1;
 
+                let whosTurn = game.nextPlayer==this.options.activePlayer?
+                    'mine':'opponent';
+
                 let surface = new Surface({
                     size: [undefined, 50],
                     classes: ['arena-item'],
                     properties: {
+                        backgroundColor: '#e8e8e8',
                         lineHeight: '50px',
                         paddingLeft: '10px',
                         paddingRight: '10px',
                         data: game
                     },
-                    content: `<div class="avatar" style="background-image: url(${playerToShow.avatar});"></div>
+                    content: `<div class="turn ${whosTurn}"></div>
+                    <div class="avatar" style="background-image: url(${playerToShow.avatar});"></div>
                     <div class="playername">${playerToShow.name}</div>`
                 });
 

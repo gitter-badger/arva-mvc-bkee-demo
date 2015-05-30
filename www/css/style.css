@@ -45,11 +45,10 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
     color:#9F9F9F;
 }
 
-.ff-tabbar.background {
+
+.ff-tabbar.item {
     background-color: #ECECEC;
     border-top: 1px solid #D6D6D6 !important;
-}
-.ff-tabbar.item {
     color: #333333 !important;
     font-size: 11px;
 }
@@ -78,6 +77,25 @@ Imaging with any questions regarding Web Fonts: http://webfonts.fonts.com
     border-radius: 7px;
     border:1px solid #dddddd;
 }
+
+.arena-item div.turn {
+    -webkit-transform: translate(0, 100%);
+    -ms-transform: translate(0, 100%);
+    position: absolute;
+    height:14px;
+    width:14px;
+    border-radius: 7px;
+    border:1px solid #dddddd;
+}
+
+.arena-item div.turn.mine {
+    background-color: #7ccc3f;
+}
+
+.arena-item div.turn.opponent {
+    background-color: #cc7e0e;
+}
+
 
 .arena-item div.indicator.online {
     background-color: #82CC58;

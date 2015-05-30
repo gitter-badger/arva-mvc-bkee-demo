@@ -69,7 +69,7 @@ export default class Navigation extends View {
                     size: [context.size[0], 40],
                     align: [0,1],
                     origin: [0,1],
-                    translate: [0, 0, 20]
+                    translate: [0, 0, 25]
                 });
             }.bind(this),
             dataSource: this._renderables

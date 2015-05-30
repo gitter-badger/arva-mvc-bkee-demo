@@ -40,6 +40,11 @@ export class PlayController extends Controller {
             });
 
             // when data is updated by the game engine. reflect the view
+            gameState.on('ready', () => {
+                gameEngine = this._CreateGameEngine(gameState);
+                gameView.set(activePlayer, gameState);
+            });
+
             gameState.on('value', () => {
                 gameEngine = this._CreateGameEngine(gameState);
                 gameView.set(activePlayer, gameState);

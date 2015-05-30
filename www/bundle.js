@@ -27605,6 +27605,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
         function PrioritisedArray(dataType) {
           var dataSource = arguments[1] !== (void 0) ? arguments[1] : null;
           var dataSnapshot = arguments[2] !== (void 0) ? arguments[2] : null;
+          var options = arguments[3] !== (void 0) ? arguments[3] : null;
           $traceurRuntime.superConstructor(PrioritisedArray).call(this);
           this._valueChangedCallback = null;
           this._dataType = dataType;
@@ -27615,10 +27616,12 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
           if (!dataSource) {
-            var modelName = Object.getPrototypeOf(this).constructor.name;
-            var path = modelName;
+            var path = Object.getPrototypeOf(this).constructor.name;
             dataSource = Context.getContext().get(DataSource);
-            dataSource = dataSource.child(path);
+            if (options)
+              dataSource = dataSource.child(path, options);
+            else
+              dataSource = dataSource.child(path);
             this._dataSource = dataSource;
           }
           if (dataSnapshot) {
@@ -27656,10 +27659,9 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             var $__0 = this;
             if (model instanceof this._dataType) {
               if (this._findIndexById(model.id) < 0) {
-                model.priority = this.length;
                 this.push(model);
                 if (!model._inheritable) {
-                  model.on('value', (function(modelData) {
+                  model.on('changed', (function(modelData) {
                     $__0._onChildChanged(modelData);
                   }));
                 }
@@ -27678,7 +27680,6 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           insertAt: function(model, position) {
             if (model instanceof this._dataType) {
               this.splice(position, 0, model);
-              this._recalculatePriorities(position);
             } else {
               console.log('Tried to append an object that is not the same type as the PrioritisedArray was created with.');
             }
@@ -27688,18 +27689,9 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             var model = this[fromPosition];
             this.splice(fromPosition, 1);
             this.splice(toPosition, 0, model);
-            this._recalculatePriorities();
           },
           remove: function(position) {
             this.splice(position, 1);
-          },
-          _recalculatePriorities: function() {
-            var start = arguments[0] !== (void 0) ? arguments[0] : 0;
-            this._isBeingReordered = true;
-            for (var i = start; i < this.length; i++) {
-              this[i].priority = i;
-            }
-            this._isBeingReordered = false;
           },
           _buildFromSnapshot: function(dataSnapshot) {
             var numChildren = dataSnapshot.numChildren(),
@@ -27728,9 +27720,12 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           },
           _buildFromDataSource: function(dataSource) {
             var $__0 = this;
+            this._registerCallbacks(dataSource);
+            return ;
             var path = dataSource.path();
+            var options = dataSource.options;
             var DataSource = Object.getPrototypeOf(dataSource).constructor;
-            var newSource = new DataSource(path);
+            var newSource = new DataSource(path, options);
             newSource.setValueChangedCallback((function(dataSnapshot) {
               newSource.removeValueChangedCallback();
               $__0._buildFromSnapshot(dataSnapshot);
@@ -27740,32 +27735,28 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           _registerCallbacks: function(dataSource) {
             dataSource.setChildAddedCallback(this._onChildAdded);
             dataSource.setChildMovedCallback(this._onChildMoved);
-            if (dataSource.inheritable)
-              dataSource.setChildChangedCallback(this._onChildChanged);
+            dataSource.setChildChangedCallback(this._onChildChanged);
             dataSource.setChildRemovedCallback(this._onChildRemoved);
           },
-          _onChildAdded: function(snapshot) {
+          _onChildAdded: function(snapshot, prevSiblingId) {
             var id = snapshot.key();
             var rootPath = snapshot.ref().root().toString();
             var model = this.add(new this._dataType(id, null, {
               dataSnapshot: snapshot,
               path: snapshot.ref().toString().replace(rootPath, '/')
             }));
-            this._eventEmitter.emit('child_added', model);
+            this._eventEmitter.emit('child_added', model, prevSiblingId);
             this._eventEmitter.emit('value', this);
           },
-          _onChildChanged: function(snapshot) {
+          _onChildChanged: function(snapshot, prevSiblingId) {
             var id = snapshot.key();
             var itemIndex = this._findIndexById(id);
             var changedModel = new this._dataType(id, null, {
               dataSnapshot: snapshot,
               dataSource: snapshot.ref()
             });
-            if (!(JSON.stringify(this[itemIndex]) === JSON.stringify(changedModel))) {
-              this[itemIndex] = changedModel;
-              this._eventEmitter.emit('child_changed', changedModel);
-              this._eventEmitter.emit('value', this);
-            }
+            this._eventEmitter.emit('child_changed', changedModel, prevSiblingId);
+            this._eventEmitter.emit('value', this);
           },
           _onChildMoved: function(snapshot, prevSiblingId) {
             if (!this._isBeingReordered) {
@@ -27775,7 +27766,6 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
               this.remove(previousPosition);
               var newPosition = this._findIndexById(prevSiblingId) + 1;
               this.insertAt(tempModel, newPosition);
-              this._recalculatePriorities();
               var model = this[newPosition];
               this._eventEmitter.emit('child_moved', model, previousPosition);
               this._eventEmitter.emit('value', this);
@@ -28285,16 +28275,19 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
   };
 });
 
-System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView"], function($__export) {
+System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "components/DataBoundFlexScrollView";
   var Surface,
-      FlexScrollView;
+      FlexScrollView,
+      _;
   return {
     setters: [function($__m) {
       Surface = $__m.default;
     }, function($__m) {
       FlexScrollView = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
     }],
     execute: function() {
       $__export('default', (function($__super) {
@@ -28303,22 +28296,16 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
           if (!OPTIONS.autoPipeEvents)
             OPTIONS.autoPipeEvents = true;
           $traceurRuntime.superConstructor(DataBoundFlexScrollView).call(this, OPTIONS);
-          if (this.options.dataStore)
+          if (!this.options.direction)
+            this.options.direction = 'ascending';
+          if (this.options.dataStore) {
+            this._dataItems = [];
             this._bindDataSource(this.options.dataStore);
-          else {
+          } else {
             console.log('No DataSource was set.');
           }
         }
         return ($traceurRuntime.createClass)(DataBoundFlexScrollView, {
-          _reTouchList: function() {
-            if (this._dataSource) {
-              var i = 0;
-              for (i; i < this._dataSource.length; i++) {
-                var bg = i % 2 ? '#e8e8e8' : '#efefef';
-                this._dataSource[i].properties.backgroundColor = bg;
-              }
-            }
-          },
           _bindDataSource: function() {
             if (!this.options.dataStore || !this.options.template) {
               console.log('Datasource and template should both be set.');
@@ -28328,29 +28315,119 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
               console.log('Template needs to be a function.');
               return ;
             }
-            this.options.dataStore.on('child_added', function(child) {
-              if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
-                return ;
-              }
-              this.insert(child.priority, this.options.template(child));
-              this._reTouchList();
-            }, this);
-            this.options.dataStore.on('child_changed', function(child) {
-              if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
-                this.remove(child.priority);
+            this.options.dataStore.on('child_added', function(child, previousSibling) {
+              var isDescending = this.options.direction == 'descending';
+              var previous = this._getPreviousIndex(previousSibling);
+              var index = this._dataSource != null ? previous > -1 ? previous + (isDescending ? 0 : 1) : (isDescending ? 0 : this._dataSource.length) : 0;
+              if (!this.options.dataFilter || (typeof this.options.dataFilter === "function" && this.options.dataFilter(child))) {
+                this._addItem(index, child, true);
               } else {
-                this.replace(child.priority, this.options.template(child));
+                this._addItem(index, child, false);
               }
-              this._reTouchList();
-            }, this);
-            this.options.dataStore.on('child_moved', function(child, oldposition) {
-              this.swap(oldposition, child.priority);
-              this._reTouchList();
-            }, this);
+            }.bind(this));
+            this.options.dataStore.on('child_changed', function(child, previousSibling) {
+              var isDescending = this.options.direction == 'descending';
+              var changedIndex = this._getChildIndex(child);
+              var previous = this._getPreviousIndex(previousSibling);
+              if (this._dataSource && this._dataSource.length >= changedIndex) {
+                if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
+                  this._removeItem(changedIndex);
+                } else {
+                  var newIndex = previous > -1 ? previous + (isDescending ? 0 : 1) : (isDescending ? 0 : this._dataSource.length - 1);
+                  if (!this._dataItems[changedIndex].visible)
+                    this._addItem(newIndex, child, true);
+                  else if (changedIndex != newIndex) {
+                    this._replaceItem(changedIndex, child);
+                    this._swapItem(changedIndex, newIndex);
+                  } else
+                    this._replaceItem(changedIndex, child);
+                }
+              }
+            }.bind(this));
+            this.options.dataStore.on('child_moved', function(child, previousSibling) {
+              var current = _getChildIndex(previousSibling);
+              var previous = _getPreviousIndex(previousSibling);
+              this._swapItem(current, previous);
+            }.bind(this));
             this.options.dataStore.on('child_removed', function(child) {
-              this.remove(child.priority);
-              this._reTouchList();
-            }, this);
+              var index = this._getChildIndex(child);
+              if (index > -1)
+                this._removeItem(index);
+            }.bind(this));
+          },
+          _addItem: function(index, child, isVisible) {
+            var replace = this._dataItems[index] && this._dataItems[index].id == child.id ? 1 : 0;
+            this._dataItems.splice(index, replace, {
+              id: child.id,
+              visible: isVisible,
+              position: index
+            });
+            if (isVisible) {
+              this.insert(index, this.options.template(child));
+            }
+          },
+          _replaceItem: function(index, child) {
+            this.replace(index, this.options.template(child));
+          },
+          _removeItem: function(index) {
+            if (this._dataItems[index].visible) {
+              this.remove(index);
+              this._dataItems[index].visible = false;
+            }
+          },
+          _swapItem: function(oldIndex, newIndex) {
+            var isDescending = this.options.direction == 'descending';
+            var isVisible = false;
+            var realNewIndex = newIndex;
+            var endOfListAndNotVisible = false;
+            while (!isVisible || endOfListAndNotVisible) {
+              isVisible = this._dataItems[realNewIndex].visible;
+              if (!isVisible)
+                realNewIndex += isDescending ? -1 : 1;
+              endOfListAndNotVisible = realNewIndex < 0 || realNewIndex > (this._dataItems.length - 1);
+            }
+            if (!endOfListAndNotVisible) {
+              this.swap(oldIndex, realNewIndex);
+              var oldId = this._dataItems[oldIndex];
+              var otherId = this._dataItems[realNewIndex];
+              this._dataItems[oldIndex] = otherId;
+              this._dataItems[realNewIndex] = oldId;
+            }
+          },
+          _getChildIndex: function(child) {
+            if (!child)
+              return -1;
+            if (typeof child === 'object' && child.id) {
+              return _.findIndex(this._dataItems, function(record) {
+                return record.id == child.id;
+              });
+            } else {
+              return _.findIndex(this._dataItems, function(record) {
+                return record.id == child;
+              });
+            }
+          },
+          _getPreviousIndex: function(child) {
+            var isDescending = this.options.direction == 'descending';
+            if (!child)
+              return -1;
+            if (typeof child === 'object' && child.id) {
+              var index = _.findIndex(this._dataItems, function(record) {
+                return record.id == child.id;
+              });
+              if (!this._dataItems[index].visible) {
+                return this._getChildIndex(this._dataItems[isDescending ? index - 1 : index + 1]);
+              } else
+                return index;
+            } else {
+              var foundIndex = _.findIndex(this._dataItems, function(record) {
+                return record.id == child;
+              });
+              if (!this._dataItems[foundIndex].visible) {
+                return this._getChildIndex(this._dataItems[isDescending ? foundIndex - 1 : foundIndex + 1]);
+              } else
+                return foundIndex;
+            }
           }
         }, {}, $__super);
       }(FlexScrollView)));
@@ -28506,16 +28583,18 @@ System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm
               }),
               template: (function(game) {
                 var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
+                var whosTurn = game.nextPlayer == $__0.options.activePlayer ? 'mine' : 'opponent';
                 var surface = new Surface({
                   size: [undefined, 50],
                   classes: ['arena-item'],
                   properties: {
+                    backgroundColor: '#e8e8e8',
                     lineHeight: '50px',
                     paddingLeft: '10px',
                     paddingRight: '10px',
                     data: game
                   },
-                  content: ("<div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
+                  content: ("<div class=\"turn " + whosTurn + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
                 });
                 surface.on('click', function() {
                   contextView._eventOutput.emit('play', this.properties.data);
@@ -28859,13 +28938,14 @@ System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizb
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.3", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.3", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot", "github:Bizboard/arva-ds@develop/core/DataSource"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
   var _,
       EventEmitter,
       ObjectHelper,
       Snapshot,
+      DataSource,
       PrioritisedObject;
   return {
     setters: [function($__m) {
@@ -28876,6 +28956,8 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
       ObjectHelper = $__m.ObjectHelper;
     }, function($__m) {
       Snapshot = $__m.Snapshot;
+    }, function($__m) {
+      DataSource = $__m.DataSource;
     }],
     execute: function() {
       'use strict';
@@ -28935,32 +29017,42 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
               this.off(event, fn, context);
             }, this);
           },
+          onModelUpdated: function(snapshot) {
+            var toCompare = ObjectHelper.getEnumerableProperties(this);
+            var newData = snapshot.val();
+            if (!_.isEqual(toCompare, newData)) {
+              return true;
+            }
+            return false;
+          },
           on: function(event, fn, context) {
-            var objectContext = this;
+            var objectContext = context || this;
             switch (event) {
               case 'ready':
                 if (this._dataSource && this._dataSource.ready) {
-                  fn.call(context, this);
+                  fn.call(objectContext, this);
                 }
                 break;
               case 'value':
-                var wrapper = function(dataSnapshot) {
-                  objectContext._buildFromSnapshot(dataSnapshot);
-                  fn.call(context, dataSnapshot);
-                }.bind(context);
+                var wrapper = function(dataSnapshot, previousSibling) {
+                  if (this.onModelUpdated(dataSnapshot)) {
+                    objectContext._buildFromSnapshot(dataSnapshot);
+                    fn.call(objectContext, this, previousSibling);
+                  }
+                }.bind(objectContext);
                 this._dataSource.setValueChangedCallback(wrapper);
                 break;
               case 'added':
-                this._dataSource.setChildAddedCallback(fn.bind(context));
+                this._dataSource.setChildAddedCallback(fn.bind(objectContext));
                 break;
               case 'moved':
-                this._dataSource.setChildMovedCallback(fn.bind(context));
+                this._dataSource.setChildMovedCallback(fn.bind(objectContext));
                 break;
               case 'removed':
-                this._dataSource.setChildRemovedCallback(fn.bind(context));
+                this._dataSource.setChildRemovedCallback(fn.bind(objectContext));
                 break;
             }
-            $traceurRuntime.superGet(this, PrioritisedObject.prototype, "on").call(this, event, fn, context);
+            $traceurRuntime.superGet(this, PrioritisedObject.prototype, "on").call(this, event, fn, objectContext);
           },
           off: function(event, fn, context) {
             switch (event) {
@@ -28996,6 +29088,15 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
               this._dataSource.ready = true;
               this.emit('ready');
             }
+            var data = dataSnapshot.val();
+            for (var key in data) {
+              if (Object.getOwnPropertyDescriptor(this, key)) {
+                ObjectHelper.addPropertyToObject(this, key, data[key], true, true, this._onSetterTriggered);
+              }
+            }
+            this._dataSource.ready = true;
+            this.emit('ready');
+            return ;
             dataSnapshot.forEach(function(child) {
               var ref = child.ref();
               var key = child.key();
@@ -29067,7 +29168,7 @@ System.register("collections/Players", ["github:Bizboard/arva-ds@develop/core/Mo
         function Players() {
           var datasource = arguments[0] !== (void 0) ? arguments[0] : null;
           var datasnapshot = arguments[1] !== (void 0) ? arguments[1] : null;
-          $traceurRuntime.superConstructor(Players).call(this, Player, datasource, datasnapshot);
+          $traceurRuntime.superConstructor(Players).call(this, Player, datasource, datasnapshot, {orderBy: 'score'});
         }
         return ($traceurRuntime.createClass)(Players, {}, {}, $__super);
       }(PrioritisedArray)));
@@ -29279,7 +29380,6 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
         }
         return ($traceurRuntime.createClass)(InvitePlayerView, {
           _createRenderables: function() {
-            var $__0 = this;
             var contextView = this;
             var invitePlayers = new DataboundFlexScrollView({
               flowOptions: {
@@ -29293,8 +29393,9 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                 margins: [5, 5, 5, 5],
                 spacing: 5
               },
+              direction: 'descending',
               dataFilter: (function(player) {
-                return player.id != $__0.options.activePlayer;
+                return player.id != contextView.options.activePlayer && player.score != 111;
               }),
               template: function(player) {
                 var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
@@ -29302,6 +29403,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                   size: [undefined, 50],
                   classes: ['arena-item'],
                   properties: {
+                    backgroundColor: '#efefef',
                     lineHeight: '50px',
                     paddingLeft: '10px',
                     paddingRight: '10px',
@@ -29764,7 +29866,7 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
                   size: [context.size[0], 40],
                   align: [0, 1],
                   origin: [0, 1],
-                  translate: [0, 0, 20]
+                  translate: [0, 0, 25]
                 });
               }.bind(this),
               dataSource: this._renderables
@@ -29955,6 +30057,10 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
                   gameEngine.move(move.by, move.position);
                 }
               }));
+              gameState.on('ready', (function() {
+                gameEngine = $__0._CreateGameEngine(gameState);
+                gameView.set(activePlayer, gameState);
+              }));
               gameState.on('value', (function() {
                 gameEngine = $__0._CreateGameEngine(gameState);
                 gameView.set(activePlayer, gameState);
@@ -30010,6 +30116,7 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
     execute: function() {
       FirebaseDataSource = (function($__super) {
         function FirebaseDataSource(path) {
+          var options = arguments[1] !== (void 0) ? arguments[1] : {orderBy: '.priority'};
           $traceurRuntime.superConstructor(FirebaseDataSource).call(this, path);
           this._onValueCallback = null;
           this._onAddCallback = null;
@@ -30017,6 +30124,7 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           this._onMoveCallback = null;
           this._onRemoveCallback = null;
           this._dataReference = new Firebase(path);
+          this.options = options;
           ObjectHelper.bindAllMethods(this, this);
         }
         return ($traceurRuntime.createClass)(FirebaseDataSource, {
@@ -30027,7 +30135,11 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
             this._dataReference = value;
           },
           child: function(childName) {
-            return new FirebaseDataSource(this._dataReference.child(childName).toString());
+            var options = arguments[1] !== (void 0) ? arguments[1] : null;
+            if (options)
+              return new FirebaseDataSource(this._dataReference.child(childName).toString(), options);
+            else
+              return new FirebaseDataSource(this._dataReference.child(childName).toString());
           },
           path: function() {
             return this._dataReference.toString();
@@ -30078,9 +30190,18 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           setChildAddedCallback: function(callback) {
             var $__0 = this;
             this._onAddCallback = callback;
-            this._dataReference.on('child_added', (function(newChildSnapshot, prevChildName) {
-              $__0._onAddCallback(newChildSnapshot);
-            }));
+            var wrapper = (function(newChildSnapshot, prevChildName) {
+              $__0._onAddCallback(newChildSnapshot, prevChildName);
+            });
+            if (this.options.orderBy && this.options.orderBy == '.priority') {
+              this._dataReference.orderByPriority().on('child_added', wrapper.bind(this));
+            } else if (this.options.orderBy && this.options.orderBy == '.value') {
+              this._dataReference.orderByValue().on('child_added', wrapper.bind(this));
+            } else if (this.options.orderBy && this.options.orderBy != '') {
+              this._dataReference.orderByChild(this.options.orderBy).on('child_added', wrapper.bind(this));
+            } else {
+              this._dataReference.on('child_added', wrapper.bind(this));
+            }
           },
           removeChildAddedCallback: function() {
             if (this._onAddCallback) {
@@ -30091,9 +30212,18 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           setChildChangedCallback: function(callback) {
             var $__0 = this;
             this._onChangeCallback = callback;
-            this._dataReference.on('child_changed', (function(newChildSnapshot, prevChildName) {
-              $__0._onChangeCallback(newChildSnapshot);
-            }));
+            var wrapper = (function(newChildSnapshot, prevChildName) {
+              $__0._onChangeCallback(newChildSnapshot, prevChildName);
+            });
+            if (this.options.orderBy && this.options.orderBy == '.priority') {
+              this._dataReference.orderByPriority().on('child_changed', wrapper.bind(this));
+            } else if (this.options.orderBy && this.options.orderBy == '.value') {
+              this._dataReference.orderByValue().on('child_changed', wrapper.bind(this));
+            } else if (this.options.orderBy && this.options.orderBy != '') {
+              this._dataReference.orderByChild(this.options.orderBy).on('child_changed', wrapper.bind(this));
+            } else {
+              this._dataReference.on('child_changed', wrapper.bind(this));
+            }
           },
           removeChildChangedCallback: function() {
             if (this._onChangeCallback) {
@@ -30371,8 +30501,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       Invite,
       BKEE_PLAYERID,
       BKEE_PLAYERTOKEN,
-      BKEE_LASTGAMEID,
-      BKEE_ACTIVEGAMES;
+      BKEE_LASTGAMEID;
   return {
     setters: [function($__m) {
       GetDefaultContext = $__m.GetDefaultContext;
@@ -30404,12 +30533,9 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
       BKEE_PLAYERID = 'bkee.playerid';
       BKEE_PLAYERTOKEN = 'bkee.playertoken';
       BKEE_LASTGAMEID = 'bkee.lastgameid';
-      BKEE_ACTIVEGAMES = 'bkee.activegames';
       $__export('default', (function() {
         function GameContext() {
           var $__0 = this;
-          if (!localStorage[BKEE_ACTIVEGAMES])
-            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
           this.players = new Players();
           this.avatars = new Avatars();
           this.games = new Games();
@@ -30453,7 +30579,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
             localStorage[BKEE_PLAYERID] = playerId;
           },
           getDefaultPlayerName: function() {
-            return ("player-" + Date.now() + "-" + Math.floor(Math.random() * 100000));
+            return ("player-" + Math.floor(Math.random() * 100000));
           },
           getLastActiveGame: function() {
             var gameId = localStorage[BKEE_LASTGAMEID];
@@ -30477,8 +30603,7 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
             var player1,
                 player2,
                 dice,
-                newGame,
-                games;
+                newGame;
             return $traceurRuntime.asyncWrap(function($ctx) {
               while (true)
                 switch ($ctx.state) {
@@ -30502,9 +30627,6 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
                       activeSince: Date.now(),
                       nextPlayer: dice > 5 ? invitation.player1 : invitation.player2
                     });
-                    games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-                    games[invitation.player1] = newGame.id;
-                    localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
                     invitation.remove();
                     $ctx.state = -2;
                     break;
@@ -30512,9 +30634,6 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
                     return $ctx.end();
                 }
             }, this);
-          },
-          getActiveGames: function() {
-            return localStorage[BKEE_ACTIVEGAMES];
           },
           setWinnerScore: function() {
             var winner = new Player(this.getPlayerId());
@@ -30535,14 +30654,6 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
             winner.once('ready', function() {
               winner.lost = winner.lost + 1;
             });
-          },
-          hasGame: function(playerId) {
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-            return games[playerId] != null;
-          },
-          getGameId: function(playerId) {
-            var games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-            return games[playerId];
           },
           trackOnline: function() {
             var $__0 = this;
@@ -30603,53 +30714,27 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
         }
         return ($traceurRuntime.createClass)(ProfileController, {
           Register: function() {
-            var newPlayerName,
-                authData,
-                newPlayer;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    $ctx.state = (this.gameContext.isNewPlayer()) ? 6 : 10;
-                    break;
-                  case 6:
-                    newPlayerName = this.gameContext.getDefaultPlayerName();
-                    $ctx.state = 7;
-                    break;
-                  case 7:
-                    Promise.resolve(RegisterNewAccount(this.gameContext.ds)).then($ctx.createCallback(3), $ctx.errback);
-                    return ;
-                  case 3:
-                    authData = $ctx.value;
-                    $ctx.state = 2;
-                    break;
-                  case 2:
-                    Promise.resolve(this.gameContext.ready('avatars')).then($ctx.createCallback(5), $ctx.errback);
-                    return ;
-                  case 5:
-                    newPlayer = new Player(null, {
-                      uid: authData.uid,
-                      name: newPlayerName,
-                      lost: 0,
-                      won: 0,
-                      draw: 0,
-                      score: 0,
-                      lastTimeAccessed: Date.now(),
-                      avatar: this.gameContext.avatars[0].url
-                    });
-                    this.gameContext.players.add(newPlayer);
-                    this.gameContext.setActivePlayer(newPlayer.id, authData.token);
-                    this.router.go(this, 'Show', {playerId: newPlayer.id});
-                    $ctx.state = -2;
-                    break;
-                  case 10:
-                    this.router.go(HomeController, 'Main');
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+            var $__0 = this;
+            if (this.gameContext.isNewPlayer()) {
+              var newPlayerName = this.gameContext.getDefaultPlayerName();
+              RegisterNewAccount(this.gameContext.ds).then((function(authData) {
+                var newPlayer = new Player(null, {
+                  uid: authData.uid,
+                  name: newPlayerName,
+                  lost: 0,
+                  won: 0,
+                  draw: 0,
+                  score: 0,
+                  lastTimeAccessed: Date.now(),
+                  avatar: 'https://bitcoinwallet.com/images/users/unknown_user.png'
+                });
+                $__0.gameContext.players.add(newPlayer);
+                $__0.gameContext.setActivePlayer(newPlayer.id, authData.token);
+                $__0.router.go($__0, 'Show', {playerId: newPlayer.id});
+              }));
+            } else {
+              this.router.go(HomeController, 'Main');
+            }
           },
           Show: function(playerId) {
             var controllerContext = this;
@@ -30673,42 +30758,20 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
             }
           },
           ChangeAvatar: function() {
-            var controllerContext,
-                avatarView;
-            return $traceurRuntime.asyncWrap(function($ctx) {
-              while (true)
-                switch ($ctx.state) {
-                  case 0:
-                    controllerContext = this;
-                    $ctx.state = 7;
-                    break;
-                  case 7:
-                    Promise.resolve(FireOnceAndWait(this.gameContext.avatars)).then($ctx.createCallback(2), $ctx.errback);
-                    return ;
-                  case 2:
-                    avatarView = new ChangeAvatarView();
-                    avatarView.set(this.gameContext.avatars);
-                    avatarView.on('select', function(avatar) {
-                      var playerId = controllerContext.gameContext.getPlayerId();
-                      var playerToUpdate = new Player(playerId);
-                      playerToUpdate.once('ready', function() {
-                        playerToUpdate.avatar = avatar.properties.data.url;
-                      });
-                      controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
-                    });
-                    $ctx.state = 9;
-                    break;
-                  case 9:
-                    $ctx.returnValue = avatarView;
-                    $ctx.state = 4;
-                    break;
-                  case 4:
-                    $ctx.state = -2;
-                    break;
-                  default:
-                    return $ctx.end();
-                }
-            }, this);
+            var controllerContext = this;
+            var avatarView = new ChangeAvatarView();
+            this.gameContext.avatars.once('value', function() {
+              avatarView.set(this.gameContext.avatars);
+            });
+            avatarView.on('select', function(avatar) {
+              var playerId = controllerContext.gameContext.getPlayerId();
+              var playerToUpdate = new Player(playerId);
+              playerToUpdate.once('ready', function() {
+                playerToUpdate.avatar = avatar.properties.data.url;
+              });
+              controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+            });
+            return avatarView;
           }
         }, {}, $__super);
       }(Controller));
@@ -31099,14 +31162,14 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
               methods: {
                 next: {
                   transition: {
-                    duration: 750,
+                    duration: 500,
                     curve: Easing.outBack
                   },
                   animation: AnimationController.Animation.Slide.Down
                 },
                 previous: {
                   transition: {
-                    duration: 750,
+                    duration: 500,
                     curve: Easing.outBack
                   },
                   animation: AnimationController.Animation.Slide.Up
@@ -31125,7 +31188,7 @@ System.register("BkeeApp", ["github:Bizboard/di.js@master", "github:Bizboard/arv
                   duration: 500,
                   curve: Easing.outBack
                 },
-                animation: AnimationController.Animation.Slide.Right,
+                animation: AnimationController.Animation.Slide.Left,
                 activeFrom: ['ProfileController']
               }]},
             ProfileController: {

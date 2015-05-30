@@ -20,14 +20,10 @@ import Invite              from '../models/Invite';
 const BKEE_PLAYERID = 'bkee.playerid';
 const BKEE_PLAYERTOKEN = 'bkee.playertoken';
 const BKEE_LASTGAMEID = 'bkee.lastgameid';
-const BKEE_ACTIVEGAMES = 'bkee.activegames';
 
 export default class GameContext {
 
     constructor() {
-
-        if (!localStorage[BKEE_ACTIVEGAMES])
-            localStorage[BKEE_ACTIVEGAMES] = JSON.stringify({});
 
 
         this.players = new Players();
@@ -85,7 +81,7 @@ export default class GameContext {
     }
 
     getDefaultPlayerName() {
-        return `player-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+        return `player-${Math.floor(Math.random() * 100000)}`;
     }
 
     getLastActiveGame() {
@@ -131,16 +127,9 @@ export default class GameContext {
             nextPlayer: dice>5?invitation.player1:invitation.player2
         });
 
-        let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        games[invitation.player1] = newGame.id;
-        localStorage[BKEE_ACTIVEGAMES] = JSON.stringify(games);
-
         invitation.remove();
     }
 
-    getActiveGames() {
-        return localStorage[BKEE_ACTIVEGAMES];
-    }
 
     setWinnerScore() {
 
@@ -166,20 +155,6 @@ export default class GameContext {
             winner.lost = winner.lost + 1;
         });
     }
-
-
-    hasGame(playerId) {
-        let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        return games[playerId]!=null;
-    }
-
-
-
-    getGameId(playerId) {
-        let games = JSON.parse(localStorage[BKEE_ACTIVEGAMES]);
-        return games[playerId];
-    }
-
 
 
     trackOnline() {

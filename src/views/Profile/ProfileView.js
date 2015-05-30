@@ -87,6 +87,7 @@ export default class ProfileView extends View {
                 let nameSpan = 1;
                 let scoreSpan = rows*0.3;
 
+
                 context.set('background', {
                     size: context.size,
                     translate: [0,0,0]
@@ -109,7 +110,6 @@ export default class ProfileView extends View {
 
                 context.set('score', {
                     size: [context.size[0], scoreSpan*this.options.rowSize],
-                    //align: [0,0.5],
                     translate: [0,((avatarSpan+nameSpan)*this.options.rowSize)+this.options.headerHeight,2]
                 });
 

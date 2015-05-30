@@ -41,11 +41,11 @@ export class BkeeApp extends App {
                 ],
                 methods: {
                     next: {
-                        transition: {duration: 750, curve: Easing.outBack},
+                        transition: {duration: 500, curve: Easing.outBack},
                         animation: AnimationController.Animation.Slide.Down
                     },
                     previous: {
-                        transition: {duration: 750, curve: Easing.outBack},
+                        transition: {duration: 500, curve: Easing.outBack},
                         animation: AnimationController.Animation.Slide.Up
                     }
                 }
@@ -59,7 +59,7 @@ export class BkeeApp extends App {
                     },
                     {
                         transition: {duration: 500, curve: Easing.outBack},
-                        animation: AnimationController.Animation.Slide.Right,
+                        animation: AnimationController.Animation.Slide.Left,
                         activeFrom: ['ProfileController']
                     }
 

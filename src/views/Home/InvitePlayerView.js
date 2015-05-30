@@ -63,8 +63,10 @@ export default class InvitePlayerView extends View {
                 spacing: 5
             },
 
+            direction: 'descending',
+
             dataFilter: (player) => {
-                return player.id != this.options.activePlayer;
+                return player.id != contextView.options.activePlayer && player.score != 111;
             },
 
             template: function(player) {
@@ -75,6 +77,7 @@ export default class InvitePlayerView extends View {
                     size: [undefined, 50],
                     classes: ['arena-item'],
                     properties: {
+                        backgroundColor: '#efefef',
                         lineHeight: '50px',
                         paddingLeft: '10px',
                         paddingRight: '10px',

@@ -9,6 +9,8 @@ import Player               from '../models/Player';
 export default class Players extends PrioritisedArray
 {
     constructor(datasource = null, datasnapshot = null) {
-        super(Player, datasource, datasnapshot);
+        super(Player, datasource, datasnapshot, {
+            orderBy: 'score'
+        });
     }
 }
