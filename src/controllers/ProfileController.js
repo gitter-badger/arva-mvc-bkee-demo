@@ -20,8 +20,19 @@ export class ProfileController extends Controller {
 
     constructor(router, context) {
         super(router, context);
-
+        let controllerContext = this;
         this.gameContext = GetDefaultContext().get(GameContext);
+
+        this.changeAvatarView = new ChangeAvatarView({
+            dataSource: this.gameContext.avatars
+        });
+
+        this.changeAvatarView.on('select', function(avatar) {
+            let playerId = controllerContext.gameContext.getPlayerId();
+            let playerToUpdate = new Player(playerId);
+            playerToUpdate.once('ready', function(){playerToUpdate.avatar=avatar.properties.data.url});
+            controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+        });
     }
 
 
@@ -90,21 +101,10 @@ export class ProfileController extends Controller {
     }
 
     ChangeAvatar() {
-        let controllerContext = this;
 
-        let avatarView = new ChangeAvatarView();
 
-        this.gameContext.avatars.once('value', function() {
-            avatarView.set(this.gameContext.avatars);
 
-        });
 
-        avatarView.on('select', function(avatar) {
-            let playerId = controllerContext.gameContext.getPlayerId();
-            let playerToUpdate = new Player(playerId);
-            playerToUpdate.once('ready', function(){playerToUpdate.avatar=avatar.properties.data.url});
-            controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
-        });
-        return avatarView;
+        return this.changeAvatarView;
     }
 }

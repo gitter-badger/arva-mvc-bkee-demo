@@ -66,7 +66,7 @@ export default class InvitePlayerView extends View {
             sortingDirection: 'descending',
 
             dataFilter: (player) => {
-                return player.id != contextView.options.activePlayer && player.score != 111;
+                return player.id != contextView.options.activePlayer;
             },
 
             template: function(player) {

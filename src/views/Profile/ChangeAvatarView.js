@@ -11,6 +11,8 @@ import FlexScrollView               from 'famous-flex/src/FlexScrollView';
 import CollectionLayout             from 'famous-flex/src/layouts/CollectionLayout';
 import ViewSequence                 from 'famous/core/ViewSequence';
 import Background                   from '../../components/Background';
+import DataBoundScrollView          from 'arva-mvc/components/DataBoundScrollView';
+import _                            from 'lodash';
 
 const DEFAULT_OPTIONS = {
     headerHeight: 75,
@@ -22,8 +24,9 @@ export default class ChangeAvatarView extends View {
 
 
 
-    constructor() {
-        super(DEFAULT_OPTIONS);
+    constructor(options = {}) {
+        let newOptions = _.extend(options, DEFAULT_OPTIONS);
+        super(newOptions);
 
         /* Bind all local methods to the current object instance, so we can refer to 'this'
          * in the methods as expected, even when they're called from event handlers.        */
@@ -38,48 +41,42 @@ export default class ChangeAvatarView extends View {
 
         this._createRenderables();
         this._createLayout();
-        this.set(this.options.defaultModel);
-    }
-
-    set(model) {
-        let viewContext = this;
-        this._renderables.header.setContent(`<div>Avatars</div>Kies je eigen avatar.`);
-
-        if (model.length==0) return;
-
-        let sequence = new ViewSequence();
-        model.forEach(function(avatar){
-            var avatarSurface = new BkImageSurface({
-                content: avatar.url,
-                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
-                properties: { data: avatar }
-            });
-            avatarSurface.on('click', function(){ viewContext._eventOutput.emit('select', this);});
-            sequence.push(avatarSurface);
-        });
-
-        this._renderables.avatarlist.setDataSource(sequence);
     }
 
 
 
 
     _createRenderables() {
+        let viewContext = this;
 
         this._renderables = {
             background: new Background(),
 
             header: new Surface({
-                classes: ['header']
+                classes: ['header'],
+                content: `<div>Avatars</div>Kies je eigen avatar.`
             }),
-            avatarlist: new FlexScrollView({
+
+            avatarlist: new DataBoundScrollView({
                 autoPipeEvents: true,
                 layout: CollectionLayout,
                 layoutOptions: {
                     cells: [3,3],
                     margins: [20, 10, 20, 10],
                     spacing: [20, 20]
-                }
+                },
+
+                template: function(avatar) {
+                    let avatarSurface = new BkImageSurface({
+                        content: avatar.url,
+                        sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
+                        properties: { data: avatar }
+                    });
+                    avatarSurface.on('click', function(){ viewContext._eventOutput.emit('select', this);});
+                    return avatarSurface;
+                },
+
+                dataStore: this.options.dataSource
             })
 
         };

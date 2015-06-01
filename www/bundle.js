@@ -8363,7 +8363,1453 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayo
 })();
 (function() {
 function define(){};  define.amd = {};
-System.register("github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/utilities/Timer"], false, function(__require, __exports, __module) {
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/ScrollController", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode", "github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager", "npm:famous@0.3.5/surfaces/ContainerSurface", "npm:famous@0.3.5/core/Transform", "npm:famous@0.3.5/core/EventHandler", "npm:famous@0.3.5/core/Group", "npm:famous@0.3.5/math/Vector", "npm:famous@0.3.5/physics/PhysicsEngine", "npm:famous@0.3.5/physics/bodies/Particle", "npm:famous@0.3.5/physics/forces/Drag", "npm:famous@0.3.5/physics/forces/Spring", "npm:famous@0.3.5/inputs/ScrollSync", "npm:famous@0.3.5/core/ViewSequence"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var LayoutController = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutController");
+    var LayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNode");
+    var FlowLayoutNode = require("github:ijzerenhein/famous-flex@0.3.2/src/FlowLayoutNode");
+    var LayoutNodeManager = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutNodeManager");
+    var ContainerSurface = require("npm:famous@0.3.5/surfaces/ContainerSurface");
+    var Transform = require("npm:famous@0.3.5/core/Transform");
+    var EventHandler = require("npm:famous@0.3.5/core/EventHandler");
+    var Group = require("npm:famous@0.3.5/core/Group");
+    var Vector = require("npm:famous@0.3.5/math/Vector");
+    var PhysicsEngine = require("npm:famous@0.3.5/physics/PhysicsEngine");
+    var Particle = require("npm:famous@0.3.5/physics/bodies/Particle");
+    var Drag = require("npm:famous@0.3.5/physics/forces/Drag");
+    var Spring = require("npm:famous@0.3.5/physics/forces/Spring");
+    var ScrollSync = require("npm:famous@0.3.5/inputs/ScrollSync");
+    var ViewSequence = require("npm:famous@0.3.5/core/ViewSequence");
+    var Bounds = {
+      NONE: 0,
+      PREV: 1,
+      NEXT: 2,
+      BOTH: 3
+    };
+    var SpringSource = {
+      NONE: 'none',
+      NEXTBOUNDS: 'next-bounds',
+      PREVBOUNDS: 'prev-bounds',
+      MINSIZE: 'minimal-size',
+      GOTOSEQUENCE: 'goto-sequence',
+      ENSUREVISIBLE: 'ensure-visible',
+      GOTOPREVDIRECTION: 'goto-prev-direction',
+      GOTONEXTDIRECTION: 'goto-next-direction'
+    };
+    var PaginationMode = {
+      PAGE: 0,
+      SCROLL: 1
+    };
+    function ScrollController(options) {
+      options = LayoutUtility.combineOptions(ScrollController.DEFAULT_OPTIONS, options);
+      var layoutManager = new LayoutNodeManager(options.flow ? FlowLayoutNode : LayoutNode, _initLayoutNode.bind(this));
+      LayoutController.call(this, options, layoutManager);
+      this._scroll = {
+        activeTouches: [],
+        pe: new PhysicsEngine(),
+        particle: new Particle(this.options.scrollParticle),
+        dragForce: new Drag(this.options.scrollDrag),
+        frictionForce: new Drag(this.options.scrollFriction),
+        springValue: undefined,
+        springForce: new Spring(this.options.scrollSpring),
+        springEndState: new Vector([0, 0, 0]),
+        groupStart: 0,
+        groupTranslate: [0, 0, 0],
+        scrollDelta: 0,
+        normalizedScrollDelta: 0,
+        scrollForce: 0,
+        scrollForceCount: 0,
+        unnormalizedScrollOffset: 0,
+        isScrolling: false
+      };
+      this._debug = {
+        layoutCount: 0,
+        commitCount: 0
+      };
+      this.group = new Group();
+      this.group.add({render: _innerRender.bind(this)});
+      this._scroll.pe.addBody(this._scroll.particle);
+      if (!this.options.scrollDrag.disabled) {
+        this._scroll.dragForceId = this._scroll.pe.attach(this._scroll.dragForce, this._scroll.particle);
+      }
+      if (!this.options.scrollFriction.disabled) {
+        this._scroll.frictionForceId = this._scroll.pe.attach(this._scroll.frictionForce, this._scroll.particle);
+      }
+      this._scroll.springForce.setOptions({anchor: this._scroll.springEndState});
+      this._eventInput.on('touchstart', _touchStart.bind(this));
+      this._eventInput.on('touchmove', _touchMove.bind(this));
+      this._eventInput.on('touchend', _touchEnd.bind(this));
+      this._eventInput.on('touchcancel', _touchEnd.bind(this));
+      this._eventInput.on('mousedown', _mouseDown.bind(this));
+      this._eventInput.on('mouseup', _mouseUp.bind(this));
+      this._eventInput.on('mousemove', _mouseMove.bind(this));
+      this._scrollSync = new ScrollSync(this.options.scrollSync);
+      this._eventInput.pipe(this._scrollSync);
+      this._scrollSync.on('update', _scrollUpdate.bind(this));
+      if (this.options.useContainer) {
+        this.container = new ContainerSurface(this.options.container);
+        this.container.add({render: function() {
+            return this.id;
+          }.bind(this)});
+        if (!this.options.autoPipeEvents) {
+          this.subscribe(this.container);
+          EventHandler.setInputHandler(this.container, this);
+          EventHandler.setOutputHandler(this.container, this);
+        }
+      }
+    }
+    ScrollController.prototype = Object.create(LayoutController.prototype);
+    ScrollController.prototype.constructor = ScrollController;
+    ScrollController.Bounds = Bounds;
+    ScrollController.PaginationMode = PaginationMode;
+    ScrollController.DEFAULT_OPTIONS = {
+      useContainer: false,
+      container: {properties: {overflow: 'hidden'}},
+      scrollParticle: {},
+      scrollDrag: {
+        forceFunction: Drag.FORCE_FUNCTIONS.QUADRATIC,
+        strength: 0.001,
+        disabled: true
+      },
+      scrollFriction: {
+        forceFunction: Drag.FORCE_FUNCTIONS.LINEAR,
+        strength: 0.0025,
+        disabled: false
+      },
+      scrollSpring: {
+        dampingRatio: 1.0,
+        period: 350
+      },
+      scrollSync: {scale: 0.2},
+      overscroll: true,
+      paginated: false,
+      paginationMode: PaginationMode.PAGE,
+      paginationEnergyThresshold: 0.01,
+      alignment: 0,
+      touchMoveDirectionThresshold: undefined,
+      touchMoveNoVelocityDuration: 100,
+      mouseMove: false,
+      enabled: true,
+      layoutAll: false,
+      alwaysLayout: false,
+      extraBoundsSpace: [100, 100],
+      debug: false
+    };
+    ScrollController.prototype.setOptions = function(options) {
+      LayoutController.prototype.setOptions.call(this, options);
+      if (this._scroll) {
+        if (options.scrollSpring) {
+          this._scroll.springForce.setOptions(options.scrollSpring);
+        }
+        if (options.scrollDrag) {
+          this._scroll.dragForce.setOptions(options.scrollDrag);
+        }
+      }
+      if (options.scrollSync && this._scrollSync) {
+        this._scrollSync.setOptions(options.scrollSync);
+      }
+      return this;
+    };
+    function _initLayoutNode(node, spec) {
+      if (!spec && this.options.flowOptions.insertSpec) {
+        node.setSpec(this.options.flowOptions.insertSpec);
+      }
+    }
+    function _isSequentiallyScrollingOptimized() {
+      return !this._layout.capabilities || (this._layout.capabilities.sequentialScrollingOptimized === undefined) || this._layout.capabilities.sequentialScrollingOptimized;
+    }
+    function _updateSpring() {
+      var springValue = this._scroll.scrollForceCount ? undefined : this._scroll.springPosition;
+      if (this._scroll.springValue !== springValue) {
+        this._scroll.springValue = springValue;
+        if (springValue === undefined) {
+          if (this._scroll.springForceId !== undefined) {
+            this._scroll.pe.detach(this._scroll.springForceId);
+            this._scroll.springForceId = undefined;
+          }
+        } else {
+          if (this._scroll.springForceId === undefined) {
+            this._scroll.springForceId = this._scroll.pe.attach(this._scroll.springForce, this._scroll.particle);
+          }
+          this._scroll.springEndState.set1D(springValue);
+          this._scroll.pe.wake();
+        }
+      }
+    }
+    function _getEventTimestamp(event) {
+      return event.timeStamp || Date.now();
+    }
+    function _mouseDown(event) {
+      if (!this.options.mouseMove) {
+        return ;
+      }
+      if (this._scroll.mouseMove) {
+        this.releaseScrollForce(this._scroll.mouseMove.delta);
+      }
+      var current = [event.clientX, event.clientY];
+      var time = _getEventTimestamp(event);
+      this._scroll.mouseMove = {
+        delta: 0,
+        start: current,
+        current: current,
+        prev: current,
+        time: time,
+        prevTime: time
+      };
+      this.applyScrollForce(this._scroll.mouseMove.delta);
+    }
+    function _mouseMove(event) {
+      if (!this._scroll.mouseMove || !this.options.enabled) {
+        return ;
+      }
+      var moveDirection = Math.atan2(Math.abs(event.clientY - this._scroll.mouseMove.prev[1]), Math.abs(event.clientX - this._scroll.mouseMove.prev[0])) / (Math.PI / 2.0);
+      var directionDiff = Math.abs(this._direction - moveDirection);
+      if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)) {
+        this._scroll.mouseMove.prev = this._scroll.mouseMove.current;
+        this._scroll.mouseMove.current = [event.clientX, event.clientY];
+        this._scroll.mouseMove.prevTime = this._scroll.mouseMove.time;
+        this._scroll.mouseMove.direction = moveDirection;
+        this._scroll.mouseMove.time = _getEventTimestamp(event);
+      }
+      var delta = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.start[this._direction];
+      this.updateScrollForce(this._scroll.mouseMove.delta, delta);
+      this._scroll.mouseMove.delta = delta;
+    }
+    function _mouseUp(event) {
+      if (!this._scroll.mouseMove) {
+        return ;
+      }
+      var velocity = 0;
+      var diffTime = this._scroll.mouseMove.time - this._scroll.mouseMove.prevTime;
+      if ((diffTime > 0) && ((_getEventTimestamp(event) - this._scroll.mouseMove.time) <= this.options.touchMoveNoVelocityDuration)) {
+        var diffOffset = this._scroll.mouseMove.current[this._direction] - this._scroll.mouseMove.prev[this._direction];
+        velocity = diffOffset / diffTime;
+      }
+      this.releaseScrollForce(this._scroll.mouseMove.delta, velocity);
+      this._scroll.mouseMove = undefined;
+    }
+    function _touchStart(event) {
+      if (!this._touchEndEventListener) {
+        this._touchEndEventListener = function(event2) {
+          event2.target.removeEventListener('touchend', this._touchEndEventListener);
+          _touchEnd.call(this, event2);
+        }.bind(this);
+      }
+      var oldTouchesCount = this._scroll.activeTouches.length;
+      var i = 0;
+      var j;
+      var touchFound;
+      while (i < this._scroll.activeTouches.length) {
+        var activeTouch = this._scroll.activeTouches[i];
+        touchFound = false;
+        for (j = 0; j < event.touches.length; j++) {
+          var touch = event.touches[j];
+          if (touch.identifier === activeTouch.id) {
+            touchFound = true;
+            break;
+          }
+        }
+        if (!touchFound) {
+          this._scroll.activeTouches.splice(i, 1);
+        } else {
+          i++;
+        }
+      }
+      for (i = 0; i < event.touches.length; i++) {
+        var changedTouch = event.touches[i];
+        touchFound = false;
+        for (j = 0; j < this._scroll.activeTouches.length; j++) {
+          if (this._scroll.activeTouches[j].id === changedTouch.identifier) {
+            touchFound = true;
+            break;
+          }
+        }
+        if (!touchFound) {
+          var current = [changedTouch.clientX, changedTouch.clientY];
+          var time = _getEventTimestamp(event);
+          this._scroll.activeTouches.push({
+            id: changedTouch.identifier,
+            start: current,
+            current: current,
+            prev: current,
+            time: time,
+            prevTime: time
+          });
+          changedTouch.target.addEventListener('touchend', this._touchEndEventListener);
+        }
+      }
+      if (!oldTouchesCount && this._scroll.activeTouches.length) {
+        this.applyScrollForce(0);
+        this._scroll.touchDelta = 0;
+      }
+    }
+    function _touchMove(event) {
+      if (!this.options.enabled) {
+        return ;
+      }
+      var primaryTouch;
+      for (var i = 0; i < event.changedTouches.length; i++) {
+        var changedTouch = event.changedTouches[i];
+        for (var j = 0; j < this._scroll.activeTouches.length; j++) {
+          var touch = this._scroll.activeTouches[j];
+          if (touch.id === changedTouch.identifier) {
+            var moveDirection = Math.atan2(Math.abs(changedTouch.clientY - touch.prev[1]), Math.abs(changedTouch.clientX - touch.prev[0])) / (Math.PI / 2.0);
+            var directionDiff = Math.abs(this._direction - moveDirection);
+            if ((this.options.touchMoveDirectionThresshold === undefined) || (directionDiff <= this.options.touchMoveDirectionThresshold)) {
+              touch.prev = touch.current;
+              touch.current = [changedTouch.clientX, changedTouch.clientY];
+              touch.prevTime = touch.time;
+              touch.direction = moveDirection;
+              touch.time = _getEventTimestamp(event);
+              primaryTouch = (j === 0) ? touch : undefined;
+            }
+          }
+        }
+      }
+      if (primaryTouch) {
+        var delta = primaryTouch.current[this._direction] - primaryTouch.start[this._direction];
+        this.updateScrollForce(this._scroll.touchDelta, delta);
+        this._scroll.touchDelta = delta;
+      }
+    }
+    function _touchEnd(event) {
+      var primaryTouch = this._scroll.activeTouches.length ? this._scroll.activeTouches[0] : undefined;
+      for (var i = 0; i < event.changedTouches.length; i++) {
+        var changedTouch = event.changedTouches[i];
+        for (var j = 0; j < this._scroll.activeTouches.length; j++) {
+          var touch = this._scroll.activeTouches[j];
+          if (touch.id === changedTouch.identifier) {
+            this._scroll.activeTouches.splice(j, 1);
+            if ((j === 0) && this._scroll.activeTouches.length) {
+              var newPrimaryTouch = this._scroll.activeTouches[0];
+              newPrimaryTouch.start[0] = newPrimaryTouch.current[0] - (touch.current[0] - touch.start[0]);
+              newPrimaryTouch.start[1] = newPrimaryTouch.current[1] - (touch.current[1] - touch.start[1]);
+            }
+            break;
+          }
+        }
+      }
+      if (!primaryTouch || this._scroll.activeTouches.length) {
+        return ;
+      }
+      var velocity = 0;
+      var diffTime = primaryTouch.time - primaryTouch.prevTime;
+      if ((diffTime > 0) && ((_getEventTimestamp(event) - primaryTouch.time) <= this.options.touchMoveNoVelocityDuration)) {
+        var diffOffset = primaryTouch.current[this._direction] - primaryTouch.prev[this._direction];
+        velocity = diffOffset / diffTime;
+      }
+      var delta = this._scroll.touchDelta;
+      this.releaseScrollForce(delta, velocity);
+      this._scroll.touchDelta = 0;
+    }
+    function _scrollUpdate(event) {
+      if (!this.options.enabled) {
+        return ;
+      }
+      var offset = Array.isArray(event.delta) ? event.delta[this._direction] : event.delta;
+      this.scroll(offset);
+    }
+    function _setParticle(position, velocity, phase) {
+      if (position !== undefined) {
+        this._scroll.particleValue = position;
+        this._scroll.particle.setPosition1D(position);
+      }
+      if (velocity !== undefined) {
+        var oldVelocity = this._scroll.particle.getVelocity1D();
+        if (oldVelocity !== velocity) {
+          this._scroll.particle.setVelocity1D(velocity);
+        }
+      }
+    }
+    function _calcScrollOffset(normalize, refreshParticle) {
+      if (refreshParticle || (this._scroll.particleValue === undefined)) {
+        this._scroll.particleValue = this._scroll.particle.getPosition1D();
+        this._scroll.particleValue = Math.round(this._scroll.particleValue * 1000) / 1000;
+      }
+      var scrollOffset = this._scroll.particleValue;
+      if (this._scroll.scrollDelta || this._scroll.normalizedScrollDelta) {
+        scrollOffset += this._scroll.scrollDelta + this._scroll.normalizedScrollDelta;
+        if (((this._scroll.boundsReached & Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) || ((this._scroll.boundsReached & Bounds.NEXT) && (scrollOffset < this._scroll.springPosition)) || (this._scroll.boundsReached === Bounds.BOTH)) {
+          scrollOffset = this._scroll.springPosition;
+        }
+        if (normalize) {
+          if (!this._scroll.scrollDelta) {
+            this._scroll.normalizedScrollDelta = 0;
+            _setParticle.call(this, scrollOffset, undefined, '_calcScrollOffset');
+          }
+          this._scroll.normalizedScrollDelta += this._scroll.scrollDelta;
+          this._scroll.scrollDelta = 0;
+        }
+      }
+      if (this._scroll.scrollForceCount && this._scroll.scrollForce) {
+        if (this._scroll.springPosition !== undefined) {
+          scrollOffset = (scrollOffset + this._scroll.scrollForce + this._scroll.springPosition) / 2.0;
+        } else {
+          scrollOffset += this._scroll.scrollForce;
+        }
+      }
+      if (!this.options.overscroll) {
+        if ((this._scroll.boundsReached === Bounds.BOTH) || ((this._scroll.boundsReached === Bounds.PREV) && (scrollOffset > this._scroll.springPosition)) || ((this._scroll.boundsReached === Bounds.NEXT) && (scrollOffset < this._scroll.springPosition))) {
+          scrollOffset = this._scroll.springPosition;
+        }
+      }
+      return scrollOffset;
+    }
+    ScrollController.prototype._calcScrollHeight = function(next, lastNodeOnly) {
+      var calcedHeight = 0;
+      var node = this._nodes.getStartEnumNode(next);
+      while (node) {
+        if (node._invalidated) {
+          if (node.trueSizeRequested) {
+            calcedHeight = undefined;
+            break;
+          }
+          if (node.scrollLength !== undefined) {
+            calcedHeight = lastNodeOnly ? node.scrollLength : (calcedHeight + node.scrollLength);
+            if (!next && lastNodeOnly) {
+              break;
+            }
+          }
+        }
+        node = next ? node._next : node._prev;
+      }
+      return calcedHeight;
+    };
+    function _calcBounds(size, scrollOffset) {
+      var prevHeight = this._calcScrollHeight(false);
+      var nextHeight = this._calcScrollHeight(true);
+      var enforeMinSize = _isSequentiallyScrollingOptimized.call(this);
+      var totalHeight;
+      if (enforeMinSize) {
+        if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
+          totalHeight = prevHeight + nextHeight;
+        }
+        if ((totalHeight !== undefined) && (totalHeight <= size[this._direction])) {
+          this._scroll.boundsReached = Bounds.BOTH;
+          this._scroll.springPosition = this.options.alignment ? -nextHeight : prevHeight;
+          this._scroll.springSource = SpringSource.MINSIZE;
+          return ;
+        }
+      }
+      if (this.options.alignment) {
+        if (enforeMinSize) {
+          if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= 0)) {
+            this._scroll.boundsReached = Bounds.NEXT;
+            this._scroll.springPosition = -nextHeight;
+            this._scroll.springSource = SpringSource.NEXTBOUNDS;
+            return ;
+          }
+        } else {
+          var firstPrevItemHeight = this._calcScrollHeight(false, true);
+          if ((nextHeight !== undefined) && firstPrevItemHeight && ((scrollOffset + nextHeight + size[this._direction]) <= firstPrevItemHeight)) {
+            this._scroll.boundsReached = Bounds.NEXT;
+            this._scroll.springPosition = nextHeight - (size[this._direction] - firstPrevItemHeight);
+            this._scroll.springSource = SpringSource.NEXTBOUNDS;
+            return ;
+          }
+        }
+      } else {
+        if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= 0)) {
+          this._scroll.boundsReached = Bounds.PREV;
+          this._scroll.springPosition = prevHeight;
+          this._scroll.springSource = SpringSource.PREVBOUNDS;
+          return ;
+        }
+      }
+      if (this.options.alignment) {
+        if ((prevHeight !== undefined) && ((scrollOffset - prevHeight) >= -size[this._direction])) {
+          this._scroll.boundsReached = Bounds.PREV;
+          this._scroll.springPosition = -size[this._direction] + prevHeight;
+          this._scroll.springSource = SpringSource.PREVBOUNDS;
+          return ;
+        }
+      } else {
+        var nextBounds = enforeMinSize ? size[this._direction] : this._calcScrollHeight(true, true);
+        if ((nextHeight !== undefined) && ((scrollOffset + nextHeight) <= nextBounds)) {
+          this._scroll.boundsReached = Bounds.NEXT;
+          this._scroll.springPosition = nextBounds - nextHeight;
+          this._scroll.springSource = SpringSource.NEXTBOUNDS;
+          return ;
+        }
+      }
+      this._scroll.boundsReached = Bounds.NONE;
+      this._scroll.springPosition = undefined;
+      this._scroll.springSource = SpringSource.NONE;
+    }
+    function _calcScrollToOffset(size, scrollOffset) {
+      var scrollToRenderNode = this._scroll.scrollToRenderNode || this._scroll.ensureVisibleRenderNode;
+      if (!scrollToRenderNode) {
+        return ;
+      }
+      if ((this._scroll.boundsReached === Bounds.BOTH) || (!this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.PREV)) || (this._scroll.scrollToDirection && (this._scroll.boundsReached === Bounds.NEXT))) {
+        return ;
+      }
+      var foundNode;
+      var scrollToOffset = 0;
+      var node = this._nodes.getStartEnumNode(true);
+      var count = 0;
+      while (node) {
+        count++;
+        if (!node._invalidated || (node.scrollLength === undefined)) {
+          break;
+        }
+        if (this.options.alignment) {
+          scrollToOffset -= node.scrollLength;
+        }
+        if (node.renderNode === scrollToRenderNode) {
+          foundNode = node;
+          break;
+        }
+        if (!this.options.alignment) {
+          scrollToOffset -= node.scrollLength;
+        }
+        node = node._next;
+      }
+      if (!foundNode) {
+        scrollToOffset = 0;
+        node = this._nodes.getStartEnumNode(false);
+        while (node) {
+          if (!node._invalidated || (node.scrollLength === undefined)) {
+            break;
+          }
+          if (!this.options.alignment) {
+            scrollToOffset += node.scrollLength;
+          }
+          if (node.renderNode === scrollToRenderNode) {
+            foundNode = node;
+            break;
+          }
+          if (this.options.alignment) {
+            scrollToOffset += node.scrollLength;
+          }
+          node = node._prev;
+        }
+      }
+      if (foundNode) {
+        if (this._scroll.ensureVisibleRenderNode) {
+          if (this.options.alignment) {
+            if ((scrollToOffset - foundNode.scrollLength) < 0) {
+              this._scroll.springPosition = scrollToOffset;
+              this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+            } else if (scrollToOffset > size[this._direction]) {
+              this._scroll.springPosition = size[this._direction] - scrollToOffset;
+              this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+            } else {
+              if (!foundNode.trueSizeRequested) {
+                this._scroll.ensureVisibleRenderNode = undefined;
+              }
+            }
+          } else {
+            scrollToOffset = -scrollToOffset;
+            if (scrollToOffset < 0) {
+              this._scroll.springPosition = scrollToOffset;
+              this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+            } else if ((scrollToOffset + foundNode.scrollLength) > size[this._direction]) {
+              this._scroll.springPosition = size[this._direction] - (scrollToOffset + foundNode.scrollLength);
+              this._scroll.springSource = SpringSource.ENSUREVISIBLE;
+            } else {
+              if (!foundNode.trueSizeRequested) {
+                this._scroll.ensureVisibleRenderNode = undefined;
+              }
+            }
+          }
+        } else {
+          this._scroll.springPosition = scrollToOffset;
+          this._scroll.springSource = SpringSource.GOTOSEQUENCE;
+        }
+        return ;
+      }
+      if (this._scroll.scrollToDirection) {
+        this._scroll.springPosition = scrollOffset - size[this._direction];
+        this._scroll.springSource = SpringSource.GOTONEXTDIRECTION;
+      } else {
+        this._scroll.springPosition = scrollOffset + size[this._direction];
+        this._scroll.springSource = SpringSource.GOTOPREVDIRECTION;
+      }
+      if (this._viewSequence.cleanup) {
+        var viewSequence = this._viewSequence;
+        while (viewSequence.get() !== scrollToRenderNode) {
+          viewSequence = this._scroll.scrollToDirection ? viewSequence.getNext(true) : viewSequence.getPrevious(true);
+          if (!viewSequence) {
+            break;
+          }
+        }
+      }
+    }
+    function _snapToPage() {
+      if (!this.options.paginated || this._scroll.scrollForceCount || (this._scroll.springPosition !== undefined)) {
+        return ;
+      }
+      var item;
+      switch (this.options.paginationMode) {
+        case PaginationMode.SCROLL:
+          if (!this.options.paginationEnergyThresshold || (Math.abs(this._scroll.particle.getEnergy()) <= this.options.paginationEnergyThresshold)) {
+            item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+            if (item && item.renderNode) {
+              this.goToRenderNode(item.renderNode);
+            }
+          }
+          break;
+        case PaginationMode.PAGE:
+          item = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+          if (item && item.renderNode) {
+            this.goToRenderNode(item.renderNode);
+          }
+          break;
+      }
+    }
+    function _normalizePrevViewSequence(scrollOffset) {
+      var count = 0;
+      var normalizedScrollOffset = scrollOffset;
+      var normalizeNextPrev = false;
+      var node = this._nodes.getStartEnumNode(false);
+      while (node) {
+        if (!node._invalidated || !node._viewSequence) {
+          break;
+        }
+        if (normalizeNextPrev) {
+          this._viewSequence = node._viewSequence;
+          normalizedScrollOffset = scrollOffset;
+          normalizeNextPrev = false;
+        }
+        if ((node.scrollLength === undefined) || node.trueSizeRequested || (scrollOffset < 0)) {
+          break;
+        }
+        scrollOffset -= node.scrollLength;
+        count++;
+        if (node.scrollLength) {
+          if (this.options.alignment) {
+            normalizeNextPrev = (scrollOffset >= 0);
+          } else {
+            this._viewSequence = node._viewSequence;
+            normalizedScrollOffset = scrollOffset;
+          }
+        }
+        node = node._prev;
+      }
+      return normalizedScrollOffset;
+    }
+    function _normalizeNextViewSequence(scrollOffset) {
+      var count = 0;
+      var normalizedScrollOffset = scrollOffset;
+      var node = this._nodes.getStartEnumNode(true);
+      while (node) {
+        if (!node._invalidated || (node.scrollLength === undefined) || node.trueSizeRequested || !node._viewSequence || ((scrollOffset > 0) && (!this.options.alignment || (node.scrollLength !== 0)))) {
+          break;
+        }
+        if (this.options.alignment) {
+          scrollOffset += node.scrollLength;
+          count++;
+        }
+        if (node.scrollLength || this.options.alignment) {
+          this._viewSequence = node._viewSequence;
+          normalizedScrollOffset = scrollOffset;
+        }
+        if (!this.options.alignment) {
+          scrollOffset += node.scrollLength;
+          count++;
+        }
+        node = node._next;
+      }
+      return normalizedScrollOffset;
+    }
+    function _normalizeViewSequence(size, scrollOffset) {
+      var caps = this._layout.capabilities;
+      if (caps && caps.debug && (caps.debug.normalize !== undefined) && !caps.debug.normalize) {
+        return scrollOffset;
+      }
+      if (this._scroll.scrollForceCount) {
+        return scrollOffset;
+      }
+      var normalizedScrollOffset = scrollOffset;
+      if (this.options.alignment && (scrollOffset < 0)) {
+        normalizedScrollOffset = _normalizeNextViewSequence.call(this, scrollOffset);
+      } else if (!this.options.alignment && (scrollOffset > 0)) {
+        normalizedScrollOffset = _normalizePrevViewSequence.call(this, scrollOffset);
+      }
+      if (normalizedScrollOffset === scrollOffset) {
+        if (this.options.alignment && (scrollOffset > 0)) {
+          normalizedScrollOffset = _normalizePrevViewSequence.call(this, scrollOffset);
+        } else if (!this.options.alignment && (scrollOffset < 0)) {
+          normalizedScrollOffset = _normalizeNextViewSequence.call(this, scrollOffset);
+        }
+      }
+      if (normalizedScrollOffset !== scrollOffset) {
+        var delta = normalizedScrollOffset - scrollOffset;
+        var particleValue = this._scroll.particle.getPosition1D();
+        _setParticle.call(this, particleValue + delta, undefined, 'normalize');
+        if (this._scroll.springPosition !== undefined) {
+          this._scroll.springPosition += delta;
+        }
+        if (_isSequentiallyScrollingOptimized.call(this)) {
+          this._scroll.groupStart -= delta;
+        }
+      }
+      return normalizedScrollOffset;
+    }
+    ScrollController.prototype.getVisibleItems = function() {
+      var size = this._contextSizeCache;
+      var scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+      var result = [];
+      var node = this._nodes.getStartEnumNode(true);
+      while (node) {
+        if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset > size[this._direction])) {
+          break;
+        }
+        scrollOffset += node.scrollLength;
+        if ((scrollOffset >= 0) && node._viewSequence) {
+          result.push({
+            index: node._viewSequence.getIndex(),
+            viewSequence: node._viewSequence,
+            renderNode: node.renderNode,
+            visiblePerc: node.scrollLength ? ((Math.min(scrollOffset, size[this._direction]) - Math.max(scrollOffset - node.scrollLength, 0)) / node.scrollLength) : 1,
+            scrollOffset: scrollOffset - node.scrollLength,
+            scrollLength: node.scrollLength,
+            _node: node
+          });
+        }
+        node = node._next;
+      }
+      scrollOffset = this.options.alignment ? (this._scroll.unnormalizedScrollOffset + size[this._direction]) : this._scroll.unnormalizedScrollOffset;
+      node = this._nodes.getStartEnumNode(false);
+      while (node) {
+        if (!node._invalidated || (node.scrollLength === undefined) || (scrollOffset < 0)) {
+          break;
+        }
+        scrollOffset -= node.scrollLength;
+        if ((scrollOffset < size[this._direction]) && node._viewSequence) {
+          result.unshift({
+            index: node._viewSequence.getIndex(),
+            viewSequence: node._viewSequence,
+            renderNode: node.renderNode,
+            visiblePerc: node.scrollLength ? ((Math.min(scrollOffset + node.scrollLength, size[this._direction]) - Math.max(scrollOffset, 0)) / node.scrollLength) : 1,
+            scrollOffset: scrollOffset,
+            scrollLength: node.scrollLength,
+            _node: node
+          });
+        }
+        node = node._prev;
+      }
+      return result;
+    };
+    function _getVisibleItem(first) {
+      var result = {};
+      var diff;
+      var prevDiff = 10000000;
+      var diffDelta = (first && this.options.alignment) ? -this._contextSizeCache[this._direction] : ((!first && !this.options.alignment) ? this._contextSizeCache[this._direction] : 0);
+      var scrollOffset = this._scroll.unnormalizedScrollOffset;
+      var node = this._nodes.getStartEnumNode(true);
+      while (node) {
+        if (!node._invalidated || (node.scrollLength === undefined)) {
+          break;
+        }
+        if (node._viewSequence) {
+          diff = Math.abs(diffDelta - (scrollOffset + (!first ? node.scrollLength : 0)));
+          if (diff >= prevDiff) {
+            break;
+          }
+          prevDiff = diff;
+          result.scrollOffset = scrollOffset;
+          result._node = node;
+          scrollOffset += node.scrollLength;
+        }
+        node = node._next;
+      }
+      scrollOffset = this._scroll.unnormalizedScrollOffset;
+      node = this._nodes.getStartEnumNode(false);
+      while (node) {
+        if (!node._invalidated || (node.scrollLength === undefined)) {
+          break;
+        }
+        if (node._viewSequence) {
+          scrollOffset -= node.scrollLength;
+          diff = Math.abs(diffDelta - (scrollOffset + (!first ? node.scrollLength : 0)));
+          if (diff >= prevDiff) {
+            break;
+          }
+          prevDiff = diff;
+          result.scrollOffset = scrollOffset;
+          result._node = node;
+        }
+        node = node._prev;
+      }
+      if (!result._node) {
+        return undefined;
+      }
+      result.scrollLength = result._node.scrollLength;
+      if (this.options.alignment) {
+        result.visiblePerc = (Math.min(result.scrollOffset + result.scrollLength, 0) - Math.max(result.scrollOffset, -this._contextSizeCache[this._direction])) / result.scrollLength;
+      } else {
+        result.visiblePerc = (Math.min(result.scrollOffset + result.scrollLength, this._contextSizeCache[this._direction]) - Math.max(result.scrollOffset, 0)) / result.scrollLength;
+      }
+      result.index = result._node._viewSequence.getIndex();
+      result.viewSequence = result._node._viewSequence;
+      result.renderNode = result._node.renderNode;
+      return result;
+    }
+    ScrollController.prototype.getFirstVisibleItem = function() {
+      return _getVisibleItem.call(this, true);
+    };
+    ScrollController.prototype.getLastVisibleItem = function() {
+      return _getVisibleItem.call(this, false);
+    };
+    function _goToSequence(viewSequence, next, noAnimation) {
+      if (noAnimation) {
+        this._viewSequence = viewSequence;
+        this._scroll.springPosition = undefined;
+        _updateSpring.call(this);
+        this.halt();
+        this._scroll.scrollDelta = 0;
+        _setParticle.call(this, 0, 0, '_goToSequence');
+        this._isDirty = true;
+      } else {
+        this._scroll.scrollToSequence = viewSequence;
+        this._scroll.scrollToRenderNode = viewSequence.get();
+        this._scroll.ensureVisibleRenderNode = undefined;
+        this._scroll.scrollToDirection = next;
+        this._scroll.scrollDirty = true;
+      }
+    }
+    function _ensureVisibleSequence(viewSequence, next) {
+      this._scroll.scrollToSequence = undefined;
+      this._scroll.scrollToRenderNode = undefined;
+      this._scroll.ensureVisibleRenderNode = viewSequence.get();
+      this._scroll.scrollToDirection = next;
+      this._scroll.scrollDirty = true;
+    }
+    function _goToPage(amount, noAnimation) {
+      var viewSequence = (!noAnimation ? this._scroll.scrollToSequence : undefined) || this._viewSequence;
+      if (!this._scroll.scrollToSequence && !noAnimation) {
+        var firstVisibleItem = this.getFirstVisibleItem();
+        if (firstVisibleItem) {
+          viewSequence = firstVisibleItem.viewSequence;
+          if (((amount < 0) && (firstVisibleItem.scrollOffset < 0)) || ((amount > 0) && (firstVisibleItem.scrollOffset > 0))) {
+            amount = 0;
+          }
+        }
+      }
+      if (!viewSequence) {
+        return ;
+      }
+      for (var i = 0; i < Math.abs(amount); i++) {
+        var nextViewSequence = (amount > 0) ? viewSequence.getNext() : viewSequence.getPrevious();
+        if (nextViewSequence) {
+          viewSequence = nextViewSequence;
+        } else {
+          break;
+        }
+      }
+      _goToSequence.call(this, viewSequence, amount >= 0, noAnimation);
+    }
+    ScrollController.prototype.goToFirstPage = function(noAnimation) {
+      if (!this._viewSequence) {
+        return this;
+      }
+      if (this._viewSequence._ && this._viewSequence._.loop) {
+        LayoutUtility.error('Unable to go to first item of looped ViewSequence');
+        return this;
+      }
+      var viewSequence = this._viewSequence;
+      while (viewSequence) {
+        var prev = viewSequence.getPrevious();
+        if (prev && prev.get()) {
+          viewSequence = prev;
+        } else {
+          break;
+        }
+      }
+      _goToSequence.call(this, viewSequence, false, noAnimation);
+      return this;
+    };
+    ScrollController.prototype.goToPreviousPage = function(noAnimation) {
+      _goToPage.call(this, -1, noAnimation);
+      return this;
+    };
+    ScrollController.prototype.goToNextPage = function(noAnimation) {
+      _goToPage.call(this, 1, noAnimation);
+      return this;
+    };
+    ScrollController.prototype.goToLastPage = function(noAnimation) {
+      if (!this._viewSequence) {
+        return this;
+      }
+      if (this._viewSequence._ && this._viewSequence._.loop) {
+        LayoutUtility.error('Unable to go to last item of looped ViewSequence');
+        return this;
+      }
+      var viewSequence = this._viewSequence;
+      while (viewSequence) {
+        var next = viewSequence.getNext();
+        if (next && next.get()) {
+          viewSequence = next;
+        } else {
+          break;
+        }
+      }
+      _goToSequence.call(this, viewSequence, true, noAnimation);
+      return this;
+    };
+    ScrollController.prototype.goToRenderNode = function(node, noAnimation) {
+      if (!this._viewSequence || !node) {
+        return this;
+      }
+      if (this._viewSequence.get() === node) {
+        var next = _calcScrollOffset.call(this) >= 0;
+        _goToSequence.call(this, this._viewSequence, next, noAnimation);
+        return this;
+      }
+      var nextSequence = this._viewSequence.getNext();
+      var prevSequence = this._viewSequence.getPrevious();
+      while ((nextSequence || prevSequence) && (nextSequence !== this._viewSequence)) {
+        var nextNode = nextSequence ? nextSequence.get() : undefined;
+        if (nextNode === node) {
+          _goToSequence.call(this, nextSequence, true, noAnimation);
+          break;
+        }
+        var prevNode = prevSequence ? prevSequence.get() : undefined;
+        if (prevNode === node) {
+          _goToSequence.call(this, prevSequence, false, noAnimation);
+          break;
+        }
+        nextSequence = nextNode ? nextSequence.getNext() : undefined;
+        prevSequence = prevNode ? prevSequence.getPrevious() : undefined;
+      }
+      return this;
+    };
+    ScrollController.prototype.ensureVisible = function(node) {
+      if (node instanceof ViewSequence) {
+        node = node.get();
+      } else if ((node instanceof Number) || (typeof node === 'number')) {
+        var viewSequence = this._viewSequence;
+        while (viewSequence.getIndex() < node) {
+          viewSequence = viewSequence.getNext();
+          if (!viewSequence) {
+            return this;
+          }
+        }
+        while (viewSequence.getIndex() > node) {
+          viewSequence = viewSequence.getPrevious();
+          if (!viewSequence) {
+            return this;
+          }
+        }
+      }
+      if (this._viewSequence.get() === node) {
+        var next = _calcScrollOffset.call(this) >= 0;
+        _ensureVisibleSequence.call(this, this._viewSequence, next);
+        return this;
+      }
+      var nextSequence = this._viewSequence.getNext();
+      var prevSequence = this._viewSequence.getPrevious();
+      while ((nextSequence || prevSequence) && (nextSequence !== this._viewSequence)) {
+        var nextNode = nextSequence ? nextSequence.get() : undefined;
+        if (nextNode === node) {
+          _ensureVisibleSequence.call(this, nextSequence, true);
+          break;
+        }
+        var prevNode = prevSequence ? prevSequence.get() : undefined;
+        if (prevNode === node) {
+          _ensureVisibleSequence.call(this, prevSequence, false);
+          break;
+        }
+        nextSequence = nextNode ? nextSequence.getNext() : undefined;
+        prevSequence = prevNode ? prevSequence.getPrevious() : undefined;
+      }
+      return this;
+    };
+    ScrollController.prototype.scroll = function(delta) {
+      this.halt();
+      this._scroll.scrollDelta += delta;
+      return this;
+    };
+    ScrollController.prototype.canScroll = function(delta) {
+      var scrollOffset = _calcScrollOffset.call(this);
+      var prevHeight = this._calcScrollHeight(false);
+      var nextHeight = this._calcScrollHeight(true);
+      var totalHeight;
+      if ((nextHeight !== undefined) && (prevHeight !== undefined)) {
+        totalHeight = prevHeight + nextHeight;
+      }
+      if ((totalHeight !== undefined) && (totalHeight <= this._contextSizeCache[this._direction])) {
+        return 0;
+      }
+      if ((delta < 0) && (nextHeight !== undefined)) {
+        var nextOffset = this._contextSizeCache[this._direction] - (scrollOffset + nextHeight);
+        return Math.max(nextOffset, delta);
+      } else if ((delta > 0) && (prevHeight !== undefined)) {
+        var prevOffset = -(scrollOffset - prevHeight);
+        return Math.min(prevOffset, delta);
+      }
+      return delta;
+    };
+    ScrollController.prototype.halt = function() {
+      this._scroll.scrollToSequence = undefined;
+      this._scroll.scrollToRenderNode = undefined;
+      this._scroll.ensureVisibleRenderNode = undefined;
+      _setParticle.call(this, undefined, 0, 'halt');
+      return this;
+    };
+    ScrollController.prototype.isScrolling = function() {
+      return this._scroll.isScrolling;
+    };
+    ScrollController.prototype.getBoundsReached = function() {
+      return this._scroll.boundsReached;
+    };
+    ScrollController.prototype.getVelocity = function() {
+      return this._scroll.particle.getVelocity1D();
+    };
+    ScrollController.prototype.getEnergy = function() {
+      return this._scroll.particle.getEnergy();
+    };
+    ScrollController.prototype.setVelocity = function(velocity) {
+      return this._scroll.particle.setVelocity1D(velocity);
+    };
+    ScrollController.prototype.applyScrollForce = function(delta) {
+      this.halt();
+      if (this._scroll.scrollForceCount === 0) {
+        this._scroll.scrollForceStartItem = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+      }
+      this._scroll.scrollForceCount++;
+      this._scroll.scrollForce += delta;
+      this._eventOutput.emit((this._scroll.scrollForceCount === 1) ? 'swipestart' : 'swipeupdate', {
+        target: this,
+        total: this._scroll.scrollForce,
+        delta: delta
+      });
+      return this;
+    };
+    ScrollController.prototype.updateScrollForce = function(prevDelta, newDelta) {
+      this.halt();
+      newDelta -= prevDelta;
+      this._scroll.scrollForce += newDelta;
+      this._eventOutput.emit('swipeupdate', {
+        target: this,
+        total: this._scroll.scrollForce,
+        delta: newDelta
+      });
+      return this;
+    };
+    ScrollController.prototype.releaseScrollForce = function(delta, velocity) {
+      this.halt();
+      if (this._scroll.scrollForceCount === 1) {
+        var scrollOffset = _calcScrollOffset.call(this);
+        _setParticle.call(this, scrollOffset, velocity, 'releaseScrollForce');
+        this._scroll.pe.wake();
+        this._scroll.scrollForce = 0;
+        this._scroll.scrollDirty = true;
+        if (this._scroll.scrollForceStartItem && this.options.paginated && (this.options.paginationMode === PaginationMode.PAGE)) {
+          var item = this.options.alignment ? this.getLastVisibleItem(true) : this.getFirstVisibleItem(true);
+          if (item) {
+            if (item.renderNode !== this._scroll.scrollForceStartItem.renderNode) {
+              this.goToRenderNode(item.renderNode);
+            } else if (this.options.paginationEnergyThresshold && (Math.abs(this._scroll.particle.getEnergy()) >= this.options.paginationEnergyThresshold)) {
+              velocity = velocity || 0;
+              if ((velocity < 0) && item._node._next && item._node._next.renderNode) {
+                this.goToRenderNode(item._node._next.renderNode);
+              } else if ((velocity >= 0) && item._node._prev && item._node._prev.renderNode) {
+                this.goToRenderNode(item._node._prev.renderNode);
+              }
+            } else {
+              this.goToRenderNode(item.renderNode);
+            }
+          }
+        }
+        this._scroll.scrollForceStartItem = undefined;
+        this._scroll.scrollForceCount--;
+        this._eventOutput.emit('swipeend', {
+          target: this,
+          total: delta,
+          delta: 0,
+          velocity: velocity
+        });
+      } else {
+        this._scroll.scrollForce -= delta;
+        this._scroll.scrollForceCount--;
+        this._eventOutput.emit('swipeupdate', {
+          target: this,
+          total: this._scroll.scrollForce,
+          delta: delta
+        });
+      }
+      return this;
+    };
+    ScrollController.prototype.getSpec = function(node, normalize) {
+      var spec = LayoutController.prototype.getSpec.apply(this, arguments);
+      if (spec && _isSequentiallyScrollingOptimized.call(this)) {
+        spec = {
+          origin: spec.origin,
+          align: spec.align,
+          opacity: spec.opacity,
+          size: spec.size,
+          renderNode: spec.renderNode,
+          transform: spec.transform
+        };
+        var translate = [0, 0, 0];
+        translate[this._direction] = this._scrollOffsetCache + this._scroll.groupStart;
+        spec.transform = Transform.thenMove(spec.transform, translate);
+      }
+      return spec;
+    };
+    function _layout(size, scrollOffset, nested) {
+      this._debug.layoutCount++;
+      var scrollStart = 0 - Math.max(this.options.extraBoundsSpace[0], 1);
+      var scrollEnd = size[this._direction] + Math.max(this.options.extraBoundsSpace[1], 1);
+      if (this.options.layoutAll) {
+        scrollStart = -1000000;
+        scrollEnd = 1000000;
+      }
+      var layoutContext = this._nodes.prepareForLayout(this._viewSequence, this._nodesById, {
+        size: size,
+        direction: this._direction,
+        reverse: this.options.alignment ? true : false,
+        scrollOffset: this.options.alignment ? (scrollOffset + size[this._direction]) : scrollOffset,
+        scrollStart: scrollStart,
+        scrollEnd: scrollEnd
+      });
+      if (this._layout._function) {
+        this._layout._function(layoutContext, this._layout.options);
+      }
+      this._scroll.unnormalizedScrollOffset = scrollOffset;
+      if (this._postLayout) {
+        this._postLayout(size, scrollOffset);
+      }
+      this._nodes.removeNonInvalidatedNodes(this.options.flowOptions.removeSpec);
+      _calcBounds.call(this, size, scrollOffset);
+      _calcScrollToOffset.call(this, size, scrollOffset);
+      _snapToPage.call(this);
+      var newScrollOffset = _calcScrollOffset.call(this, true);
+      if (!nested && (newScrollOffset !== scrollOffset)) {
+        return _layout.call(this, size, newScrollOffset, true);
+      }
+      scrollOffset = _normalizeViewSequence.call(this, size, scrollOffset);
+      _updateSpring.call(this);
+      this._nodes.removeVirtualViewSequenceNodes();
+      if (this.options.size && (this.options.size[this._direction] === true)) {
+        var scrollLength = 0;
+        var node = this._nodes.getStartEnumNode();
+        while (node) {
+          if (node._invalidated && node.scrollLength) {
+            scrollLength += node.scrollLength;
+          }
+          node = node._next;
+        }
+        this._size = this._size || [0, 0];
+        this._size[0] = this.options.size[0];
+        this._size[1] = this.options.size[1];
+        this._size[this._direction] = scrollLength;
+      }
+      return scrollOffset;
+    }
+    function _innerRender() {
+      var specs = this._specs;
+      for (var i3 = 0,
+          j3 = specs.length; i3 < j3; i3++) {
+        if (specs[i3].renderNode) {
+          specs[i3].target = specs[i3].renderNode.render();
+        }
+      }
+      if (!specs.length || (specs[specs.length - 1] !== this._cleanupRegistration)) {
+        specs.push(this._cleanupRegistration);
+      }
+      return specs;
+    }
+    ScrollController.prototype.commit = function commit(context) {
+      var size = context.size;
+      this._debug.commitCount++;
+      if (this._resetFlowState) {
+        this._resetFlowState = false;
+        this._isDirty = true;
+        this._nodes.removeAll();
+      }
+      var scrollOffset = _calcScrollOffset.call(this, true, true);
+      if (this._scrollOffsetCache === undefined) {
+        this._scrollOffsetCache = scrollOffset;
+      }
+      var emitEndScrollingEvent = false;
+      var emitScrollEvent = false;
+      var eventData;
+      if (size[0] !== this._contextSizeCache[0] || size[1] !== this._contextSizeCache[1] || this._isDirty || this._scroll.scrollDirty || this._nodes._trueSizeRequested || this.options.alwaysLayout || this._scrollOffsetCache !== scrollOffset) {
+        eventData = {
+          target: this,
+          oldSize: this._contextSizeCache,
+          size: size,
+          oldScrollOffset: -(this._scrollOffsetCache + this._scroll.groupStart),
+          scrollOffset: -(scrollOffset + this._scroll.groupStart)
+        };
+        if (this._scrollOffsetCache !== scrollOffset) {
+          if (!this._scroll.isScrolling) {
+            this._scroll.isScrolling = true;
+            this._eventOutput.emit('scrollstart', eventData);
+          }
+          emitScrollEvent = true;
+        } else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
+          emitEndScrollingEvent = true;
+        }
+        this._eventOutput.emit('layoutstart', eventData);
+        if (this.options.flow && (this._isDirty || (this.options.flowOptions.reflowOnResize && ((size[0] !== this._contextSizeCache[0]) || (size[1] !== this._contextSizeCache[1]))))) {
+          var node = this._nodes.getStartEnumNode();
+          while (node) {
+            node.releaseLock(true);
+            node = node._next;
+          }
+        }
+        this._contextSizeCache[0] = size[0];
+        this._contextSizeCache[1] = size[1];
+        this._isDirty = false;
+        this._scroll.scrollDirty = false;
+        scrollOffset = _layout.call(this, size, scrollOffset);
+        this._scrollOffsetCache = scrollOffset;
+        eventData.scrollOffset = -(this._scrollOffsetCache + this._scroll.groupStart);
+      } else if (this._scroll.isScrolling && !this._scroll.scrollForceCount) {
+        emitEndScrollingEvent = true;
+      }
+      var groupTranslate = this._scroll.groupTranslate;
+      groupTranslate[0] = 0;
+      groupTranslate[1] = 0;
+      groupTranslate[2] = 0;
+      groupTranslate[this._direction] = -this._scroll.groupStart - scrollOffset;
+      var sequentialScrollingOptimized = _isSequentiallyScrollingOptimized.call(this);
+      var result = this._nodes.buildSpecAndDestroyUnrenderedNodes(sequentialScrollingOptimized ? groupTranslate : undefined);
+      this._specs = result.specs;
+      if (!this._specs.length) {
+        this._scroll.groupStart = 0;
+      }
+      if (eventData) {
+        this._eventOutput.emit('layoutend', eventData);
+      }
+      if (result.modified) {
+        this._eventOutput.emit('reflow', {target: this});
+      }
+      if (emitScrollEvent) {
+        this._eventOutput.emit('scroll', eventData);
+      }
+      if (eventData) {
+        var visibleItem = this.options.alignment ? this.getLastVisibleItem() : this.getFirstVisibleItem();
+        if ((visibleItem && !this._visibleItemCache) || (!visibleItem && this._visibleItemCache) || (visibleItem && this._visibleItemCache && (visibleItem.renderNode !== this._visibleItemCache.renderNode))) {
+          this._eventOutput.emit('pagechange', {
+            target: this,
+            oldViewSequence: this._visibleItemCache ? this._visibleItemCache.viewSequence : undefined,
+            viewSequence: visibleItem ? visibleItem.viewSequence : undefined,
+            oldIndex: this._visibleItemCache ? this._visibleItemCache.index : undefined,
+            index: visibleItem ? visibleItem.index : undefined,
+            renderNode: visibleItem ? visibleItem.renderNode : undefined,
+            oldRenderNode: this._visibleItemCache ? this._visibleItemCache.renderNode : undefined
+          });
+          this._visibleItemCache = visibleItem;
+        }
+      }
+      if (emitEndScrollingEvent) {
+        this._scroll.isScrolling = false;
+        eventData = {
+          target: this,
+          oldSize: size,
+          size: size,
+          oldScrollOffset: -(this._scroll.groupStart + scrollOffset),
+          scrollOffset: -(this._scroll.groupStart + scrollOffset)
+        };
+        this._eventOutput.emit('scrollend', eventData);
+      }
+      var transform = context.transform;
+      if (sequentialScrollingOptimized) {
+        var windowOffset = scrollOffset + this._scroll.groupStart;
+        var translate = [0, 0, 0];
+        translate[this._direction] = windowOffset;
+        transform = Transform.thenMove(transform, translate);
+      }
+      return {
+        transform: transform,
+        size: size,
+        opacity: context.opacity,
+        origin: context.origin,
+        target: this.group.render()
+      };
+    };
+    ScrollController.prototype.render = function render() {
+      if (this.container) {
+        return this.container.render.apply(this.container, arguments);
+      } else {
+        return this.id;
+      }
+    };
+    module.exports = ScrollController;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/layouts/ListLayout", ["npm:famous@0.3.5/utilities/Utility", "github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var Utility = require("npm:famous@0.3.5/utilities/Utility");
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var capabilities = {
+      sequence: true,
+      direction: [Utility.Direction.Y, Utility.Direction.X],
+      scrolling: true,
+      trueSize: true,
+      sequentialScrollingOptimized: true
+    };
+    var set = {
+      size: [0, 0],
+      translate: [0, 0, 0],
+      scrollLength: undefined
+    };
+    var margin = [0, 0];
+    function ListLayout(context, options) {
+      var size = context.size;
+      var direction = context.direction;
+      var alignment = context.alignment;
+      var revDirection = direction ? 0 : 1;
+      var offset;
+      var margins = LayoutUtility.normalizeMargins(options.margins);
+      var spacing = options.spacing || 0;
+      var node;
+      var nodeSize;
+      var itemSize;
+      var getItemSize;
+      var lastSectionBeforeVisibleCell;
+      var lastSectionBeforeVisibleCellOffset;
+      var lastSectionBeforeVisibleCellLength;
+      var lastSectionBeforeVisibleCellScrollLength;
+      var lastSectionBeforeVisibleCellTopReached;
+      var firstVisibleCell;
+      var lastNode;
+      var lastCellOffsetInFirstVisibleSection;
+      var isSectionCallback = options.isSectionCallback;
+      var bound;
+      set.size[0] = size[0];
+      set.size[1] = size[1];
+      set.size[revDirection] -= (margins[1 - revDirection] + margins[3 - revDirection]);
+      set.translate[0] = 0;
+      set.translate[1] = 0;
+      set.translate[2] = 0;
+      set.translate[revDirection] = margins[direction ? 3 : 0];
+      if ((options.itemSize === true) || !options.hasOwnProperty('itemSize')) {
+        itemSize = true;
+      } else if (options.itemSize instanceof Function) {
+        getItemSize = options.itemSize;
+      } else {
+        itemSize = (options.itemSize === undefined) ? size[direction] : options.itemSize;
+      }
+      margin[0] = margins[direction ? 0 : 3];
+      margin[1] = -margins[direction ? 2 : 1];
+      offset = context.scrollOffset + margin[alignment];
+      bound = context.scrollEnd + margin[alignment];
+      while (offset < (bound + spacing)) {
+        lastNode = node;
+        node = context.next();
+        if (!node) {
+          break;
+        }
+        nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+        nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
+        set.size[direction] = nodeSize;
+        set.translate[direction] = offset + (alignment ? spacing : 0);
+        set.scrollLength = nodeSize + spacing;
+        context.set(node, set);
+        offset += set.scrollLength;
+        if (isSectionCallback && isSectionCallback(node.renderNode)) {
+          if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+            lastSectionBeforeVisibleCellTopReached = true;
+            set.translate[direction] = margin[0];
+            context.set(node, set);
+          }
+          if (!firstVisibleCell) {
+            lastSectionBeforeVisibleCell = node;
+            lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+            lastSectionBeforeVisibleCellLength = nodeSize;
+            lastSectionBeforeVisibleCellScrollLength = nodeSize;
+          } else if (lastCellOffsetInFirstVisibleSection === undefined) {
+            lastCellOffsetInFirstVisibleSection = offset - nodeSize;
+          }
+        } else if (!firstVisibleCell && (offset >= 0)) {
+          firstVisibleCell = node;
+        }
+      }
+      if (lastNode && !node && !alignment) {
+        set.scrollLength = nodeSize + margin[0] + -margin[1];
+        context.set(lastNode, set);
+      }
+      lastNode = undefined;
+      node = undefined;
+      offset = context.scrollOffset + margin[alignment];
+      bound = context.scrollStart + margin[alignment];
+      while (offset > (bound - spacing)) {
+        lastNode = node;
+        node = context.prev();
+        if (!node) {
+          break;
+        }
+        nodeSize = getItemSize ? getItemSize(node.renderNode) : itemSize;
+        nodeSize = (nodeSize === true) ? context.resolveSize(node, size)[direction] : nodeSize;
+        set.scrollLength = nodeSize + spacing;
+        offset -= set.scrollLength;
+        set.size[direction] = nodeSize;
+        set.translate[direction] = offset + (alignment ? spacing : 0);
+        context.set(node, set);
+        if (isSectionCallback && isSectionCallback(node.renderNode)) {
+          if ((set.translate[direction] <= margin[0]) && !lastSectionBeforeVisibleCellTopReached) {
+            lastSectionBeforeVisibleCellTopReached = true;
+            set.translate[direction] = margin[0];
+            context.set(node, set);
+          }
+          if (!lastSectionBeforeVisibleCell) {
+            lastSectionBeforeVisibleCell = node;
+            lastSectionBeforeVisibleCellOffset = offset;
+            lastSectionBeforeVisibleCellLength = nodeSize;
+            lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
+          }
+        } else if ((offset + nodeSize) >= 0) {
+          firstVisibleCell = node;
+          if (lastSectionBeforeVisibleCell) {
+            lastCellOffsetInFirstVisibleSection = offset + nodeSize;
+          }
+          lastSectionBeforeVisibleCell = undefined;
+        }
+      }
+      if (lastNode && !node && alignment) {
+        set.scrollLength = nodeSize + margin[0] + -margin[1];
+        context.set(lastNode, set);
+        if (lastSectionBeforeVisibleCell === lastNode) {
+          lastSectionBeforeVisibleCellScrollLength = set.scrollLength;
+        }
+      }
+      if (isSectionCallback && !lastSectionBeforeVisibleCell) {
+        node = context.prev();
+        while (node) {
+          if (isSectionCallback(node.renderNode)) {
+            lastSectionBeforeVisibleCell = node;
+            nodeSize = options.itemSize || context.resolveSize(node, size)[direction];
+            lastSectionBeforeVisibleCellOffset = offset - nodeSize;
+            lastSectionBeforeVisibleCellLength = nodeSize;
+            lastSectionBeforeVisibleCellScrollLength = undefined;
+            break;
+          } else {
+            node = context.prev();
+          }
+        }
+      }
+      if (lastSectionBeforeVisibleCell) {
+        var correctedOffset = Math.max(margin[0], lastSectionBeforeVisibleCellOffset);
+        if ((lastCellOffsetInFirstVisibleSection !== undefined) && (lastSectionBeforeVisibleCellLength > (lastCellOffsetInFirstVisibleSection - margin[0]))) {
+          correctedOffset = ((lastCellOffsetInFirstVisibleSection - lastSectionBeforeVisibleCellLength));
+        }
+        set.size[direction] = lastSectionBeforeVisibleCellLength;
+        set.translate[direction] = correctedOffset;
+        set.scrollLength = lastSectionBeforeVisibleCellScrollLength;
+        context.set(lastSectionBeforeVisibleCell, set);
+      }
+    }
+    ListLayout.Capabilities = capabilities;
+    ListLayout.Name = 'ListLayout';
+    ListLayout.Description = 'List-layout with margins, spacing and sticky headers';
+    module.exports = ListLayout;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/utilities/Timer"], false, function(__require, __exports, __module) {
   return (function(require, exports, module) {
     var Surface = require("npm:famous@0.3.5/core/Surface");
     var Timer = require("npm:famous@0.3.5/utilities/Timer");
@@ -8405,29 +9851,30 @@ System.register("github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSiz
         this._invalidated = true;
       }
       if (this._currentTarget && this._hiddenSurface._currentTarget && this._invalidated) {
-        this._hiddenSurface._currentTarget.innerHTML = this._currentTarget.innerHTML;
+        var hiddenEl = this._hiddenSurface._currentTarget;
+        hiddenEl.innerHTML = this._currentTarget.innerHTML;
         this._invalidated = false;
         var fontSize = this._fontSize;
         var fontSizeStr = fontSize + this._fontSizeUnit;
-        if (this._hiddenSurface._currentTarget.style.fontSize !== fontSizeStr) {
-          this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
+        if (hiddenEl.style.fontSize !== fontSizeStr) {
+          hiddenEl.style.fontSize = fontSizeStr;
         }
-        if (this._hiddenSurface._currentTarget.clientHeight < context.size[1]) {
+        if ((hiddenEl.clientHeight < context.size[1]) && (hiddenEl.scrollWidth <= Math.ceil(context.size[0]))) {
           while (fontSize < this._fontSizeRange[1]) {
-            this._hiddenSurface._currentTarget.style.fontSize = (fontSize + 1) + this._fontSizeUnit;
-            if (this._hiddenSurface._currentTarget.clientHeight > context.size[1]) {
-              this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
+            hiddenEl.style.fontSize = (fontSize + 1) + this._fontSizeUnit;
+            if ((hiddenEl.clientHeight > context.size[1]) || (hiddenEl.scrollWidth > Math.ceil(context.size[0]))) {
+              hiddenEl.style.fontSize = fontSizeStr;
               break;
             }
             fontSize++;
             fontSizeStr = fontSize + this._fontSizeUnit;
           }
-        } else if (this._hiddenSurface._currentTarget.clientHeight > context.size[1]) {
+        } else if ((hiddenEl.clientHeight > context.size[1]) || (hiddenEl.scrollWidth > Math.ceil(context.size[0]))) {
           while (fontSize > this._fontSizeRange[0]) {
             fontSize--;
             fontSizeStr = fontSize + this._fontSizeUnit;
-            this._hiddenSurface._currentTarget.style.fontSize = fontSizeStr;
-            if (this._hiddenSurface._currentTarget.clientHeight < context.size[1]) {
+            hiddenEl.style.fontSize = fontSizeStr;
+            if ((hiddenEl.clientHeight <= context.size[1]) && (hiddenEl.scrollWidth <= Math.ceil(context.size[0]))) {
               break;
             }
           }
@@ -18877,6 +20324,407 @@ System.register("github:Ijzerenhein/famous-flex@0.3.2/src/ScrollController", ["g
   }).call(__exports, __require, __exports, __module);
 });
 })();
+(function() {
+function define(){};  define.amd = {};
+System.register("github:ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", ["github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility", "github:ijzerenhein/famous-flex@0.3.2/src/ScrollController", "github:ijzerenhein/famous-flex@0.3.2/src/layouts/ListLayout"], false, function(__require, __exports, __module) {
+  return (function(require, exports, module) {
+    var LayoutUtility = require("github:ijzerenhein/famous-flex@0.3.2/src/LayoutUtility");
+    var ScrollController = require("github:ijzerenhein/famous-flex@0.3.2/src/ScrollController");
+    var ListLayout = require("github:ijzerenhein/famous-flex@0.3.2/src/layouts/ListLayout");
+    var PullToRefreshState = {
+      HIDDEN: 0,
+      PULLING: 1,
+      ACTIVE: 2,
+      COMPLETED: 3,
+      HIDDING: 4
+    };
+    function FlexScrollView(options) {
+      ScrollController.call(this, LayoutUtility.combineOptions(FlexScrollView.DEFAULT_OPTIONS, options));
+      this._thisScrollViewDelta = 0;
+      this._leadingScrollViewDelta = 0;
+      this._trailingScrollViewDelta = 0;
+    }
+    FlexScrollView.prototype = Object.create(ScrollController.prototype);
+    FlexScrollView.prototype.constructor = FlexScrollView;
+    FlexScrollView.PullToRefreshState = PullToRefreshState;
+    FlexScrollView.Bounds = ScrollController.Bounds;
+    FlexScrollView.PaginationMode = ScrollController.PaginationMode;
+    FlexScrollView.DEFAULT_OPTIONS = {
+      layout: ListLayout,
+      direction: undefined,
+      paginated: false,
+      alignment: 0,
+      flow: false,
+      mouseMove: false,
+      useContainer: false,
+      visibleItemThresshold: 0.5,
+      pullToRefreshHeader: undefined,
+      pullToRefreshFooter: undefined,
+      leadingScrollView: undefined,
+      trailingScrollView: undefined
+    };
+    FlexScrollView.prototype.setOptions = function(options) {
+      ScrollController.prototype.setOptions.call(this, options);
+      if (options.pullToRefreshHeader || options.pullToRefreshFooter || this._pullToRefresh) {
+        if (options.pullToRefreshHeader) {
+          this._pullToRefresh = this._pullToRefresh || [undefined, undefined];
+          if (!this._pullToRefresh[0]) {
+            this._pullToRefresh[0] = {
+              state: PullToRefreshState.HIDDEN,
+              prevState: PullToRefreshState.HIDDEN,
+              footer: false
+            };
+          }
+          this._pullToRefresh[0].node = options.pullToRefreshHeader;
+        } else if (!this.options.pullToRefreshHeader && this._pullToRefresh) {
+          this._pullToRefresh[0] = undefined;
+        }
+        if (options.pullToRefreshFooter) {
+          this._pullToRefresh = this._pullToRefresh || [undefined, undefined];
+          if (!this._pullToRefresh[1]) {
+            this._pullToRefresh[1] = {
+              state: PullToRefreshState.HIDDEN,
+              prevState: PullToRefreshState.HIDDEN,
+              footer: true
+            };
+          }
+          this._pullToRefresh[1].node = options.pullToRefreshFooter;
+        } else if (!this.options.pullToRefreshFooter && this._pullToRefresh) {
+          this._pullToRefresh[1] = undefined;
+        }
+        if (this._pullToRefresh && !this._pullToRefresh[0] && !this._pullToRefresh[1]) {
+          this._pullToRefresh = undefined;
+        }
+      }
+      return this;
+    };
+    FlexScrollView.prototype.sequenceFrom = function(node) {
+      return this.setDataSource(node);
+    };
+    FlexScrollView.prototype.getCurrentIndex = function() {
+      var item = this.getFirstVisibleItem();
+      return item ? item.viewSequence.getIndex() : -1;
+    };
+    FlexScrollView.prototype.goToPage = function(index, noAnimation) {
+      var viewSequence = this._viewSequence;
+      if (!viewSequence) {
+        return this;
+      }
+      while (viewSequence.getIndex() < index) {
+        viewSequence = viewSequence.getNext();
+        if (!viewSequence) {
+          return this;
+        }
+      }
+      while (viewSequence.getIndex() > index) {
+        viewSequence = viewSequence.getPrevious();
+        if (!viewSequence) {
+          return this;
+        }
+      }
+      this.goToRenderNode(viewSequence.get(), noAnimation);
+      return this;
+    };
+    FlexScrollView.prototype.getOffset = function() {
+      return this._scrollOffsetCache;
+    };
+    FlexScrollView.prototype.getPosition = FlexScrollView.prototype.getOffset;
+    FlexScrollView.prototype.getAbsolutePosition = function() {
+      return -(this._scrollOffsetCache + this._scroll.groupStart);
+    };
+    function _setPullToRefreshState(pullToRefresh, state) {
+      if (pullToRefresh.state !== state) {
+        pullToRefresh.state = state;
+        if (pullToRefresh.node && pullToRefresh.node.setPullToRefreshStatus) {
+          pullToRefresh.node.setPullToRefreshStatus(state);
+        }
+      }
+    }
+    function _getPullToRefresh(footer) {
+      return this._pullToRefresh ? this._pullToRefresh[footer ? 1 : 0] : undefined;
+    }
+    FlexScrollView.prototype._postLayout = function(size, scrollOffset) {
+      if (!this._pullToRefresh) {
+        return ;
+      }
+      if (this.options.alignment) {
+        scrollOffset += size[this._direction];
+      }
+      var prevHeight;
+      var nextHeight;
+      var totalHeight;
+      for (var i = 0; i < 2; i++) {
+        var pullToRefresh = this._pullToRefresh[i];
+        if (pullToRefresh) {
+          var length = pullToRefresh.node.getSize()[this._direction];
+          var pullLength = pullToRefresh.node.getPullToRefreshSize ? pullToRefresh.node.getPullToRefreshSize()[this._direction] : length;
+          var offset;
+          if (!pullToRefresh.footer) {
+            prevHeight = this._calcScrollHeight(false);
+            prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+            offset = (prevHeight >= 0) ? (scrollOffset - prevHeight) : prevHeight;
+            if (this.options.alignment) {
+              nextHeight = this._calcScrollHeight(true);
+              nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+              totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+              if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+                offset = Math.round((scrollOffset - size[this._direction]) + nextHeight);
+              }
+            }
+          } else {
+            nextHeight = (nextHeight === undefined) ? nextHeight = this._calcScrollHeight(true) : nextHeight;
+            nextHeight = (nextHeight === undefined) ? -1 : nextHeight;
+            offset = (nextHeight >= 0) ? (scrollOffset + nextHeight) : (size[this._direction] + 1);
+            if (!this.options.alignment) {
+              prevHeight = (prevHeight === undefined) ? this._calcScrollHeight(false) : prevHeight;
+              prevHeight = (prevHeight === undefined) ? -1 : prevHeight;
+              totalHeight = ((prevHeight >= 0) && (nextHeight >= 0)) ? (prevHeight + nextHeight) : -1;
+              if ((totalHeight >= 0) && (totalHeight < size[this._direction])) {
+                offset = Math.round((scrollOffset - prevHeight) + size[this._direction]);
+              }
+            }
+            offset = -(offset - size[this._direction]);
+          }
+          var visiblePerc = Math.max(Math.min(offset / pullLength, 1), 0);
+          switch (pullToRefresh.state) {
+            case PullToRefreshState.HIDDEN:
+              if (this._scroll.scrollForceCount) {
+                if (visiblePerc >= 1) {
+                  _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
+                } else if (offset >= 0.2) {
+                  _setPullToRefreshState(pullToRefresh, PullToRefreshState.PULLING);
+                }
+              }
+              break;
+            case PullToRefreshState.PULLING:
+              if (this._scroll.scrollForceCount && (visiblePerc >= 1)) {
+                _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
+              } else if (offset < 0.2) {
+                _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+              }
+              break;
+            case PullToRefreshState.ACTIVE:
+              break;
+            case PullToRefreshState.COMPLETED:
+              if (!this._scroll.scrollForceCount) {
+                if (offset >= 0.2) {
+                  _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDING);
+                } else {
+                  _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+                }
+              }
+              break;
+            case PullToRefreshState.HIDDING:
+              if (offset < 0.2) {
+                _setPullToRefreshState(pullToRefresh, PullToRefreshState.HIDDEN);
+              }
+              break;
+          }
+          if (pullToRefresh.state !== PullToRefreshState.HIDDEN) {
+            var contextNode = {
+              renderNode: pullToRefresh.node,
+              prev: !pullToRefresh.footer,
+              next: pullToRefresh.footer,
+              index: !pullToRefresh.footer ? --this._nodes._contextState.prevGetIndex : ++this._nodes._contextState.nextGetIndex
+            };
+            var scrollLength;
+            if (pullToRefresh.state === PullToRefreshState.ACTIVE) {
+              scrollLength = length;
+            } else if (this._scroll.scrollForceCount) {
+              scrollLength = Math.min(offset, length);
+            }
+            var set = {
+              size: [size[0], size[1]],
+              translate: [0, 0, -1e-3],
+              scrollLength: scrollLength
+            };
+            set.size[this._direction] = Math.max(Math.min(offset, pullLength), 0);
+            set.translate[this._direction] = pullToRefresh.footer ? (size[this._direction] - length) : 0;
+            this._nodes._context.set(contextNode, set);
+          }
+        }
+      }
+    };
+    FlexScrollView.prototype.showPullToRefresh = function(footer) {
+      var pullToRefresh = _getPullToRefresh.call(this, footer);
+      if (pullToRefresh) {
+        _setPullToRefreshState(pullToRefresh, PullToRefreshState.ACTIVE);
+        this._scroll.scrollDirty = true;
+      }
+    };
+    FlexScrollView.prototype.hidePullToRefresh = function(footer) {
+      var pullToRefresh = _getPullToRefresh.call(this, footer);
+      if (pullToRefresh && (pullToRefresh.state === PullToRefreshState.ACTIVE)) {
+        _setPullToRefreshState(pullToRefresh, PullToRefreshState.COMPLETED);
+        this._scroll.scrollDirty = true;
+      }
+      return this;
+    };
+    FlexScrollView.prototype.isPullToRefreshVisible = function(footer) {
+      var pullToRefresh = _getPullToRefresh.call(this, footer);
+      return pullToRefresh ? (pullToRefresh.state === PullToRefreshState.ACTIVE) : false;
+    };
+    FlexScrollView.prototype.applyScrollForce = function(delta) {
+      var leadingScrollView = this.options.leadingScrollView;
+      var trailingScrollView = this.options.trailingScrollView;
+      if (!leadingScrollView && !trailingScrollView) {
+        return ScrollController.prototype.applyScrollForce.call(this, delta);
+      }
+      var partialDelta;
+      if (delta < 0) {
+        if (leadingScrollView) {
+          partialDelta = leadingScrollView.canScroll(delta);
+          this._leadingScrollViewDelta += partialDelta;
+          leadingScrollView.applyScrollForce(partialDelta);
+          delta -= partialDelta;
+        }
+        if (trailingScrollView) {
+          partialDelta = this.canScroll(delta);
+          ScrollController.prototype.applyScrollForce.call(this, partialDelta);
+          this._thisScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+          trailingScrollView.applyScrollForce(delta);
+          this._trailingScrollViewDelta += delta;
+        } else {
+          ScrollController.prototype.applyScrollForce.call(this, delta);
+          this._thisScrollViewDelta += delta;
+        }
+      } else {
+        if (trailingScrollView) {
+          partialDelta = trailingScrollView.canScroll(delta);
+          trailingScrollView.applyScrollForce(partialDelta);
+          this._trailingScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+        }
+        if (leadingScrollView) {
+          partialDelta = this.canScroll(delta);
+          ScrollController.prototype.applyScrollForce.call(this, partialDelta);
+          this._thisScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+          leadingScrollView.applyScrollForce(delta);
+          this._leadingScrollViewDelta += delta;
+        } else {
+          ScrollController.prototype.applyScrollForce.call(this, delta);
+          this._thisScrollViewDelta += delta;
+        }
+      }
+      return this;
+    };
+    FlexScrollView.prototype.updateScrollForce = function(prevDelta, newDelta) {
+      var leadingScrollView = this.options.leadingScrollView;
+      var trailingScrollView = this.options.trailingScrollView;
+      if (!leadingScrollView && !trailingScrollView) {
+        return ScrollController.prototype.updateScrollForce.call(this, prevDelta, newDelta);
+      }
+      var partialDelta;
+      var delta = newDelta - prevDelta;
+      if (delta < 0) {
+        if (leadingScrollView) {
+          partialDelta = leadingScrollView.canScroll(delta);
+          leadingScrollView.updateScrollForce(this._leadingScrollViewDelta, this._leadingScrollViewDelta + partialDelta);
+          this._leadingScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+        }
+        if (trailingScrollView && delta) {
+          partialDelta = this.canScroll(delta);
+          ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + partialDelta);
+          this._thisScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+          this._trailingScrollViewDelta += delta;
+          trailingScrollView.updateScrollForce(this._trailingScrollViewDelta, this._trailingScrollViewDelta + delta);
+        } else if (delta) {
+          ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + delta);
+          this._thisScrollViewDelta += delta;
+        }
+      } else {
+        if (trailingScrollView) {
+          partialDelta = trailingScrollView.canScroll(delta);
+          trailingScrollView.updateScrollForce(this._trailingScrollViewDelta, this._trailingScrollViewDelta + partialDelta);
+          this._trailingScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+        }
+        if (leadingScrollView) {
+          partialDelta = this.canScroll(delta);
+          ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + partialDelta);
+          this._thisScrollViewDelta += partialDelta;
+          delta -= partialDelta;
+          leadingScrollView.updateScrollForce(this._leadingScrollViewDelta, this._leadingScrollViewDelta + delta);
+          this._leadingScrollViewDelta += delta;
+        } else {
+          ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, this._thisScrollViewDelta + delta);
+          this._thisScrollViewDelta += delta;
+        }
+      }
+      return this;
+    };
+    FlexScrollView.prototype.releaseScrollForce = function(delta, velocity) {
+      var leadingScrollView = this.options.leadingScrollView;
+      var trailingScrollView = this.options.trailingScrollView;
+      if (!leadingScrollView && !trailingScrollView) {
+        return ScrollController.prototype.releaseScrollForce.call(this, delta, velocity);
+      }
+      var partialDelta;
+      if (delta < 0) {
+        if (leadingScrollView) {
+          partialDelta = Math.max(this._leadingScrollViewDelta, delta);
+          this._leadingScrollViewDelta -= partialDelta;
+          delta -= partialDelta;
+          leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? 0 : velocity);
+        }
+        if (trailingScrollView) {
+          partialDelta = Math.max(this._thisScrollViewDelta, delta);
+          this._thisScrollViewDelta -= partialDelta;
+          delta -= partialDelta;
+          ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+          this._trailingScrollViewDelta -= delta;
+          trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? velocity : 0);
+        } else {
+          this._thisScrollViewDelta -= delta;
+          ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+        }
+      } else {
+        if (trailingScrollView) {
+          partialDelta = Math.min(this._trailingScrollViewDelta, delta);
+          this._trailingScrollViewDelta -= partialDelta;
+          delta -= partialDelta;
+          trailingScrollView.releaseScrollForce(this._trailingScrollViewDelta, delta ? 0 : velocity);
+        }
+        if (leadingScrollView) {
+          partialDelta = Math.min(this._thisScrollViewDelta, delta);
+          this._thisScrollViewDelta -= partialDelta;
+          delta -= partialDelta;
+          ScrollController.prototype.releaseScrollForce.call(this, this._thisScrollViewDelta, delta ? 0 : velocity);
+          this._leadingScrollViewDelta -= delta;
+          leadingScrollView.releaseScrollForce(this._leadingScrollViewDelta, delta ? velocity : 0);
+        } else {
+          this._thisScrollViewDelta -= delta;
+          ScrollController.prototype.updateScrollForce.call(this, this._thisScrollViewDelta, delta ? velocity : 0);
+        }
+      }
+      return this;
+    };
+    FlexScrollView.prototype.commit = function(context) {
+      var result = ScrollController.prototype.commit.call(this, context);
+      if (this._pullToRefresh) {
+        for (var i = 0; i < 2; i++) {
+          var pullToRefresh = this._pullToRefresh[i];
+          if (pullToRefresh) {
+            if ((pullToRefresh.state === PullToRefreshState.ACTIVE) && (pullToRefresh.prevState !== PullToRefreshState.ACTIVE)) {
+              this._eventOutput.emit('refresh', {
+                target: this,
+                footer: pullToRefresh.footer
+              });
+            }
+            pullToRefresh.prevState = pullToRefresh.state;
+          }
+        }
+      }
+      return result;
+    };
+    module.exports = FlexScrollView;
+  }).call(__exports, __require, __exports, __module);
+});
+})();
 System.register("github:firebase/firebase-bower@2.2.5", ["github:firebase/firebase-bower@2.2.5/firebase"], true, function(require, exports, module) {
   var global = System.global,
       __define = global.define;
@@ -28509,7 +30357,7 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "
   };
 });
 
-System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface"], function($__export) {
+System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/MyGamesView";
   var Surface,
@@ -29325,7 +31173,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.0/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
@@ -29386,7 +31234,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
               },
               sortingDirection: 'descending',
               dataFilter: (function(player) {
-                return player.id != contextView.options.activePlayer && player.score != 111;
+                return player.id != contextView.options.activePlayer;
               }),
               template: function(player) {
                 var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
@@ -29997,6 +31845,138 @@ System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.3
   };
 });
 
+System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", ["github:ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "npm:lodash@3.9.3"], function($__export) {
+  "use strict";
+  var __moduleName = "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView";
+  var FlexScrollView,
+      _;
+  return {
+    setters: [function($__m) {
+      FlexScrollView = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
+    }],
+    execute: function() {
+      $__export('default', (function($__super) {
+        function DataBoundScrollView() {
+          var OPTIONS = arguments[0] !== (void 0) ? arguments[0] : {};
+          if (!OPTIONS.autoPipeEvents) {
+            OPTIONS.autoPipeEvents = true;
+          }
+          $traceurRuntime.superConstructor(DataBoundScrollView).call(this, OPTIONS);
+          if (!this.options.sortingDirection) {
+            this.options.sortingDirection = 'ascending';
+          }
+          this.isDescending = this.options.sortingDirection === 'descending';
+          if (this.options.dataStore) {
+            this._bindDataSource(this.options.dataStore);
+          } else {
+            console.log('No DataSource was set.');
+          }
+        }
+        return ($traceurRuntime.createClass)(DataBoundScrollView, {
+          _bindDataSource: function() {
+            if (!this.options.dataStore || !this.options.template) {
+              console.log('Datasource and template should both be set.');
+              return ;
+            }
+            if (!this.options.template instanceof Function) {
+              console.log('Template needs to be a function.');
+              return ;
+            }
+            this.options.dataStore.on('child_added', function(child, previousSibling) {
+              if (!this.options.dataFilter || (typeof this.options.dataFilter === 'function' && this.options.dataFilter(child))) {
+                this._addItem(child, true);
+              }
+            }.bind(this));
+            this.options.dataStore.on('child_changed', function(child, previousSibling) {
+              var changedItem = this._getDataSourceIndex(child.id);
+              if (this._dataSource && changedItem < this._dataSource.length) {
+                if (this.options.dataFilter && typeof this.options.dataFilter === 'function' && !this.options.dataFilter(child)) {
+                  this._removeItem(child);
+                } else {
+                  if (changedItem === -1) {
+                    this._addItem(child, true);
+                    this._moveItem(child.id, previousSibling);
+                  } else {
+                    this._replaceItem(child);
+                    this._moveItem(child.id, previousSibling);
+                  }
+                }
+              }
+            }.bind(this));
+            this.options.dataStore.on('child_moved', function(child, previousSibling) {
+              var current = this._getDataSourceIndex(child.id);
+              var previous = this._getDataSourceIndex(previousSibling);
+              this._moveItem(current, previous);
+            }.bind(this));
+            this.options.dataStore.on('child_removed', function(child) {
+              this._removeItem(child);
+            }.bind(this));
+          },
+          _addItem: function(child) {
+            var newSurface = this.options.template(child);
+            newSurface.dataId = child.id;
+            if (this.isDescending) {
+              this.insert(0, newSurface);
+            } else {
+              this.insert(-1, newSurface);
+            }
+          },
+          _replaceItem: function(child) {
+            var index = this._getDataSourceIndex(child.id);
+            var newSurface = this.options.template(child);
+            newSurface.dataId = child.id;
+            this.replace(index, newSurface);
+          },
+          _removeItem: function(child) {
+            var index = _.findIndex(this._dataSource, function(surface) {
+              return surface.dataId == child.id;
+            });
+            this.remove(index);
+          },
+          _moveItem: function(oldId) {
+            var prevChildId = arguments[1] !== (void 0) ? arguments[1] : null;
+            var oldIndex = this._getDataSourceIndex(oldId);
+            var previousSiblingIndex = this._getNextVisibleIndex(prevChildId);
+            if (oldIndex !== previousSiblingIndex) {
+              this.move(oldIndex, previousSiblingIndex);
+            }
+          },
+          _getDataSourceIndex: function(id) {
+            return _.findIndex(this._dataSource, function(surface) {
+              return surface.dataId === id;
+            });
+          },
+          _getNextVisibleIndex: function(id) {
+            var viewIndex = this._getDataSourceIndex(id);
+            if (viewIndex === -1) {
+              var modelIndex = _.findIndex(this.options.dataStore, function(model) {
+                return model.id === id;
+              });
+              if (modelIndex === 0 || modelIndex === -1)
+                return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
+              else {
+                var nextModel = this.options.dataStore[this.isDescending ? modelIndex + 1 : modelIndex - 1];
+                var nextIndex = this._getDataSourceIndex(nextModel.id);
+                if (nextIndex > -1) {
+                  var newIndex = this.isDescending ? nextIndex === 0 ? 0 : nextIndex - 1 : this._dataSource.length === nextIndex + 1 ? nextIndex : nextIndex + 1;
+                  return newIndex;
+                } else {
+                  return this._getNextVisibleIndex(nextModel.id);
+                }
+              }
+            } else {
+              var newIndex$__1 = this.isDescending ? viewIndex === 0 ? 0 : viewIndex - 1 : this._dataSource.length === viewIndex + 1 ? viewIndex : viewIndex + 1;
+              return newIndex$__1;
+            }
+          }
+        }, {}, $__super);
+      }(FlexScrollView)));
+    }
+  };
+});
+
 System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop/core/Controller", "github:Bizboard/arva-mvc@develop/DefaultContext", "models/Game", "views/Play/PlayView", "views/Home/InvitePlayerView", "utils/helpers", "utils/BKEEEngine", "utils/GameContext"], function($__export) {
   "use strict";
   var __moduleName = "controllers/PlayController";
@@ -30117,7 +32097,6 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           this._dataReference = new Firebase(path);
           this.options = options;
           ObjectHelper.bindAllMethods(this, this);
-          Firebase.enableLogging(true);
         }
         return ($traceurRuntime.createClass)(FirebaseDataSource, {
           get dataReference() {
@@ -30304,7 +32283,7 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background"], function($__export) {
+System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ChangeAvatarView";
   var Surface,
@@ -30317,6 +32296,8 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
       CollectionLayout,
       ViewSequence,
       Background,
+      DataBoundScrollView,
+      _,
       DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
@@ -30339,6 +32320,10 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
       ViewSequence = $__m.default;
     }, function($__m) {
       Background = $__m.default;
+    }, function($__m) {
+      DataBoundScrollView = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
     }],
     execute: function() {
       DEFAULT_OPTIONS = {
@@ -30348,46 +32333,44 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
       };
       $__export('default', (function($__super) {
         function ChangeAvatarView() {
-          $traceurRuntime.superConstructor(ChangeAvatarView).call(this, DEFAULT_OPTIONS);
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          var newOptions = _.extend(options, DEFAULT_OPTIONS);
+          $traceurRuntime.superConstructor(ChangeAvatarView).call(this, newOptions);
           ObjectHelper.bindAllMethods(this, this);
           ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
           ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
           this._createRenderables();
           this._createLayout();
-          this.set(this.options.defaultModel);
         }
         return ($traceurRuntime.createClass)(ChangeAvatarView, {
-          set: function(model) {
-            var viewContext = this;
-            this._renderables.header.setContent("<div>Avatars</div>Kies je eigen avatar.");
-            if (model.length == 0)
-              return ;
-            var sequence = new ViewSequence();
-            model.forEach(function(avatar) {
-              var avatarSurface = new BkImageSurface({
-                content: avatar.url,
-                sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
-                properties: {data: avatar}
-              });
-              avatarSurface.on('click', function() {
-                viewContext._eventOutput.emit('select', this);
-              });
-              sequence.push(avatarSurface);
-            });
-            this._renderables.avatarlist.setDataSource(sequence);
-          },
           _createRenderables: function() {
+            var viewContext = this;
             this._renderables = {
               background: new Background(),
-              header: new Surface({classes: ['header']}),
-              avatarlist: new FlexScrollView({
+              header: new Surface({
+                classes: ['header'],
+                content: "<div>Avatars</div>Kies je eigen avatar."
+              }),
+              avatarlist: new DataBoundScrollView({
                 autoPipeEvents: true,
                 layout: CollectionLayout,
                 layoutOptions: {
                   cells: [3, 3],
                   margins: [20, 10, 20, 10],
                   spacing: [20, 20]
-                }
+                },
+                template: function(avatar) {
+                  var avatarSurface = new BkImageSurface({
+                    content: avatar.url,
+                    sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
+                    properties: {data: avatar}
+                  });
+                  avatarSurface.on('click', function() {
+                    viewContext._eventOutput.emit('select', this);
+                  });
+                  return avatarSurface;
+                },
+                dataStore: this.options.dataSource
               })
             };
           },
@@ -30702,7 +32685,17 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
       ProfileController = (function($__super) {
         function ProfileController(router, context) {
           $traceurRuntime.superConstructor(ProfileController).call(this, router, context);
+          var controllerContext = this;
           this.gameContext = GetDefaultContext().get(GameContext);
+          this.changeAvatarView = new ChangeAvatarView({dataSource: this.gameContext.avatars});
+          this.changeAvatarView.on('select', function(avatar) {
+            var playerId = controllerContext.gameContext.getPlayerId();
+            var playerToUpdate = new Player(playerId);
+            playerToUpdate.once('ready', function() {
+              playerToUpdate.avatar = avatar.properties.data.url;
+            });
+            controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
+          });
         }
         return ($traceurRuntime.createClass)(ProfileController, {
           Register: function() {
@@ -30750,20 +32743,7 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
             }
           },
           ChangeAvatar: function() {
-            var controllerContext = this;
-            var avatarView = new ChangeAvatarView();
-            this.gameContext.avatars.once('value', function() {
-              avatarView.set(this.gameContext.avatars);
-            });
-            avatarView.on('select', function(avatar) {
-              var playerId = controllerContext.gameContext.getPlayerId();
-              var playerToUpdate = new Player(playerId);
-              playerToUpdate.once('ready', function() {
-                playerToUpdate.avatar = avatar.properties.data.url;
-              });
-              controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
-            });
-            return avatarView;
+            return this.changeAvatarView;
           }
         }, {}, $__super);
       }(Controller));
