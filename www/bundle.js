@@ -27750,11 +27750,14 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
           },
           _onChildChanged: function(snapshot, prevSiblingId) {
             var id = snapshot.key();
-            var itemIndex = this._findIndexById(id);
             var changedModel = new this._dataType(id, null, {
               dataSnapshot: snapshot,
               dataSource: snapshot.ref()
             });
+            var previousPosition = this._findIndexById(id);
+            this.remove(previousPosition);
+            var newPosition = this._findIndexById(prevSiblingId) + 1;
+            this.insertAt(changedModel, newPosition);
             this._eventEmitter.emit('child_changed', changedModel, prevSiblingId);
             this._eventEmitter.emit('value', this);
           },
@@ -28296,8 +28299,9 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
           if (!OPTIONS.autoPipeEvents)
             OPTIONS.autoPipeEvents = true;
           $traceurRuntime.superConstructor(DataBoundFlexScrollView).call(this, OPTIONS);
-          if (!this.options.direction)
-            this.options.direction = 'ascending';
+          if (!this.options.sortingDirection)
+            this.options.sortingDirection = 'ascending';
+          this.isDescending = this.options.sortingDirection == 'descending';
           if (this.options.dataStore) {
             this._dataItems = [];
             this._bindDataSource(this.options.dataStore);
@@ -28316,117 +28320,98 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
               return ;
             }
             this.options.dataStore.on('child_added', function(child, previousSibling) {
-              var isDescending = this.options.direction == 'descending';
-              var previous = this._getPreviousIndex(previousSibling);
-              var index = this._dataSource != null ? previous > -1 ? previous + (isDescending ? 0 : 1) : (isDescending ? 0 : this._dataSource.length) : 0;
               if (!this.options.dataFilter || (typeof this.options.dataFilter === "function" && this.options.dataFilter(child))) {
-                this._addItem(index, child, true);
-              } else {
-                this._addItem(index, child, false);
+                this._addItem(child, true);
               }
             }.bind(this));
             this.options.dataStore.on('child_changed', function(child, previousSibling) {
-              var isDescending = this.options.direction == 'descending';
-              var changedIndex = this._getChildIndex(child);
-              var previous = this._getPreviousIndex(previousSibling);
-              if (this._dataSource && this._dataSource.length >= changedIndex) {
+              var changedItem = this._getDataSourceIndex(child.id);
+              if (this._dataSource && changedItem < this._dataSource.length) {
                 if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
-                  this._removeItem(changedIndex);
+                  this._removeItem(child);
                 } else {
-                  var newIndex = previous > -1 ? previous + (isDescending ? 0 : 1) : (isDescending ? 0 : this._dataSource.length - 1);
-                  if (!this._dataItems[changedIndex].visible)
-                    this._addItem(newIndex, child, true);
-                  else if (changedIndex != newIndex) {
-                    this._replaceItem(changedIndex, child);
-                    this._swapItem(changedIndex, newIndex);
-                  } else
-                    this._replaceItem(changedIndex, child);
+                  if (changedItem == -1) {
+                    this._addItem(child, true);
+                    this._moveItem(child.id, previousSibling);
+                  } else {
+                    this._replaceItem(child);
+                    this._moveItem(child.id, previousSibling);
+                  }
                 }
               }
             }.bind(this));
             this.options.dataStore.on('child_moved', function(child, previousSibling) {
-              var current = _getChildIndex(previousSibling);
-              var previous = _getPreviousIndex(previousSibling);
-              this._swapItem(current, previous);
+              var current = this._getDataSourceIndex(child.id);
+              var previous = this._getDataSourceIndex(previousSibling);
+              this._moveItem(current, previous);
             }.bind(this));
             this.options.dataStore.on('child_removed', function(child) {
-              var index = this._getChildIndex(child);
-              if (index > -1)
-                this._removeItem(index);
+              this._removeItem(child);
             }.bind(this));
           },
-          _addItem: function(index, child, isVisible) {
-            var replace = this._dataItems[index] && this._dataItems[index].id == child.id ? 1 : 0;
-            this._dataItems.splice(index, replace, {
-              id: child.id,
-              visible: isVisible,
-              position: index
+          _addItem: function(child) {
+            var newSurface = this.options.template(child);
+            newSurface.dataId = child.id;
+            if (this.isDescending) {
+              this.insert(0, newSurface);
+            } else {
+              this.insert(-1, newSurface);
+            }
+          },
+          _replaceItem: function(child) {
+            var index = this._getDataSourceIndex(child.id);
+            var newSurface = this.options.template(child);
+            newSurface.dataId = child.id;
+            this.replace(index, newSurface);
+          },
+          _removeItem: function(child) {
+            var index = _.findIndex(this._dataSource, function(surface) {
+              return surface.dataId == child.id;
             });
-            if (isVisible) {
-              this.insert(index, this.options.template(child));
+            this.remove(index);
+          },
+          _moveItem: function(oldId) {
+            var prevChildId = arguments[1] !== (void 0) ? arguments[1] : null;
+            var oldIndex = this._getDataSourceIndex(oldId);
+            var previousSiblingIndex = this._getNextVisibleIndex(prevChildId);
+            if (oldIndex != previousSiblingIndex) {
+              this.move(oldIndex, previousSiblingIndex);
             }
           },
-          _replaceItem: function(index, child) {
-            this.replace(index, this.options.template(child));
+          _getBeginPosition: function() {
+            return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
           },
-          _removeItem: function(index) {
-            if (this._dataItems[index].visible) {
-              this.remove(index);
-              this._dataItems[index].visible = false;
-            }
+          _getDataSourceIndex: function(id) {
+            return _.findIndex(this._dataSource, function(surface) {
+              return surface.dataId == id;
+            });
           },
-          _swapItem: function(oldIndex, newIndex) {
-            var isDescending = this.options.direction == 'descending';
-            var isVisible = false;
-            var realNewIndex = newIndex;
-            var endOfListAndNotVisible = false;
-            while (!isVisible || endOfListAndNotVisible) {
-              isVisible = this._dataItems[realNewIndex].visible;
-              if (!isVisible)
-                realNewIndex += isDescending ? -1 : 1;
-              endOfListAndNotVisible = realNewIndex < 0 || realNewIndex > (this._dataItems.length - 1);
-            }
-            if (!endOfListAndNotVisible) {
-              this.swap(oldIndex, realNewIndex);
-              var oldId = this._dataItems[oldIndex];
-              var otherId = this._dataItems[realNewIndex];
-              this._dataItems[oldIndex] = otherId;
-              this._dataItems[realNewIndex] = oldId;
-            }
+          _getDataStoreIndex: function(id) {
+            return _.findIndex(this.options.dataStore, function(model) {
+              return model.id == id;
+            });
           },
-          _getChildIndex: function(child) {
-            if (!child)
-              return -1;
-            if (typeof child === 'object' && child.id) {
-              return _.findIndex(this._dataItems, function(record) {
-                return record.id == child.id;
+          _getNextVisibleIndex: function(id) {
+            var viewIndex = this._getDataSourceIndex(id);
+            if (viewIndex == -1) {
+              var modelIndex = _.findIndex(this.options.dataStore, function(model) {
+                return model.id == id;
               });
+              if (modelIndex == 0 || modelIndex == -1)
+                return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
+              else {
+                var nextModel = this.options.dataStore[this.isDescending ? modelIndex + 1 : modelIndex - 1];
+                var nextIndex = this._getDataSourceIndex(nextModel.id);
+                if (nextIndex > -1) {
+                  var newIndex = this.isDescending ? nextIndex == 0 ? 0 : nextIndex - 1 : this._dataSource.length == nextIndex + 1 ? nextIndex : nextIndex + 1;
+                  return newIndex;
+                } else {
+                  return this._getNextVisibleIndex(nextModel.id);
+                }
+              }
             } else {
-              return _.findIndex(this._dataItems, function(record) {
-                return record.id == child;
-              });
-            }
-          },
-          _getPreviousIndex: function(child) {
-            var isDescending = this.options.direction == 'descending';
-            if (!child)
-              return -1;
-            if (typeof child === 'object' && child.id) {
-              var index = _.findIndex(this._dataItems, function(record) {
-                return record.id == child.id;
-              });
-              if (!this._dataItems[index].visible) {
-                return this._getChildIndex(this._dataItems[isDescending ? index - 1 : index + 1]);
-              } else
-                return index;
-            } else {
-              var foundIndex = _.findIndex(this._dataItems, function(record) {
-                return record.id == child;
-              });
-              if (!this._dataItems[foundIndex].visible) {
-                return this._getChildIndex(this._dataItems[isDescending ? foundIndex - 1 : foundIndex + 1]);
-              } else
-                return foundIndex;
+              var newIndex$__1 = this.isDescending ? viewIndex == 0 ? 0 : viewIndex - 1 : this._dataSource.length == viewIndex + 1 ? viewIndex : viewIndex + 1;
+              return newIndex$__1;
             }
           }
         }, {}, $__super);
@@ -29393,7 +29378,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
                 margins: [5, 5, 5, 5],
                 spacing: 5
               },
-              direction: 'descending',
+              sortingDirection: 'descending',
               dataFilter: (function(player) {
                 return player.id != contextView.options.activePlayer && player.score != 111;
               }),
@@ -30126,6 +30111,7 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           this._dataReference = new Firebase(path);
           this.options = options;
           ObjectHelper.bindAllMethods(this, this);
+          Firebase.enableLogging(true);
         }
         return ($traceurRuntime.createClass)(FirebaseDataSource, {
           get dataReference() {

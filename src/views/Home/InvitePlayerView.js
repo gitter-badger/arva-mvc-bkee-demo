@@ -63,7 +63,7 @@ export default class InvitePlayerView extends View {
                 spacing: 5
             },
 
-            direction: 'descending',
+            sortingDirection: 'descending',
 
             dataFilter: (player) => {
                 return player.id != contextView.options.activePlayer && player.score != 111;
