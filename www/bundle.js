@@ -27656,10 +27656,16 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             }
           },
           add: function(model) {
+            var prevSiblingId = arguments[1] !== (void 0) ? arguments[1] : null;
             var $__0 = this;
             if (model instanceof this._dataType) {
               if (this._findIndexById(model.id) < 0) {
-                this.push(model);
+                if (prevSiblingId) {
+                  var newPosition = this._findIndexById(prevSiblingId) + 1;
+                  this.insertAt(model, newPosition);
+                } else {
+                  this.push(model);
+                }
                 if (!model._inheritable) {
                   model.on('changed', (function(modelData) {
                     $__0._onChildChanged(modelData);
@@ -27744,7 +27750,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", [
             var model = this.add(new this._dataType(id, null, {
               dataSnapshot: snapshot,
               path: snapshot.ref().toString().replace(rootPath, '/')
-            }));
+            }), prevSiblingId);
             this._eventEmitter.emit('child_added', model, prevSiblingId);
             this._eventEmitter.emit('value', this);
           },
