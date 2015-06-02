@@ -9,6 +9,7 @@
     "dependencies": {
       "arva-ds": "github:Bizboard/arva-ds@develop",
       "arva-mvc": "github:Bizboard/arva-mvc@develop",
+      "arva-utils": "github:Bizboard/arva-utils@master",
       "di.js": "github:Bizboard/di.js@master",
       "eventemitter3": "npm:eventemitter3@^1.1.0",
       "famous": "npm:famous@^0.3.5",

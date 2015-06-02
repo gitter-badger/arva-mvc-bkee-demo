@@ -3,7 +3,7 @@
  */
 import Surface                      from 'famous/core/Surface';
 import View                         from 'famous/core/View';
-import {ObjectHelper}               from 'arva-mvc/utils/objectHelper';
+import {ObjectHelper}               from 'arva-utils/ObjectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
 import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
 import Background                   from '../../components/Background';

@@ -28758,9 +28758,9 @@ System.register("github:Bizboard/di.js@master/providers", ["github:Bizboard/di.j
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/utils/objectHelper", ["npm:lodash@3.9.3"], function($__export) {
+System.register("github:Bizboard/arva-utils@master/ObjectHelper", ["npm:lodash@3.9.3"], function($__export) {
   "use strict";
-  var __moduleName = "github:Bizboard/arva-mvc@develop/utils/objectHelper";
+  var __moduleName = "github:Bizboard/arva-utils@master/ObjectHelper";
   var _,
       ObjectHelper;
   return {
@@ -29026,9 +29026,9 @@ System.register("github:Bizboard/arva-mvc@develop/core/App", ["github:Bizboard/d
   };
 });
 
-System.register("github:Bizboard/arva-context@master/Context", [], function($__export) {
+System.register("github:Bizboard/arva-utils@master/Context", [], function($__export) {
   "use strict";
-  var __moduleName = "github:Bizboard/arva-context@master/Context";
+  var __moduleName = "github:Bizboard/arva-utils@master/Context";
   var contextContainer,
       Context;
   return {
@@ -29113,7 +29113,6 @@ System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function(
           set: function(newData) {},
           remove: function() {},
           push: function(newData) {},
-          setWithoutPriority: function(newData) {},
           setWithPriority: function(newData, priority) {},
           setPriority: function(newPriority) {},
           authWithOAuthToken: function(provider, credentials, onComplete, options) {},
@@ -29171,243 +29170,6 @@ System.register("utils/helpers", [], function($__export) {
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/utils/objectHelper", ["npm:lodash@3.9.3"], function($__export) {
-  "use strict";
-  var __moduleName = "github:Bizboard/arva-ds@develop/utils/objectHelper";
-  var _,
-      ObjectHelper;
-  return {
-    setters: [function($__m) {
-      _ = $__m.default;
-    }],
-    execute: function() {
-      ObjectHelper = (function() {
-        function ObjectHelper() {}
-        return ($traceurRuntime.createClass)(ObjectHelper, {}, {
-          hideMethodsAndPrivatePropertiesFromObject: function(object) {
-            for (var propName in object) {
-              var prototype = Object.getPrototypeOf(object);
-              var descriptor = prototype ? Object.getOwnPropertyDescriptor(prototype, propName) : undefined;
-              if (descriptor && (descriptor.get || descriptor.set) && !propName.startsWith('_')) {
-                continue;
-              }
-              var property = object[propName];
-              if (typeof property === 'function' || propName.startsWith('_')) {
-                ObjectHelper.hidePropertyFromObject(object, propName);
-              }
-            }
-          },
-          hideMethodsFromObject: function(object) {
-            for (var propName in object) {
-              var property = object[propName];
-              if (typeof property === 'function') {
-                ObjectHelper.hidePropertyFromObject(object, propName);
-              }
-            }
-          },
-          hidePropertyFromObject: function(object, propName) {
-            var prototype = object;
-            var descriptor = Object.getOwnPropertyDescriptor(object, propName);
-            while (!descriptor) {
-              prototype = Object.getPrototypeOf(prototype);
-              if (prototype.constructor.name === 'Object' || prototype.constructor.name === 'Array') {
-                return ;
-              }
-              descriptor = Object.getOwnPropertyDescriptor(prototype, propName);
-            }
-            descriptor.enumerable = false;
-            Object.defineProperty(prototype, propName, descriptor);
-            Object.defineProperty(object, propName, descriptor);
-          },
-          hideAllPropertiesFromObject: function(object) {
-            for (var propName in object) {
-              ObjectHelper.hidePropertyFromObject(object, propName);
-            }
-          },
-          addHiddenPropertyToObject: function(object, propName, prop) {
-            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var useAccessors = arguments[4] !== (void 0) ? arguments[4] : true;
-            return ObjectHelper.addPropertyToObject(object, propName, prop, false, writable, undefined, useAccessors);
-          },
-          addPropertyToObject: function(object, propName, prop) {
-            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
-            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
-            var useAccessors = arguments[6] !== (void 0) ? arguments[6] : true;
-            if (!writable || !useAccessors) {
-              var descriptor = {
-                enumerable: enumerable,
-                writable: writable,
-                value: prop
-              };
-              Object.defineProperty(object, propName, descriptor);
-            } else {
-              ObjectHelper.addGetSetPropertyWithShadow(object, propName, prop, enumerable, writable, setCallback);
-            }
-          },
-          addGetSetPropertyWithShadow: function(object, propName, prop) {
-            var enumerable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var writable = arguments[4] !== (void 0) ? arguments[4] : true;
-            var setCallback = arguments[5] !== (void 0) ? arguments[5] : null;
-            ObjectHelper.buildPropertyShadow(object, propName, prop);
-            ObjectHelper.buildGetSetProperty(object, propName, enumerable, writable, setCallback);
-          },
-          buildPropertyShadow: function(object, propName, prop) {
-            var shadow = {};
-            if (!object || !propName) {
-              debugger;
-            }
-            try {
-              if ('shadow' in object) {
-                shadow = object['shadow'];
-              }
-            } catch (error) {
-              debugger;
-            }
-            shadow[propName] = prop;
-            Object.defineProperty(object, 'shadow', {
-              writable: true,
-              configurable: true,
-              enumerable: false,
-              value: shadow
-            });
-          },
-          buildGetSetProperty: function(object, propName) {
-            var enumerable = arguments[2] !== (void 0) ? arguments[2] : true;
-            var writable = arguments[3] !== (void 0) ? arguments[3] : true;
-            var setCallback = arguments[4] !== (void 0) ? arguments[4] : null;
-            var descriptor = {
-              enumerable: enumerable,
-              configurable: true,
-              get: function() {
-                return object['shadow'][propName];
-              },
-              set: function(value) {
-                if (writable) {
-                  object['shadow'][propName] = value;
-                  if (setCallback && typeof setCallback === 'function') {
-                    setCallback({
-                      propertyName: propName,
-                      newValue: value
-                    });
-                  }
-                } else {
-                  throw new ReferenceError('Attempted to write to non-writable property "' + propName + '".');
-                }
-              }
-            };
-            Object.defineProperty(object, propName, descriptor);
-          },
-          bindAllMethods: function(object, bindTarget) {
-            var methodNames = ObjectHelper.getMethodNames(object);
-            methodNames.forEach(function(name) {
-              object[name] = object[name].bind(bindTarget);
-            });
-          },
-          getMethodNames: function(object) {
-            var methodNames = arguments[1] !== (void 0) ? arguments[1] : [];
-            var propNames = Object.getOwnPropertyNames(object).filter(function(c) {
-              return typeof object[c] === 'function';
-            });
-            methodNames = methodNames.concat(propNames);
-            var prototype = Object.getPrototypeOf(object);
-            if (prototype.constructor.name !== 'Object' && prototype.constructor.name !== 'Array') {
-              return ObjectHelper.getMethodNames(prototype, methodNames);
-            }
-            return methodNames;
-          },
-          getEnumerableProperties: function(object) {
-            return ObjectHelper.getPrototypeEnumerableProperties(object, object);
-          },
-          getPrototypeEnumerableProperties: function(rootObject, prototype) {
-            var result = {};
-            var propNames = Object.keys(prototype);
-            var $__4 = true;
-            var $__5 = false;
-            var $__6 = undefined;
-            try {
-              for (var $__2 = void 0,
-                  $__1 = (propNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__4 = ($__2 = $__1.next()).done); $__4 = true) {
-                var name = $__2.value;
-                {
-                  var value = rootObject[name];
-                  if (value !== null && value !== undefined && typeof value !== 'function') {
-                    if (typeof value == 'object') {
-                      result[name] = ObjectHelper.getEnumerableProperties(value);
-                    } else {
-                      result[name] = value;
-                    }
-                  }
-                }
-              }
-            } catch ($__7) {
-              $__5 = true;
-              $__6 = $__7;
-            } finally {
-              try {
-                if (!$__4 && $__1.return != null) {
-                  $__1.return();
-                }
-              } finally {
-                if ($__5) {
-                  throw $__6;
-                }
-              }
-            }
-            var descriptorNames = Object.getOwnPropertyNames(prototype);
-            descriptorNames = descriptorNames.filter(function(name) {
-              return propNames.indexOf(name) < 0;
-            });
-            var $__11 = true;
-            var $__12 = false;
-            var $__13 = undefined;
-            try {
-              for (var $__9 = void 0,
-                  $__8 = (descriptorNames.values())[$traceurRuntime.toProperty(Symbol.iterator)](); !($__11 = ($__9 = $__8.next()).done); $__11 = true) {
-                var name$__15 = $__9.value;
-                {
-                  var descriptor = Object.getOwnPropertyDescriptor(prototype, name$__15);
-                  if (descriptor && descriptor.enumerable) {
-                    var value$__16 = rootObject[name$__15];
-                    if (value$__16 !== null && value$__16 !== undefined && typeof value$__16 !== 'function') {
-                      if (typeof value$__16 == 'object') {
-                        result[name$__15] = ObjectHelper.getEnumerableProperties(value$__16);
-                      } else {
-                        result[name$__15] = value$__16;
-                      }
-                    }
-                  }
-                }
-              }
-            } catch ($__14) {
-              $__12 = true;
-              $__13 = $__14;
-            } finally {
-              try {
-                if (!$__11 && $__8.return != null) {
-                  $__8.return();
-                }
-              } finally {
-                if ($__12) {
-                  throw $__13;
-                }
-              }
-            }
-            var superPrototype = Object.getPrototypeOf(prototype);
-            var ignorableTypes = ['Object', 'Array', 'EventEmitter'];
-            if (ignorableTypes.indexOf(superPrototype.constructor.name) === -1) {
-              var prototypeEnumerables = ObjectHelper.getPrototypeEnumerableProperties(rootObject, superPrototype);
-              _.merge(result, prototypeEnumerables);
-            }
-            return result;
-          }
-        });
-      }());
-      $__export("ObjectHelper", ObjectHelper);
-    }
-  };
-});
-
 System.register("github:Bizboard/arva-ds@develop/core/Model/snapshot", [], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/snapshot";
@@ -29431,7 +29193,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/snapshot", [], funct
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedArray", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Bizboard/arva-utils@master/Context"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedArray";
   var EventEmitter,
@@ -29746,7 +29508,7 @@ System.register("models/Invite", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash@3.9.3", "github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/core/Controller", ["npm:lodash@3.9.3", "github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/core/Router", "github:Bizboard/arva-utils@master/ObjectHelper", "npm:famous@0.3.5/core/EventHandler", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Controller";
   var _,
@@ -29846,7 +29608,7 @@ System.register("components/Background", ["github:ijzerenhein/famous-bkimagesurf
   };
 });
 
-System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/Background"], function($__export) {
+System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Play/PlayView";
   var Surface,
@@ -30574,7 +30336,7 @@ System.register("github:Bizboard/di.js@master/annotations", ["github:Bizboard/di
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "github:Bizboard/arva-context@master/Context", "npm:famous@0.3.5/core/Engine", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizboard/di.js@master", "github:Bizboard/arva-mvc@develop/routers/ArvaRouter", "github:Bizboard/arva-utils@master/Context", "npm:famous@0.3.5/core/Engine", "npm:famous@0.3.5/core/Context", "github:ijzerenhein/famous-flex@0.3.2/src/AnimationController"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/DefaultContext";
   var Injector,
@@ -30639,7 +30401,7 @@ System.register("github:Bizboard/arva-mvc@develop/DefaultContext", ["github:Bizb
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.3", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot", "github:Bizboard/arva-ds@develop/core/DataSource"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", ["npm:lodash@3.9.3", "npm:eventemitter3@1.1.0", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Bizboard/arva-ds@develop/core/Model/snapshot", "github:Bizboard/arva-ds@develop/core/DataSource"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject";
   var _,
@@ -30834,7 +30596,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
           },
           _onSetterTriggered: function() {
             if (!this._isBeingWrittenByDatasource) {
-              this._dataSource.setWithoutPriority(ObjectHelper.getEnumerableProperties(this));
+              this._dataSource.setWithPriority(ObjectHelper.getEnumerableProperties(this), this._priority);
             }
           },
           _onDataSourceValue: function(dataSnapshot) {
@@ -30925,7 +30687,7 @@ System.register("collections/Invites", ["github:Bizboard/arva-ds@develop/core/Mo
   };
 });
 
-System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "components/Background"], function($__export) {
+System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "components/Background"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ProfileView";
   var Surface,
@@ -31035,7 +30797,7 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
@@ -31174,7 +30936,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
   };
 });
 
-System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
+System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/MyGamesView";
   var Surface,
@@ -31614,7 +31376,7 @@ System.register("github:Bizboard/di.js@master/injector", ["github:Bizboard/di.js
   };
 });
 
-System.register("github:Bizboard/arva-mvc@develop/core/Router", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-mvc@develop/utils/objectHelper"], function($__export) {
+System.register("github:Bizboard/arva-mvc@develop/core/Router", ["npm:eventemitter3@1.1.0", "github:Bizboard/arva-utils@master/ObjectHelper"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-mvc@develop/core/Router";
   var EventEmitter,
@@ -31648,7 +31410,7 @@ System.register("github:Bizboard/arva-mvc@develop/core/Router", ["npm:eventemitt
   };
 });
 
-System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
+System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Ijzerenhein/famous-flex@0.3.2/src/widgets/TabBar", "svg/arena.svg", "svg/play.svg", "svg/profile.svg"], function($__export) {
   "use strict";
   var __moduleName = "views/Shared/Navigation";
   var Surface,
@@ -31720,7 +31482,7 @@ System.register("views/Shared/Navigation", ["npm:famous@0.3.5/core/Surface", "np
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.3", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-context@master/Context"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/core/Model", ["npm:lodash@3.9.3", "github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", "github:Bizboard/arva-ds@develop/core/DataSource", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Bizboard/arva-utils@master/Context"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/core/Model";
   var _,
@@ -32067,7 +31829,7 @@ System.register("controllers/PlayController", ["github:Bizboard/arva-mvc@develop
   };
 });
 
-System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource", ["github:Bizboard/arva-ds@develop/utils/objectHelper", "github:Bizboard/arva-ds@develop/core/DataSource", "github:firebase/firebase-bower@2.2.5", "github:Bizboard/di.js@master"], function($__export) {
+System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource", ["github:Bizboard/arva-utils@master/ObjectHelper", "github:Bizboard/arva-ds@develop/core/DataSource", "github:firebase/firebase-bower@2.2.5", "github:Bizboard/di.js@master"], function($__export) {
   "use strict";
   var __moduleName = "github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource";
   var ObjectHelper,
@@ -32132,9 +31894,6 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           },
           setWithPriority: function(newData, priority) {
             return this._dataReference.setWithPriority(newData, priority);
-          },
-          setWithoutPriority: function(newData) {
-            return this._dataReference.set(newData);
           },
           setPriority: function(newPriority) {
             return this._dataReference.setPriority(newPriority);
@@ -32289,7 +32048,7 @@ System.register("models/Player", ["github:Bizboard/arva-ds@develop/core/Model"],
   };
 });
 
-System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "npm:lodash@3.9.3"], function($__export) {
+System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/surfaces/InputSurface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:ijzerenhein/famous-bkimagesurface@1.0.3/BkImageSurface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "github:Ijzerenhein/famous-flex@0.3.2/src/layouts/CollectionLayout", "npm:famous@0.3.5/core/ViewSequence", "components/Background", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Profile/ChangeAvatarView";
   var Surface,
@@ -32464,7 +32223,7 @@ System.register("github:Bizboard/di.js@master", ["github:Bizboard/di.js@master/i
   };
 });
 
-System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "npm:lodash@3.9.3", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Games", "collections/Invites", "models/Invite"], function($__export) {
+System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultContext", "github:Bizboard/arva-ds@develop/core/DataSource", "utils/helpers", "github:Bizboard/arva-utils@master/ObjectHelper", "npm:lodash@3.9.3", "models/Player", "collections/Players", "collections/Avatars", "models/Game", "collections/Games", "collections/Invites", "models/Invite"], function($__export) {
   "use strict";
   var __moduleName = "utils/GameContext";
   var GetDefaultContext,

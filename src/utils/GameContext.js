@@ -6,7 +6,7 @@ import {GetDefaultContext} from 'arva-mvc/DefaultContext';
 import {DataSource}        from 'arva-ds/core/DataSource';
 import {FireOnceAndWait,
     AuthenticateWithToken} from './helpers';
-import {ObjectHelper}      from 'arva-mvc/utils/objectHelper';
+import {ObjectHelper}      from 'arva-utils/ObjectHelper';
 import _                   from 'lodash';
 
 import Player              from '../models/Player';
