@@ -33,6 +33,9 @@ export class ProfileController extends Controller {
             playerToUpdate.once('ready', function(){playerToUpdate.avatar=avatar.properties.data.url});
             controllerContext.router.go(controllerContext, 'Show', {playerId: playerId});
         });
+
+
+
     }
 
 
@@ -75,35 +78,33 @@ export class ProfileController extends Controller {
     Show(playerId) {
         let controllerContext = this;
 
-        if (!playerId) this.router.go(HomeController, 'Main');
-        else {
-            let playerToShow = new Player(playerId);
-            //await FireOnceAndWait(playerToShow);
+        if (!this.profileView) {
+            this.profileView = new ProfileView();
 
-            let profileView = new ProfileView();
-            profileView.set(playerToShow);
 
-            playerToShow.on('value', () => {
-                profileView.set(playerToShow);
-            });
-
-            profileView._renderables.name.on('change', function() {
-                playerToShow.name = this.getValue();
-                this.setValue('');
-            });
-
-            profileView._renderables.avatar.on('click', function() {
+            this.profileView._renderables.avatar.on('click', function() {
                 controllerContext.router.go(controllerContext, 'ChangeAvatar');
             });
-
-            return profileView;
         }
+
+        if (!this.playerToShow) {
+            this.playerToShow = new Player(playerId);
+
+            this.playerToShow.on('value', () => {
+                this.profileView.set(this.playerToShow);
+            });
+
+            this.profileView._renderables.name.on('change', function() {
+                let temporaryPlayer = new Player(playerId);
+                temporaryPlayer.name = this.getValue();
+                this.setValue('');
+            });
+        }
+
+        return this.profileView;
     }
 
     ChangeAvatar() {
-
-
-
 
         return this.changeAvatarView;
     }

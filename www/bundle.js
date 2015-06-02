@@ -29113,6 +29113,7 @@ System.register("github:Bizboard/arva-ds@develop/core/DataSource", [], function(
           set: function(newData) {},
           remove: function() {},
           push: function(newData) {},
+          setWithoutPriority: function(newData) {},
           setWithPriority: function(newData, priority) {},
           setPriority: function(newPriority) {},
           authWithOAuthToken: function(provider, credentials, onComplete, options) {},
@@ -30132,6 +30133,89 @@ System.register("views/Play/PlayView", ["npm:famous@0.3.5/core/Surface", "npm:fa
   };
 });
 
+System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "npm:lodash@3.9.3"], function($__export) {
+  "use strict";
+  var __moduleName = "utils/BKEEEngine";
+  var Game,
+      EventEmitter,
+      _,
+      winningCombinations;
+  return {
+    setters: [function($__m) {
+      Game = $__m.default;
+    }, function($__m) {
+      EventEmitter = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
+    }],
+    execute: function() {
+      winningCombinations = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]];
+      $__export('default', (function($__super) {
+        function BKEEEngine(activePlayer, game) {
+          $traceurRuntime.superConstructor(BKEEEngine).call(this);
+          this._activePlayer = activePlayer;
+          this._game = game;
+          if (!this._game.data) {
+            this._state = [];
+          } else {
+            this._state = this._game.data;
+          }
+        }
+        return ($traceurRuntime.createClass)(BKEEEngine, {
+          move: function(by, position) {
+            if (this._game.winner)
+              return ;
+            var allowedMove = true;
+            this._state.forEach(function(move) {
+              if (move.position == position)
+                allowedMove = false;
+            });
+            if (!allowedMove)
+              return ;
+            this._state.push({
+              by: by,
+              position: position
+            });
+            this._game.data = this._state;
+            var didIWin = this._evaluateGameResult(_.filter(this._state, {by: by}));
+            if (didIWin) {
+              this._game.winner = by;
+              this._game.status = 'won';
+              this._game.nextPlayer = null;
+              this.emit('won');
+            } else if (this._state.length == 9) {
+              this._game.status = 'draw';
+              this._game.nextPlayer = null;
+              this.emit('draw');
+            } else {
+              if (this._game.nextPlayer) {
+                this._game.nextPlayer = this._game.nextPlayer == this._game.player1.id ? this._game.player2.id : this._game.player1.id;
+              }
+            }
+          },
+          _evaluateGameResult: function(moves) {
+            var won = false;
+            winningCombinations.forEach(function(combination) {
+              if (!won) {
+                var foundMoves = 0;
+                moves.forEach(function(move) {
+                  if (combination.indexOf(move.position) > -1) {
+                    foundMoves++;
+                  }
+                });
+                if (foundMoves == 3) {
+                  won = true;
+                }
+              }
+            });
+            return won;
+          }
+        }, {}, $__super);
+      }(EventEmitter)));
+    }
+  };
+});
+
 System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "components/DataBoundFlexScrollView";
@@ -30270,228 +30354,6 @@ System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Su
           }
         }, {}, $__super);
       }(FlexScrollView)));
-    }
-  };
-});
-
-System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "npm:lodash@3.9.3"], function($__export) {
-  "use strict";
-  var __moduleName = "utils/BKEEEngine";
-  var Game,
-      EventEmitter,
-      _,
-      winningCombinations;
-  return {
-    setters: [function($__m) {
-      Game = $__m.default;
-    }, function($__m) {
-      EventEmitter = $__m.default;
-    }, function($__m) {
-      _ = $__m.default;
-    }],
-    execute: function() {
-      winningCombinations = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]];
-      $__export('default', (function($__super) {
-        function BKEEEngine(activePlayer, game) {
-          $traceurRuntime.superConstructor(BKEEEngine).call(this);
-          this._activePlayer = activePlayer;
-          this._game = game;
-          if (!this._game.data) {
-            this._state = [];
-          } else {
-            this._state = this._game.data;
-          }
-        }
-        return ($traceurRuntime.createClass)(BKEEEngine, {
-          move: function(by, position) {
-            if (this._game.winner)
-              return ;
-            var allowedMove = true;
-            this._state.forEach(function(move) {
-              if (move.position == position)
-                allowedMove = false;
-            });
-            if (!allowedMove)
-              return ;
-            this._state.push({
-              by: by,
-              position: position
-            });
-            this._game.data = this._state;
-            var didIWin = this._evaluateGameResult(_.filter(this._state, {by: by}));
-            if (didIWin) {
-              this._game.winner = by;
-              this._game.status = 'won';
-              this._game.nextPlayer = null;
-              this.emit('won');
-            } else if (this._state.length == 9) {
-              this._game.status = 'draw';
-              this._game.nextPlayer = null;
-              this.emit('draw');
-            } else {
-              if (this._game.nextPlayer) {
-                this._game.nextPlayer = this._game.nextPlayer == this._game.player1.id ? this._game.player2.id : this._game.player1.id;
-              }
-            }
-          },
-          _evaluateGameResult: function(moves) {
-            var won = false;
-            winningCombinations.forEach(function(combination) {
-              if (!won) {
-                var foundMoves = 0;
-                moves.forEach(function(move) {
-                  if (combination.indexOf(move.position) > -1) {
-                    foundMoves++;
-                  }
-                });
-                if (foundMoves == 3) {
-                  won = true;
-                }
-              }
-            });
-            return won;
-          }
-        }, {}, $__super);
-      }(EventEmitter)));
-    }
-  };
-});
-
-System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
-  "use strict";
-  var __moduleName = "views/Home/MyGamesView";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      DataboundFlexScrollView,
-      Background,
-      _,
-      AutoFontsizeSurface,
-      DEFAULT_OPTIONS;
-  return {
-    setters: [function($__m) {
-      Surface = $__m.default;
-    }, function($__m) {
-      View = $__m.default;
-    }, function($__m) {
-      ObjectHelper = $__m.ObjectHelper;
-    }, function($__m) {
-      LayoutController = $__m.default;
-    }, function($__m) {
-      DataboundFlexScrollView = $__m.default;
-    }, function($__m) {
-      Background = $__m.default;
-    }, function($__m) {
-      _ = $__m.default;
-    }, function($__m) {
-      AutoFontsizeSurface = $__m.default;
-    }],
-    execute: function() {
-      DEFAULT_OPTIONS = {headerHeight: 75};
-      $__export('default', (function($__super) {
-        function MyGamesView() {
-          var options = arguments[0] !== (void 0) ? arguments[0] : {};
-          var newOptions = _.merge(options, DEFAULT_OPTIONS);
-          $traceurRuntime.superConstructor(MyGamesView).call(this, newOptions);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          this._createRenderables();
-          this._createLayout();
-          this._createListeners();
-        }
-        return ($traceurRuntime.createClass)(MyGamesView, {
-          _createRenderables: function() {
-            var $__0 = this;
-            var contextView = this;
-            var myGames = new DataboundFlexScrollView({
-              flowOptions: {
-                spring: {
-                  dampingRatio: 0.8,
-                  period: 1000
-                },
-                insertSpec: {opacity: 0}
-              },
-              layoutOptions: {
-                margins: [5, 5, 5, 5],
-                spacing: 5
-              },
-              dataFilter: (function(game) {
-                return game.status == 'active' && (game.player1.id == $__0.options.activePlayer || game.player2.id == $__0.options.activePlayer);
-              }),
-              template: (function(game) {
-                var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
-                var whosTurn = game.nextPlayer == $__0.options.activePlayer ? 'mine' : 'opponent';
-                var surface = new Surface({
-                  size: [undefined, 50],
-                  classes: ['arena-item'],
-                  properties: {
-                    backgroundColor: '#e8e8e8',
-                    lineHeight: '50px',
-                    paddingLeft: '10px',
-                    paddingRight: '10px',
-                    data: game
-                  },
-                  content: ("<div class=\"turn " + whosTurn + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
-                });
-                surface.on('click', function() {
-                  contextView._eventOutput.emit('play', this.properties.data);
-                });
-                return surface;
-              }),
-              dataStore: this.options.dataSource
-            });
-            this._renderables = {
-              background: new Background(),
-              header: new Surface({
-                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Actieve spelletjes',
-                classes: ['header']
-              }),
-              invite: new AutoFontsizeSurface({
-                classes: ['icon', 'icon-plus-sign'],
-                fontSizeRange: [16, 52],
-                properties: {color: '#3399cc'}
-              }),
-              games: myGames
-            };
-          },
-          _createLayout: function() {
-            var top = this.options.headerHeight;
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('background', {
-                  size: context.size,
-                  translate: [0, 0, 0]
-                });
-                context.set('header', {
-                  size: [context.size[0], top],
-                  translate: [0, 0, 20]
-                });
-                context.set('invite', {
-                  size: [56, 56],
-                  translate: [0, 0, 3],
-                  align: [0.90, 0.85],
-                  origin: [0.5, 0.5]
-                });
-                context.set('games', {
-                  size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, top, 2]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
-          },
-          _createListeners: function() {
-            this._renderables.invite.on('click', function() {
-              this._eventOutput.emit('invite');
-            });
-          }
-        }, {}, $__super);
-      }(View)));
     }
   };
 });
@@ -30972,7 +30834,7 @@ System.register("github:Bizboard/arva-ds@develop/core/Model/prioritisedObject", 
           },
           _onSetterTriggered: function() {
             if (!this._isBeingWrittenByDatasource) {
-              this._dataSource.setWithPriority(ObjectHelper.getEnumerableProperties(this), this._priority);
+              this._dataSource.setWithoutPriority(ObjectHelper.getEnumerableProperties(this));
             }
           },
           _onDataSourceValue: function(dataSnapshot) {
@@ -31173,14 +31035,14 @@ System.register("views/Profile/ProfileView", ["npm:famous@0.3.5/core/Surface", "
   };
 });
 
-System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
+System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "components/Background", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface", "npm:lodash@3.9.3"], function($__export) {
   "use strict";
   var __moduleName = "views/Home/InvitePlayerView";
   var Surface,
       View,
       ObjectHelper,
       LayoutController,
-      DataboundFlexScrollView,
+      DataBoundScrollView,
       Background,
       AutoFontsizeSurface,
       _,
@@ -31195,7 +31057,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
     }, function($__m) {
       LayoutController = $__m.default;
     }, function($__m) {
-      DataboundFlexScrollView = $__m.default;
+      DataBoundScrollView = $__m.default;
     }, function($__m) {
       Background = $__m.default;
     }, function($__m) {
@@ -31220,7 +31082,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
         return ($traceurRuntime.createClass)(InvitePlayerView, {
           _createRenderables: function() {
             var contextView = this;
-            var invitePlayers = new DataboundFlexScrollView({
+            var invitePlayers = new DataBoundScrollView({
               flowOptions: {
                 spring: {
                   dampingRatio: 0.8,
@@ -31305,6 +31167,145 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
             this._renderables.close.on('click', (function() {
               $__0._eventOutput.emit('close');
             }));
+          }
+        }, {}, $__super);
+      }(View)));
+    }
+  };
+});
+
+System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-mvc@develop/utils/objectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
+  "use strict";
+  var __moduleName = "views/Home/MyGamesView";
+  var Surface,
+      View,
+      ObjectHelper,
+      LayoutController,
+      DataboundFlexScrollView,
+      Background,
+      _,
+      AutoFontsizeSurface,
+      DEFAULT_OPTIONS;
+  return {
+    setters: [function($__m) {
+      Surface = $__m.default;
+    }, function($__m) {
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      DataboundFlexScrollView = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
+    }, function($__m) {
+      _ = $__m.default;
+    }, function($__m) {
+      AutoFontsizeSurface = $__m.default;
+    }],
+    execute: function() {
+      DEFAULT_OPTIONS = {headerHeight: 75};
+      $__export('default', (function($__super) {
+        function MyGamesView() {
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          var newOptions = _.merge(options, DEFAULT_OPTIONS);
+          $traceurRuntime.superConstructor(MyGamesView).call(this, newOptions);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+          this._createListeners();
+        }
+        return ($traceurRuntime.createClass)(MyGamesView, {
+          _createRenderables: function() {
+            var $__0 = this;
+            var contextView = this;
+            var myGames = new DataboundFlexScrollView({
+              flowOptions: {
+                spring: {
+                  dampingRatio: 0.8,
+                  period: 1000
+                },
+                insertSpec: {opacity: 0}
+              },
+              layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+              },
+              dataFilter: (function(game) {
+                return game.status == 'active' && (game.player1.id == $__0.options.activePlayer || game.player2.id == $__0.options.activePlayer);
+              }),
+              template: (function(game) {
+                var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
+                var whosTurn = game.nextPlayer == $__0.options.activePlayer ? 'mine' : 'opponent';
+                var surface = new Surface({
+                  size: [undefined, 50],
+                  classes: ['arena-item'],
+                  properties: {
+                    backgroundColor: '#e8e8e8',
+                    lineHeight: '50px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    data: game
+                  },
+                  content: ("<div class=\"turn " + whosTurn + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
+                });
+                surface.on('click', function() {
+                  contextView._eventOutput.emit('play', this.properties.data);
+                });
+                return surface;
+              }),
+              dataStore: this.options.dataSource
+            });
+            this._renderables = {
+              background: new Background(),
+              header: new Surface({
+                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Actieve spelletjes',
+                classes: ['header']
+              }),
+              invite: new AutoFontsizeSurface({
+                classes: ['icon', 'icon-plus-sign'],
+                fontSizeRange: [16, 52],
+                properties: {color: '#3399cc'}
+              }),
+              games: myGames
+            };
+          },
+          _createLayout: function() {
+            var top = this.options.headerHeight;
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
+                context.set('header', {
+                  size: [context.size[0], top],
+                  translate: [0, 0, 20]
+                });
+                context.set('invite', {
+                  size: [56, 56],
+                  translate: [0, 0, 3],
+                  align: [0.90, 0.85],
+                  origin: [0.5, 0.5]
+                });
+                context.set('games', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, top, 2]
+                });
+              }.bind(this),
+              dataSource: this._renderables
+            });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
+          },
+          _createListeners: function() {
+            this._renderables.invite.on('click', function() {
+              this._eventOutput.emit('invite');
+            });
           }
         }, {}, $__super);
       }(View)));
@@ -31933,7 +31934,9 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
             var index = _.findIndex(this._dataSource, function(surface) {
               return surface.dataId == child.id;
             });
-            this.remove(index);
+            if (index > -1) {
+              this.remove(index);
+            }
           },
           _moveItem: function(oldId) {
             var prevChildId = arguments[1] !== (void 0) ? arguments[1] : null;
@@ -32129,6 +32132,9 @@ System.register("github:Bizboard/arva-ds@develop/datasources/FirebaseDataSource"
           },
           setWithPriority: function(newData, priority) {
             return this._dataReference.setWithPriority(newData, priority);
+          },
+          setWithoutPriority: function(newData) {
+            return this._dataReference.set(newData);
           },
           setPriority: function(newPriority) {
             return this._dataReference.setPriority(newPriority);
@@ -32722,25 +32728,26 @@ System.register("controllers/ProfileController", ["github:Bizboard/arva-mvc@deve
             }
           },
           Show: function(playerId) {
+            var $__0 = this;
             var controllerContext = this;
-            if (!playerId)
-              this.router.go(HomeController, 'Main');
-            else {
-              var playerToShow = new Player(playerId);
-              var profileView = new ProfileView();
-              profileView.set(playerToShow);
-              playerToShow.on('value', (function() {
-                profileView.set(playerToShow);
-              }));
-              profileView._renderables.name.on('change', function() {
-                playerToShow.name = this.getValue();
-                this.setValue('');
-              });
-              profileView._renderables.avatar.on('click', function() {
+            if (!this.profileView) {
+              this.profileView = new ProfileView();
+              this.profileView._renderables.avatar.on('click', function() {
                 controllerContext.router.go(controllerContext, 'ChangeAvatar');
               });
-              return profileView;
             }
+            if (!this.playerToShow) {
+              this.playerToShow = new Player(playerId);
+              this.playerToShow.on('value', (function() {
+                $__0.profileView.set($__0.playerToShow);
+              }));
+              this.profileView._renderables.name.on('change', function() {
+                var temporaryPlayer = new Player(playerId);
+                temporaryPlayer.name = this.getValue();
+                this.setValue('');
+              });
+            }
+            return this.profileView;
           },
           ChangeAvatar: function() {
             return this.changeAvatarView;

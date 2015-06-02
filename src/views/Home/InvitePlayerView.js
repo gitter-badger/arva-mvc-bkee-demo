@@ -5,7 +5,7 @@ import Surface                      from 'famous/core/Surface';
 import View                         from 'famous/core/View';
 import {ObjectHelper}               from 'arva-mvc/utils/objectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
-import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
+import DataBoundScrollView          from 'arva-mvc/components/DataBoundScrollView';
 import Background                   from '../../components/Background';
 import AutoFontsizeSurface          from 'famous-autofontsizesurface/AutoFontSizeSurface';
 import _                            from 'lodash';
@@ -43,7 +43,7 @@ export default class InvitePlayerView extends View {
     _createRenderables() {
         let contextView = this;
 
-        var invitePlayers = new DataboundFlexScrollView({
+        var invitePlayers = new DataBoundScrollView({
 
             flowOptions: {
                 spring: {               // spring-options used when transitioning between states
