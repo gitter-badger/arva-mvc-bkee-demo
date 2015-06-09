@@ -69,7 +69,7 @@ export default class InvitePlayerView extends View {
                 return player.id != contextView.options.activePlayer;
             },
 
-            template: function(player) {
+            itemTemplate: function(player) {
 
                 let isOnline = (Date.now() - player.lastTimeAccessed)<10000?'online':'offline';
 

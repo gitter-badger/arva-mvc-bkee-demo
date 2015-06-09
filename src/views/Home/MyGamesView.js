@@ -5,7 +5,7 @@ import Surface                      from 'famous/core/Surface';
 import View                         from 'famous/core/View';
 import {ObjectHelper}               from 'arva-utils/ObjectHelper';
 import LayoutController             from 'famous-flex/src/LayoutController';
-import DataboundFlexScrollView      from '../../components/DataBoundFlexScrollView';
+import DataBoundScrollView          from 'arva-mvc/components/DataBoundScrollView';
 import Background                   from '../../components/Background';
 import _                            from 'lodash';
 import AutoFontsizeSurface          from 'famous-autofontsizesurface/AutoFontSizeSurface';
@@ -43,7 +43,7 @@ export default class MyGamesView extends View {
     _createRenderables() {
         let contextView = this;
 
-        var myGames = new DataboundFlexScrollView({
+        var myGames = new DataBoundScrollView({
 
             flowOptions: {
                 spring: {               // spring-options used when transitioning between states
@@ -69,7 +69,7 @@ export default class MyGamesView extends View {
                     game.player2.id == this.options.activePlayer);
             },
 
-            template: (game) => {
+            itemTemplate: (game) => {
                 let playerToShow = game.player1.id==this.options.activePlayer?
                     game.player2:
                     game.player1;

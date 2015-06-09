@@ -66,7 +66,7 @@ export default class ChangeAvatarView extends View {
                     spacing: [20, 20]
                 },
 
-                template: function(avatar) {
+                itemTemplate: function(avatar) {
                     let avatarSurface = new BkImageSurface({
                         content: avatar.url,
                         sizeMode: BkImageSurface.SizeMode.ASPECTFIT,

@@ -45,7 +45,9 @@ System.config({
       "lodash": "npm:lodash@3.9.3"
     },
     "github:Bizboard/arva-utils@master": {
-      "lodash": "npm:lodash@3.9.3"
+      "fs": "github:jspm/nodelibs-fs@0.1.2",
+      "lodash": "npm:lodash@3.9.3",
+      "path": "github:jspm/nodelibs-path@0.1.0"
     },
     "github:jspm/nodelibs-buffer@0.1.0": {
       "buffer": "npm:buffer@3.2.2"

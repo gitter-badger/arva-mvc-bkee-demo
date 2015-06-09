@@ -159,7 +159,6 @@ export default class GameContext {
 
     trackOnline() {
         setInterval(()=> {
-            return;
             if (this.isNewPlayer()) return; // Wait until we are actually a new user
             let playerName = this.getPlayerId();
 

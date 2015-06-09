@@ -29978,144 +29978,141 @@ System.register("utils/BKEEEngine", ["models/Game", "npm:eventemitter3@1.1.0", "
   };
 });
 
-System.register("components/DataBoundFlexScrollView", ["npm:famous@0.3.5/core/Surface", "github:Ijzerenhein/famous-flex@0.3.2/src/FlexScrollView", "npm:lodash@3.9.3"], function($__export) {
+System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "github:Bizboard/arva-mvc@develop/components/DataBoundScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
   "use strict";
-  var __moduleName = "components/DataBoundFlexScrollView";
+  var __moduleName = "views/Home/MyGamesView";
   var Surface,
-      FlexScrollView,
-      _;
+      View,
+      ObjectHelper,
+      LayoutController,
+      DataBoundScrollView,
+      Background,
+      _,
+      AutoFontsizeSurface,
+      DEFAULT_OPTIONS;
   return {
     setters: [function($__m) {
       Surface = $__m.default;
     }, function($__m) {
-      FlexScrollView = $__m.default;
+      View = $__m.default;
+    }, function($__m) {
+      ObjectHelper = $__m.ObjectHelper;
+    }, function($__m) {
+      LayoutController = $__m.default;
+    }, function($__m) {
+      DataBoundScrollView = $__m.default;
+    }, function($__m) {
+      Background = $__m.default;
     }, function($__m) {
       _ = $__m.default;
+    }, function($__m) {
+      AutoFontsizeSurface = $__m.default;
     }],
     execute: function() {
+      DEFAULT_OPTIONS = {headerHeight: 75};
       $__export('default', (function($__super) {
-        function DataBoundFlexScrollView() {
-          var OPTIONS = arguments[0] !== (void 0) ? arguments[0] : {};
-          if (!OPTIONS.autoPipeEvents)
-            OPTIONS.autoPipeEvents = true;
-          $traceurRuntime.superConstructor(DataBoundFlexScrollView).call(this, OPTIONS);
-          if (!this.options.sortingDirection)
-            this.options.sortingDirection = 'ascending';
-          this.isDescending = this.options.sortingDirection == 'descending';
-          if (this.options.dataStore) {
-            this._dataItems = [];
-            this._bindDataSource(this.options.dataStore);
-          } else {
-            console.log('No DataSource was set.');
-          }
+        function MyGamesView() {
+          var options = arguments[0] !== (void 0) ? arguments[0] : {};
+          var newOptions = _.merge(options, DEFAULT_OPTIONS);
+          $traceurRuntime.superConstructor(MyGamesView).call(this, newOptions);
+          ObjectHelper.bindAllMethods(this, this);
+          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
+          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
+          this._createRenderables();
+          this._createLayout();
+          this._createListeners();
         }
-        return ($traceurRuntime.createClass)(DataBoundFlexScrollView, {
-          _bindDataSource: function() {
-            if (!this.options.dataStore || !this.options.template) {
-              console.log('Datasource and template should both be set.');
-              return ;
-            }
-            if (!this.options.template instanceof Function) {
-              console.log('Template needs to be a function.');
-              return ;
-            }
-            this.options.dataStore.on('child_added', function(child, previousSibling) {
-              if (!this.options.dataFilter || (typeof this.options.dataFilter === "function" && this.options.dataFilter(child))) {
-                this._addItem(child, true);
-              }
-            }.bind(this));
-            this.options.dataStore.on('child_changed', function(child, previousSibling) {
-              var changedItem = this._getDataSourceIndex(child.id);
-              if (this._dataSource && changedItem < this._dataSource.length) {
-                if (this.options.dataFilter && typeof this.options.dataFilter === "function" && !this.options.dataFilter(child)) {
-                  this._removeItem(child);
-                } else {
-                  if (changedItem == -1) {
-                    this._addItem(child, true);
-                    this._moveItem(child.id, previousSibling);
-                  } else {
-                    this._replaceItem(child);
-                    this._moveItem(child.id, previousSibling);
-                  }
-                }
-              }
-            }.bind(this));
-            this.options.dataStore.on('child_moved', function(child, previousSibling) {
-              var current = this._getDataSourceIndex(child.id);
-              var previous = this._getDataSourceIndex(previousSibling);
-              this._moveItem(current, previous);
-            }.bind(this));
-            this.options.dataStore.on('child_removed', function(child) {
-              this._removeItem(child);
-            }.bind(this));
-          },
-          _addItem: function(child) {
-            var newSurface = this.options.template(child);
-            newSurface.dataId = child.id;
-            if (this.isDescending) {
-              this.insert(0, newSurface);
-            } else {
-              this.insert(-1, newSurface);
-            }
-          },
-          _replaceItem: function(child) {
-            var index = this._getDataSourceIndex(child.id);
-            var newSurface = this.options.template(child);
-            newSurface.dataId = child.id;
-            this.replace(index, newSurface);
-          },
-          _removeItem: function(child) {
-            var index = _.findIndex(this._dataSource, function(surface) {
-              return surface.dataId == child.id;
+        return ($traceurRuntime.createClass)(MyGamesView, {
+          _createRenderables: function() {
+            var $__0 = this;
+            var contextView = this;
+            var myGames = new DataBoundScrollView({
+              flowOptions: {
+                spring: {
+                  dampingRatio: 0.8,
+                  period: 1000
+                },
+                insertSpec: {opacity: 0}
+              },
+              layoutOptions: {
+                margins: [5, 5, 5, 5],
+                spacing: 5
+              },
+              dataFilter: (function(game) {
+                return game.status == 'active' && (game.player1.id == $__0.options.activePlayer || game.player2.id == $__0.options.activePlayer);
+              }),
+              itemTemplate: (function(game) {
+                var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
+                var whosTurn = game.nextPlayer == $__0.options.activePlayer ? 'mine' : 'opponent';
+                var surface = new Surface({
+                  size: [undefined, 50],
+                  classes: ['arena-item'],
+                  properties: {
+                    backgroundColor: '#e8e8e8',
+                    lineHeight: '50px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px',
+                    data: game
+                  },
+                  content: ("<div class=\"turn " + whosTurn + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
+                });
+                surface.on('click', function() {
+                  contextView._eventOutput.emit('play', this.properties.data);
+                });
+                return surface;
+              }),
+              dataStore: this.options.dataSource
             });
-            this.remove(index);
+            this._renderables = {
+              background: new Background(),
+              header: new Surface({
+                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Actieve spelletjes',
+                classes: ['header']
+              }),
+              invite: new AutoFontsizeSurface({
+                classes: ['icon', 'icon-plus-sign'],
+                fontSizeRange: [16, 52],
+                properties: {color: '#3399cc'}
+              }),
+              games: myGames
+            };
           },
-          _moveItem: function(oldId) {
-            var prevChildId = arguments[1] !== (void 0) ? arguments[1] : null;
-            var oldIndex = this._getDataSourceIndex(oldId);
-            var previousSiblingIndex = this._getNextVisibleIndex(prevChildId);
-            if (oldIndex != previousSiblingIndex) {
-              this.move(oldIndex, previousSiblingIndex);
-            }
-          },
-          _getBeginPosition: function() {
-            return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
-          },
-          _getDataSourceIndex: function(id) {
-            return _.findIndex(this._dataSource, function(surface) {
-              return surface.dataId == id;
+          _createLayout: function() {
+            var top = this.options.headerHeight;
+            this.layout = new LayoutController({
+              autoPipeEvents: true,
+              layout: function(context) {
+                context.set('background', {
+                  size: context.size,
+                  translate: [0, 0, 0]
+                });
+                context.set('header', {
+                  size: [context.size[0], top],
+                  translate: [0, 0, 20]
+                });
+                context.set('invite', {
+                  size: [56, 56],
+                  translate: [0, 0, 3],
+                  align: [0.90, 0.85],
+                  origin: [0.5, 0.5]
+                });
+                context.set('games', {
+                  size: [context.size[0], context.size[1] / 1.3],
+                  translate: [0, top, 2]
+                });
+              }.bind(this),
+              dataSource: this._renderables
             });
+            this.add(this.layout);
+            this.layout.pipe(this._eventOutput);
           },
-          _getDataStoreIndex: function(id) {
-            return _.findIndex(this.options.dataStore, function(model) {
-              return model.id == id;
+          _createListeners: function() {
+            this._renderables.invite.on('click', function() {
+              this._eventOutput.emit('invite');
             });
-          },
-          _getNextVisibleIndex: function(id) {
-            var viewIndex = this._getDataSourceIndex(id);
-            if (viewIndex == -1) {
-              var modelIndex = _.findIndex(this.options.dataStore, function(model) {
-                return model.id == id;
-              });
-              if (modelIndex == 0 || modelIndex == -1)
-                return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
-              else {
-                var nextModel = this.options.dataStore[this.isDescending ? modelIndex + 1 : modelIndex - 1];
-                var nextIndex = this._getDataSourceIndex(nextModel.id);
-                if (nextIndex > -1) {
-                  var newIndex = this.isDescending ? nextIndex == 0 ? 0 : nextIndex - 1 : this._dataSource.length == nextIndex + 1 ? nextIndex : nextIndex + 1;
-                  return newIndex;
-                } else {
-                  return this._getNextVisibleIndex(nextModel.id);
-                }
-              }
-            } else {
-              var newIndex$__1 = this.isDescending ? viewIndex == 0 ? 0 : viewIndex - 1 : this._dataSource.length == viewIndex + 1 ? viewIndex : viewIndex + 1;
-              return newIndex$__1;
-            }
           }
         }, {}, $__super);
-      }(FlexScrollView)));
+      }(View)));
     }
   };
 });
@@ -30860,7 +30857,7 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
               dataFilter: (function(player) {
                 return player.id != contextView.options.activePlayer;
               }),
-              template: function(player) {
+              itemTemplate: function(player) {
                 var isOnline = (Date.now() - player.lastTimeAccessed) < 10000 ? 'online' : 'offline';
                 var surface = new Surface({
                   size: [undefined, 50],
@@ -30929,145 +30926,6 @@ System.register("views/Home/InvitePlayerView", ["npm:famous@0.3.5/core/Surface",
             this._renderables.close.on('click', (function() {
               $__0._eventOutput.emit('close');
             }));
-          }
-        }, {}, $__super);
-      }(View)));
-    }
-  };
-});
-
-System.register("views/Home/MyGamesView", ["npm:famous@0.3.5/core/Surface", "npm:famous@0.3.5/core/View", "github:Bizboard/arva-utils@master/ObjectHelper", "github:Ijzerenhein/famous-flex@0.3.2/src/LayoutController", "components/DataBoundFlexScrollView", "components/Background", "npm:lodash@3.9.3", "github:Ijzerenhein/famous-autofontsizesurface@0.3.1/AutoFontSizeSurface"], function($__export) {
-  "use strict";
-  var __moduleName = "views/Home/MyGamesView";
-  var Surface,
-      View,
-      ObjectHelper,
-      LayoutController,
-      DataboundFlexScrollView,
-      Background,
-      _,
-      AutoFontsizeSurface,
-      DEFAULT_OPTIONS;
-  return {
-    setters: [function($__m) {
-      Surface = $__m.default;
-    }, function($__m) {
-      View = $__m.default;
-    }, function($__m) {
-      ObjectHelper = $__m.ObjectHelper;
-    }, function($__m) {
-      LayoutController = $__m.default;
-    }, function($__m) {
-      DataboundFlexScrollView = $__m.default;
-    }, function($__m) {
-      Background = $__m.default;
-    }, function($__m) {
-      _ = $__m.default;
-    }, function($__m) {
-      AutoFontsizeSurface = $__m.default;
-    }],
-    execute: function() {
-      DEFAULT_OPTIONS = {headerHeight: 75};
-      $__export('default', (function($__super) {
-        function MyGamesView() {
-          var options = arguments[0] !== (void 0) ? arguments[0] : {};
-          var newOptions = _.merge(options, DEFAULT_OPTIONS);
-          $traceurRuntime.superConstructor(MyGamesView).call(this, newOptions);
-          ObjectHelper.bindAllMethods(this, this);
-          ObjectHelper.hideMethodsAndPrivatePropertiesFromObject(this);
-          ObjectHelper.hidePropertyFromObject(Object.getPrototypeOf(this), 'length');
-          this._createRenderables();
-          this._createLayout();
-          this._createListeners();
-        }
-        return ($traceurRuntime.createClass)(MyGamesView, {
-          _createRenderables: function() {
-            var $__0 = this;
-            var contextView = this;
-            var myGames = new DataboundFlexScrollView({
-              flowOptions: {
-                spring: {
-                  dampingRatio: 0.8,
-                  period: 1000
-                },
-                insertSpec: {opacity: 0}
-              },
-              layoutOptions: {
-                margins: [5, 5, 5, 5],
-                spacing: 5
-              },
-              dataFilter: (function(game) {
-                return game.status == 'active' && (game.player1.id == $__0.options.activePlayer || game.player2.id == $__0.options.activePlayer);
-              }),
-              template: (function(game) {
-                var playerToShow = game.player1.id == $__0.options.activePlayer ? game.player2 : game.player1;
-                var whosTurn = game.nextPlayer == $__0.options.activePlayer ? 'mine' : 'opponent';
-                var surface = new Surface({
-                  size: [undefined, 50],
-                  classes: ['arena-item'],
-                  properties: {
-                    backgroundColor: '#e8e8e8',
-                    lineHeight: '50px',
-                    paddingLeft: '10px',
-                    paddingRight: '10px',
-                    data: game
-                  },
-                  content: ("<div class=\"turn " + whosTurn + "\"></div>\n                    <div class=\"avatar\" style=\"background-image: url(" + playerToShow.avatar + ");\"></div>\n                    <div class=\"playername\">" + playerToShow.name + "</div>")
-                });
-                surface.on('click', function() {
-                  contextView._eventOutput.emit('play', this.properties.data);
-                });
-                return surface;
-              }),
-              dataStore: this.options.dataSource
-            });
-            this._renderables = {
-              background: new Background(),
-              header: new Surface({
-                content: '<div>B K E E &nbsp;&nbsp;&nbsp;&nbsp; W A R S</div>Actieve spelletjes',
-                classes: ['header']
-              }),
-              invite: new AutoFontsizeSurface({
-                classes: ['icon', 'icon-plus-sign'],
-                fontSizeRange: [16, 52],
-                properties: {color: '#3399cc'}
-              }),
-              games: myGames
-            };
-          },
-          _createLayout: function() {
-            var top = this.options.headerHeight;
-            this.layout = new LayoutController({
-              autoPipeEvents: true,
-              layout: function(context) {
-                context.set('background', {
-                  size: context.size,
-                  translate: [0, 0, 0]
-                });
-                context.set('header', {
-                  size: [context.size[0], top],
-                  translate: [0, 0, 20]
-                });
-                context.set('invite', {
-                  size: [56, 56],
-                  translate: [0, 0, 3],
-                  align: [0.90, 0.85],
-                  origin: [0.5, 0.5]
-                });
-                context.set('games', {
-                  size: [context.size[0], context.size[1] / 1.3],
-                  translate: [0, top, 2]
-                });
-              }.bind(this),
-              dataSource: this._renderables
-            });
-            this.add(this.layout);
-            this.layout.pipe(this._eventOutput);
-          },
-          _createListeners: function() {
-            this._renderables.invite.on('click', function() {
-              this._eventOutput.emit('invite');
-            });
           }
         }, {}, $__super);
       }(View)));
@@ -31630,6 +31488,7 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
           if (!this.options.sortingDirection) {
             this.options.sortingDirection = 'ascending';
           }
+          this.isGrouped = this.options.groupBy != null;
           this.isDescending = this.options.sortingDirection === 'descending';
           if (this.options.dataStore) {
             this._bindDataSource(this.options.dataStore);
@@ -31638,8 +31497,51 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
           }
         }
         return ($traceurRuntime.createClass)(DataBoundScrollView, {
+          _findGroup: function(groupId) {
+            return _.findIndex(this._dataSource, function(surface) {
+              return surface.groupId === groupId;
+            });
+          },
+          _findNextGroup: function(fromIndex) {
+            var dslength = this._dataSource.length;
+            for (var pos = fromIndex; pos < dslength; pos++) {
+              if (this._dataSource[pos].groupId) {
+                return pos;
+              }
+            }
+            return -1;
+          },
+          _getGroupByValue: function(child) {
+            var groupByValue = '';
+            if (typeof this.options.groupBy === 'function') {
+              groupByValue = this.options.groupBy(child);
+            } else if (typeof this.options.groupBy === 'string') {
+              groupByValue = this.options.groupBy;
+            }
+            return groupByValue;
+          },
+          _addGroupItem: function(child) {
+            var groupByValue = this._getGroupByValue(child);
+            var newSurface = this.options.groupTemplate(groupByValue);
+            newSurface.groupId = groupByValue;
+            if (this.isDescending) {
+              this.insert(0, newSurface);
+            } else {
+              this.insert(-1, newSurface);
+            }
+          },
+          _ensureGroupItem: function(child) {
+            var groupByValue = this._getGroupByValue(child);
+            var groupIndex = this._findGroup(groupByValue);
+            if (groupIndex > -1) {
+              return groupIndex;
+            } else {
+              this._addGroupItem(child);
+              return this._findGroup(groupByValue);
+            }
+          },
           _bindDataSource: function() {
-            if (!this.options.dataStore || !this.options.template) {
+            if (!this.options.dataStore || !this.options.itemTemplate) {
               console.log('Datasource and template should both be set.');
               return ;
             }
@@ -31647,9 +31549,9 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
               console.log('Template needs to be a function.');
               return ;
             }
-            this.options.dataStore.on('child_added', function(child, previousSibling) {
+            this.options.dataStore.on('child_added', function(child) {
               if (!this.options.dataFilter || (typeof this.options.dataFilter === 'function' && this.options.dataFilter(child))) {
-                this._addItem(child, true);
+                this._addItem(child);
               }
             }.bind(this));
             this.options.dataStore.on('child_changed', function(child, previousSibling) {
@@ -31659,7 +31561,7 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
                   this._removeItem(child);
                 } else {
                   if (changedItem === -1) {
-                    this._addItem(child, true);
+                    this._addItem(child);
                     this._moveItem(child.id, previousSibling);
                   } else {
                     this._replaceItem(child);
@@ -31678,23 +31580,30 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
             }.bind(this));
           },
           _addItem: function(child) {
-            var newSurface = this.options.template(child);
-            newSurface.dataId = child.id;
-            if (this.isDescending) {
-              this.insert(0, newSurface);
-            } else {
-              this.insert(-1, newSurface);
+            var insertIndex = this.isDescending ? 0 : -1;
+            if (this.isGrouped) {
+              insertIndex = this._ensureGroupItem(child);
             }
+            var newSurface = this.options.itemTemplate(child);
+            newSurface.dataId = child.id;
+            if (this.isGrouped) {
+              if (this.isDescending) {
+                insertIndex++;
+              } else {
+                insertIndex = this._findNextGroup(insertIndex) + 1;
+              }
+            }
+            this.insert(insertIndex, newSurface);
           },
           _replaceItem: function(child) {
             var index = this._getDataSourceIndex(child.id);
-            var newSurface = this.options.template(child);
+            var newSurface = this.options.itemTemplate(child);
             newSurface.dataId = child.id;
             this.replace(index, newSurface);
           },
           _removeItem: function(child) {
             var index = _.findIndex(this._dataSource, function(surface) {
-              return surface.dataId == child.id;
+              return surface.dataId === child.id;
             });
             if (index > -1) {
               this.remove(index);
@@ -31719,9 +31628,9 @@ System.register("github:Bizboard/arva-mvc@develop/components/DataBoundScrollView
               var modelIndex = _.findIndex(this.options.dataStore, function(model) {
                 return model.id === id;
               });
-              if (modelIndex === 0 || modelIndex === -1)
+              if (modelIndex === 0 || modelIndex === -1) {
                 return this.isDescending ? this._dataSource ? this._dataSource.length - 1 : 0 : 0;
-              else {
+              } else {
                 var nextModel = this.options.dataStore[this.isDescending ? modelIndex + 1 : modelIndex - 1];
                 var nextIndex = this._getDataSourceIndex(nextModel.id);
                 if (nextIndex > -1) {
@@ -32124,7 +32033,7 @@ System.register("views/Profile/ChangeAvatarView", ["npm:famous@0.3.5/core/Surfac
                   margins: [20, 10, 20, 10],
                   spacing: [20, 20]
                 },
-                template: function(avatar) {
+                itemTemplate: function(avatar) {
                   var avatarSurface = new BkImageSurface({
                     content: avatar.url,
                     sizeMode: BkImageSurface.SizeMode.ASPECTFIT,
@@ -32398,7 +32307,6 @@ System.register("utils/GameContext", ["github:Bizboard/arva-mvc@develop/DefaultC
           trackOnline: function() {
             var $__0 = this;
             setInterval((function() {
-              return ;
               if ($__0.isNewPlayer())
                 return ;
               var playerName = $__0.getPlayerId();
@@ -32664,7 +32572,7 @@ System.register("github:Bizboard/arva-mvc@develop/routers/ArvaRouter", ["npm:lod
             var controllerName = this._getControllerName(controller);
             var routeRoot = controllerName.replace(this.defaultController, '').replace('Controller', '');
             var hash = '#' + (routeRoot.length > 0 ? '/' + routeRoot : '') + ('/' + method);
-            if (params) {
+            if (params !== null) {
               for (var i = 0; i < Object.keys(params).length; i++) {
                 var key = Object.keys(params)[i];
                 hash += i == 0 ? '?' : '&';
